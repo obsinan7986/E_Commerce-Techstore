@@ -1,0 +1,26 @@
+$kind: http-request
+name: http://localhost:5000/api/products
+description: ""
+url: |-
+  POST
+
+  http://localhost:5000/api/products
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"name\": \"iPhone 15 Pro\",\r
+
+    \  \"description\": \"256GB Blue Titanium\",\r
+
+    \  \"brand\": \"Apple\",\r
+
+    \  \"category\": \"Smartphones\",\r
+
+    \  \"price\": 1200,\r
+
+    \  \"stock\": 15\r
+
+    }"
+order: 1784877351610

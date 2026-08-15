@@ -62,6 +62,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: [
         "Chapa",
+        "CBE Birr",
+        "Telebirr",
+        "M-Pesa",
+        "Awash Bank",
         "Cash On Delivery",
       ],
       default: "Cash On Delivery",
@@ -88,6 +92,7 @@ const orderSchema = new mongoose.Schema(
       enum: [
         "Pending",
         "Processing",
+        "Confirmed",
         "Shipped",
         "Delivered",
         "Cancelled",
@@ -116,35 +121,26 @@ const orderSchema = new mongoose.Schema(
     },
 
     paymentResult: {
-      transactionId: {
-        type: String,
-        default: "",
-      },
+      transactionId: { type: String, default: "" },
+      txRef:         { type: String, default: "" },
+      status:        { type: String, default: "" },
+      method:        { type: String, default: "" },
+      amount:        { type: Number, default: 0  },
+      currency:      { type: String, default: "ETB" },
+    },
 
-      txRef: {
-        type: String,
-        default: "",
+    // ── Manual payment verification (CBE Birr, Bank Transfer) ──────
+    manualPayment: {
+      screenshotUrl:    { type: String, default: "" },
+      uploadedAt:       { type: Date },
+      verificationStatus: {
+        type:    String,
+        enum:    ["None", "Pending", "Verified", "Rejected"],
+        default: "None",
       },
-
-      status: {
-        type: String,
-        default: "",
-      },
-
-      method: {
-        type: String,
-        default: "",
-      },
-
-      amount: {
-        type: Number,
-        default: 0,
-      },
-
-      currency: {
-        type: String,
-        default: "ETB",
-      },
+      adminNote:        { type: String, default: "" },
+      reviewedAt:       { type: Date },
+      reviewedBy:       { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     },
 
     paidAt: {
@@ -153,6 +149,14 @@ const orderSchema = new mongoose.Schema(
 
     deliveredAt: {
       type: Date,
+    },
+
+    // ── Coupon / discount applied to this order ────────────────
+    coupon: {
+      code:           { type: String, default: "" },
+      type:           { type: String, default: "" },   // "percentage" | "fixed" | "first_order"
+      discount:       { type: Number, default: 0  },   // % or ETB value
+      discountAmount: { type: Number, default: 0  },   // actual ETB saved
     },
   },
   {

@@ -1,25 +1,107 @@
-import Product from "../models/Product.js";
 import axios from "axios";
-import crypto from "crypto";
+
 import Order from "../models/Order.js";
-import { initializeChapa } from "../services/chapaService.js";
+import Cart from "../models/Cart.js";
+
+const CHAPA_URL =
+  "https://api.chapa.co/v1/transaction";
 
 // ==========================================
-// Initialize Chapa Payment
+// Helper: Verify transaction with Chapa
 // ==========================================
-export const initializePayment = async (req, res) => {
+
+const verifyWithChapa = async (txRef) => {
+  const response = await axios.get(
+    `${CHAPA_URL}/verify/${encodeURIComponent(txRef)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+      },
+    }
+  );
+
+  return response.data?.data;
+};
+
+// ==========================================
+// Helper: Mark order as paid
+// ==========================================
+
+const markOrderAsPaid = async (order, payment) => {
+  // Security checks
+  if (payment.tx_ref !== order.paymentResult.txRef) {
+    throw new Error("Transaction reference does not match.");
+  }
+
+  if (payment.currency !== "ETB") {
+    throw new Error("Payment currency does not match.");
+  }
+
+  const paidAmount = Number(payment.amount);
+
+  if (paidAmount !== Number(order.totalPrice)) {
+    throw new Error("Payment amount does not match order total.");
+  }
+
+  order.paymentStatus = "Paid";
+  order.isPaid = true;
+  order.paidAt = new Date();
+
+  order.paymentResult.transactionId =
+    payment.reference || "";
+
+  order.paymentResult.status =
+    payment.status || "";
+
+  order.paymentResult.method =
+    payment.method || "Chapa";
+
+  order.paymentResult.amount =
+    paidAmount;
+
+  order.paymentResult.currency =
+    payment.currency || "ETB";
+
+  await order.save();
+
+  // Clear cart after successful payment.
+  // Only clear the cart belonging to this customer.
+  await Cart.findOneAndUpdate(
+    { user: order.user },
+    { $set: { items: [] } }
+  );
+
+  return order;
+};
+
+// ==========================================
+// INITIALIZE CHAPA PAYMENT
+// ==========================================
+
+export const initializeChapaPayment = async (
+  req,
+  res
+) => {
   try {
-    const { amount, orderId } = req.body;
+    const {
+      orderId,
+      firstName,
+      lastName,
+      email,
+      phone,
+    } = req.body;
 
-    if (!amount || !orderId) {
+    if (!orderId) {
       return res.status(400).json({
         success: false,
-        message: "Amount and orderId are required.",
+        message: "Order ID is required.",
       });
     }
 
-    // Find Order
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({
+      _id: orderId,
+      user: req.user._id,
+    });
 
     if (!order) {
       return res.status(404).json({
@@ -28,95 +110,135 @@ export const initializePayment = async (req, res) => {
       });
     }
 
-    // Already paid?
-    if (order.paymentStatus === "Paid") {
+    // Only Chapa orders can use this endpoint.
+    if (order.paymentMethod !== "Chapa") {
       return res.status(400).json({
         success: false,
-        message: "This order has already been paid.",
+        message:
+          "This order is not configured for Chapa payment.",
       });
     }
 
-    // Generate unique transaction reference
-    const txRef = crypto.randomUUID();
+    if (order.paymentStatus === "Paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Order is already paid.",
+      });
+    }
 
-    // Save payment info
-    order.paymentMethod = "Chapa";
-    order.paymentStatus = "Pending";
+    // Don't create a second transaction reference
+    // if the order already has one.
+    const txRef =
+      order.paymentResult?.txRef ||
+      `TECHSTORE-${order._id}-${Date.now()}`;
 
-    order.paymentResult = {
-      transactionId: "",
-      txRef: txRef,
-      status: "Pending",
-      method: "Chapa",
-      amount: Number(amount),
-      currency: "ETB",
-    };
+    // Save transaction information
+    order.paymentResult.txRef = txRef;
+    order.paymentResult.amount =
+      order.totalPrice;
+    order.paymentResult.currency = "ETB";
+    order.paymentResult.method = "Chapa";
 
     await order.save();
 
-    // Payment request to Chapa
-    const paymentData = {
-      amount: Number(amount),
-      currency: "ETB",
+    const response = await axios.post(
+      `${CHAPA_URL}/initialize`,
+      {
+        amount: order.totalPrice.toString(),
 
-      email: req.user.email,
-      first_name: req.user.fullName,
-      last_name: "",
+        currency: "ETB",
 
-      tx_ref: txRef,
+        email,
 
-      callback_url:
-        "http://localhost:5000/api/payments/chapa/callback",
+        first_name: firstName,
 
-      return_url:
-        "http://localhost:5173/payment-success",
+        last_name: lastName,
 
-      customization: {
-        title: "Tech E-Commerce",
-        description: "Secure product payment",
+        phone_number: phone,
+
+        tx_ref: txRef,
+
+        callback_url:
+          `${process.env.BACKEND_URL}/api/payments/chapa/callback`,
+
+        return_url:
+          `${process.env.FRONTEND_URL}/payment/success?orderId=${order._id}`,
+
+        customization: {
+          title: "TechStore",
+          description:
+            `Payment for order ${order._id}`,
+        },
+
+        meta: {
+          orderId: order._id.toString(),
+        },
       },
-    };
-
-    const response = await initializeChapa(paymentData);
-
-    res.status(200).json({
-      success: true,
-      txRef,
-      checkout_url: response.data.checkout_url,
-      chapaResponse: response,
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message:
-        error.response?.data?.message ||
-        error.message,
-    });
-
-  }
-};
-
-// ==========================================
-// Verify Chapa Payment
-// ==========================================
-export const verifyPayment = async (req, res) => {
-
-  try {
-
-    const { tx_ref } = req.params;
-
-    const response = await axios.get(
-      `https://api.chapa.co/v1/transaction/verify/${tx_ref}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+          Authorization:
+            `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+
+          "Content-Type":
+            "application/json",
         },
       }
     );
 
-    const payment = response.data.data;
+    const checkoutUrl =
+      response.data?.data?.checkout_url;
+
+    if (!checkoutUrl) {
+      return res.status(500).json({
+        success: false,
+        message:
+          "Chapa did not return a checkout URL.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      checkoutUrl,
+      txRef,
+      orderId: order._id,
+    });
+
+  } catch (error) {
+    console.error(
+      "Chapa initialization error:",
+      error.response?.data ||
+        error.message
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        error.response?.data?.message ||
+        "Unable to initialize Chapa payment.",
+    });
+  }
+};
+
+// ==========================================
+// VERIFY CHAPA PAYMENT
+// ==========================================
+
+export const verifyChapaPayment = async (
+  req,
+  res
+) => {
+  try {
+    const { txRef } = req.params;
+
+    if (!txRef) {
+      return res.status(400).json({
+        success: false,
+        message: "Transaction reference is required.",
+      });
+    }
+
+    const payment =
+      await verifyWithChapa(txRef);
 
     if (!payment) {
       return res.status(404).json({
@@ -125,16 +247,8 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
-    if (payment.status !== "success") {
-      return res.status(400).json({
-        success: false,
-        message: "Payment is not completed.",
-      });
-    }
-
-    // Find order
     const order = await Order.findOne({
-      "paymentResult.txRef": tx_ref,
+      "paymentResult.txRef": txRef,
     });
 
     if (!order) {
@@ -144,69 +258,180 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
-    order.paymentStatus = "Paid";
-    order.orderStatus = "Processing";
-    order.isPaid = true;
-    order.paidAt = new Date();
+    // Customer can only verify their own order.
+    if (
+      order.user.toString() !==
+        req.user._id.toString() &&
+      !req.user.isAdmin
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized.",
+      });
+    }
 
+    // Already paid
     if (order.paymentStatus === "Paid") {
-     return res.status(200).json({
+      return res.status(200).json({
         success: true,
-        message: "Payment already verified.",
+        status: "success",
         order,
       });
     }
 
-    // ======================================
-// Reduce Product Stock
-// ======================================
+    if (payment.status === "success") {
+      await markOrderAsPaid(
+        order,
+        payment
+      );
 
-for (const item of order.orderItems) {
+      return res.status(200).json({
+        success: true,
+        status: "success",
+        order,
+      });
+    }
 
-  const product = await Product.findById(item.product);
+    if (
+      payment.status === "failed" ||
+      payment.status === "cancelled"
+    ) {
+      order.paymentStatus = "Failed";
+      order.isPaid = false;
 
-  if (!product) {
-    continue;
-  }
+      order.paymentResult.status =
+        payment.status;
 
-  if (product.stock < item.quantity) {
-    return res.status(400).json({
-      success: false,
-      message: `${product.name} does not have enough stock.`,
-    });
-  }
+      await order.save();
 
-  product.stock -= item.quantity;
+      return res.status(200).json({
+        success: true,
+        status: payment.status,
+        order,
+      });
+    }
 
-  await product.save();
-}
-
-    order.paymentResult = {
-      transactionId: payment.id || "",
-      txRef: payment.tx_ref,
-      status: payment.status,
-      method: payment.payment_method || "Chapa",
-      amount: Number(payment.amount),
-      currency: payment.currency,
-    };
-
-    await order.save();
-
-    res.status(200).json({
+    // pending
+    return res.status(200).json({
       success: true,
-      message: "Payment verified successfully.",
+      status: payment.status || "pending",
       order,
     });
 
   } catch (error) {
+    console.error(
+      "Chapa verification error:",
+      error.response?.data ||
+        error.message
+    );
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message:
-        error.response?.data?.message ||
-        error.message,
+        "Payment verification failed.",
+    });
+  }
+};
+
+// ==========================================
+// CHAPA CALLBACK
+// ==========================================
+
+export const chapaCallback = async (
+  req,
+  res
+) => {
+  try {
+    const txRef =
+      req.query.tx_ref ||
+      req.query.trx_ref;
+
+    if (!txRef) {
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/payment/failed`
+      );
+    }
+
+    const payment =
+      await verifyWithChapa(txRef);
+
+    if (!payment) {
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/payment/failed`
+      );
+    }
+
+    const order = await Order.findOne({
+      "paymentResult.txRef": txRef,
     });
 
-  }
+    if (!order) {
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/payment/failed`
+      );
+    }
 
+    // SUCCESS
+    if (payment.status === "success") {
+      try {
+        await markOrderAsPaid(
+          order,
+          payment
+        );
+
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/payment/success?orderId=${order._id}`
+        );
+
+      } catch (validationError) {
+        console.error(
+          "Payment validation error:",
+          validationError.message
+        );
+
+        order.paymentStatus = "Failed";
+        order.isPaid = false;
+
+        await order.save();
+
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/payment/failed?orderId=${order._id}`
+        );
+      }
+    }
+
+    // FAILED / CANCELLED
+    if (
+      payment.status === "failed" ||
+      payment.status === "cancelled"
+    ) {
+      order.paymentStatus = "Failed";
+      order.isPaid = false;
+
+      order.paymentResult.status =
+        payment.status;
+
+      await order.save();
+
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/payment/failed?orderId=${order._id}`
+      );
+    }
+
+    // PENDING
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/payment/success?orderId=${order._id}&status=pending`
+    );
+
+  } catch (error) {
+    console.error(
+      "Chapa callback error:",
+      error.response?.data ||
+        error.message
+    );
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/payment/failed`
+    );
+  }
 };

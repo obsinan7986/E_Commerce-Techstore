@@ -1,133 +1,117 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import { admin } from "../middleware/adminMiddleware.js";
-import { 
-    getDashboardStats,
-    getAllProducts,
-    createProduct,
-    updateProduct,
-    deleteProduct, 
-    getAllOrders,
-    updateOrderStatus,
-    getAllUsers,
-    getUserById,
-    updateUserRole,
-    deleteUser,
-    getLowStockProducts,
-    getSalesReport,
-    getMonthlySalesReport,
-    getProductStatistics,
+import { validateObjectId } from "../utils/validateObjectId.js";
 
+import {
+  getDashboardStats,
+  getAllUsers,
+  getUserById,
+  updateUserRole,
+  deleteUser,
+  getLowStockProducts,
+  getSalesReport,
+  getMonthlySalesReport,
+  getProductStatistics,
+  getAdminCustomers,
+  getAdminPayments,
+  getAdminCategories,
+  getAnalytics,
 } from "../controllers/adminController.js";
 
+import {
+  getAdminProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  updateProductStock,
+} from "../controllers/productController.js";
+
+import {
+  getAllOrders,
+  getOrderById,
+  updateOrderStatus,
+  cancelOrder,
+} from "../controllers/orderController.js";
+
 const router = express.Router();
+
+const adminOnly = [protect, admin];
+
 // Dashboard
-router.get(
-  "/dashboard",
-  protect,
-  admin,
-  getDashboardStats
-);
+router.get("/dashboard",          ...adminOnly, getDashboardStats);
+router.get("/analytics",          ...adminOnly, getAnalytics);
+router.get("/sales-report",       ...adminOnly, getSalesReport);
+router.get("/monthly-sales", ...adminOnly, getMonthlySalesReport);
+router.get("/product-statistics", ...adminOnly, getProductStatistics);
+router.get("/low-stock", ...adminOnly, getLowStockProducts);
 
-router.get(
-    "/sales-report",
-    protect,
-    admin,
-    getSalesReport
-);
-
-router.get(
-    "/monthly-sales",
-    protect,
-    admin,
-    getMonthlySalesReport
-);
-
-router.get(
-    "/product-statistics",
-    protect,
-    admin,
-    getProductStatistics
-);
-
-router.get(
-    "/low-stock",
-    protect,
-    admin,
-    getLowStockProducts
-);
+// Categories & customers & payments
+router.get("/categories", ...adminOnly, getAdminCategories);
+router.get("/customers", ...adminOnly, getAdminCustomers);
+router.get("/payments", ...adminOnly, getAdminPayments);
 
 // Products
-router.get(
-    "/products",
-    protect,
-    admin,
-    getAllProducts
-);
-
-router.post(
-    "/products",
-    protect,
-    admin,
-    createProduct
-);
-
+router.get("/products", ...adminOnly, getAdminProducts);
+router.post("/products", ...adminOnly, createProduct);
 router.put(
-    "/products/:id",
-    protect,
-    admin,
-    updateProduct
+  "/products/:id",
+  ...adminOnly,
+  validateObjectId(),
+  updateProduct
 );
-
+router.patch(
+  "/products/:id/stock",
+  ...adminOnly,
+  validateObjectId(),
+  updateProductStock
+);
 router.delete(
-    "/products/:id",
-    protect,
-    admin,
-    deleteProduct
+  "/products/:id",
+  ...adminOnly,
+  validateObjectId(),
+  deleteProduct
 );
 
 // Orders
+router.get("/orders", ...adminOnly, getAllOrders);
 router.get(
-  "/orders",
-  protect,
-  admin,
-  getAllOrders
+  "/orders/:id",
+  ...adminOnly,
+  validateObjectId(),
+  getOrderById
 );
 router.put(
   "/orders/:id/status",
-  protect,
-  admin,
+  ...adminOnly,
+  validateObjectId(),
   updateOrderStatus
 );
-// ======================================
-// Users
-// ======================================
-
-router.get(
-  "/users",
-  protect,
-  admin,
-  getAllUsers
+router.put(
+  "/orders/:id/cancel",
+  ...adminOnly,
+  validateObjectId(),
+  cancelOrder
 );
 
+// Users
+router.get("/users", ...adminOnly, getAllUsers);
 router.get(
   "/users/:id",
-  protect,
-  admin,
+  ...adminOnly,
+  validateObjectId(),
   getUserById
 );
-
 router.put(
   "/users/:id/role",
-  protect,
-  admin,
+  ...adminOnly,
+  validateObjectId(),
   updateUserRole
 );
-
 router.delete(
   "/users/:id",
-  protect,
-  admin,
+  ...adminOnly,
+  validateObjectId(),
   deleteUser
 );
 

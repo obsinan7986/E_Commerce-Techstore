@@ -1,0 +1,531 @@
+/* ═══════════════════════════════════════════════
+   User Payment History Page
+   ═══════════════════════════════════════════════ */
+
+.ph-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 36px 22px 80px;
+}
+
+/* Header */
+.ph-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+}
+
+.ph-header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 5px;
+}
+
+.ph-header p {
+  font-size: 14px;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.ph-back-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary, #2563EB);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 8px 0;
+}
+
+.ph-back-link:hover { text-decoration: underline; }
+
+/* ── Bank reminder box ── */
+.ph-bank-reminder {
+  background: #EFF6FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+}
+
+.ph-bank-reminder-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1D4ED8;
+  margin-bottom: 12px;
+}
+
+.ph-bank-reminder-accounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.ph-bank-reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #BFDBFE;
+  border-radius: 10px;
+  padding: 12px 16px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.ph-bank-reminder-item > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.ph-bank-qr {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  flex-shrink: 0;
+}
+
+.ph-bank-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1D4ED8;
+}
+
+.ph-bank-num {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: 0.5px;
+}
+
+.ph-copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.7;
+  padding: 0;
+  transition: opacity 0.15s;
+}
+
+.ph-copy-btn:hover { opacity: 1; }
+
+.ph-bank-instructions {
+  font-size: 13px;
+  color: #374151;
+  margin: 12px 0 0;
+  line-height: 1.6;
+}
+
+/* ── Filter tabs ── */
+.ph-filter-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border, #E5E7EB);
+  padding-bottom: 0;
+}
+
+.ph-filter-tab {
+  padding: 9px 18px;
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-muted, #9CA3AF);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.ph-filter-tab:hover { color: var(--text); }
+
+.ph-filter-tab--active {
+  color: var(--primary, #2563EB);
+  border-bottom-color: var(--primary, #2563EB);
+}
+
+/* ── Empty ── */
+.ph-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.ph-empty span { font-size: 44px; }
+
+.ph-shop-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  background: var(--primary, #2563EB);
+  color: #fff;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.ph-shop-link:hover { background: #1D4ED8; }
+
+/* Loading / error */
+.ph-loading, .ph-error {
+  padding: 80px 20px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+/* ── Order card list ── */
+.ph-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Single card ── */
+.ph-card {
+  background: #fff;
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  transition: box-shadow 0.2s;
+}
+
+.ph-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.10); }
+
+/* Card header */
+.ph-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  background: #F9FAFB;
+  border-bottom: 1px solid var(--border, #E5E7EB);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ph-card-ids {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ph-order-id {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: monospace;
+}
+
+.ph-method-tag {
+  background: var(--border, #E5E7EB);
+  color: var(--text-secondary, #374151);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.ph-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Verification badges */
+.ph-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ph-badge--none     { background: #F3F4F6; color: #6B7280; }
+.ph-badge--pending  { background: #FEF3C7; color: #B45309; }
+.ph-badge--verified { background: #DCFCE7; color: #166534; }
+.ph-badge--rejected { background: #FEE2E2; color: #991B1B; }
+
+/* Payment status badges */
+.ph-pay-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ph-pay--pending { background: #FFFBEB; color: #92400E; }
+.ph-pay--paid    { background: #F0FDF4; color: #15803D; }
+.ph-pay--failed  { background: #FEF2F2; color: #B91C1C; }
+
+/* Card body */
+.ph-card-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ph-card-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 20px;
+}
+
+.ph-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.ph-meta-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted, #9CA3AF);
+}
+
+.ph-amount {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary, #2563EB);
+}
+
+/* Rejection note */
+.ph-rejection-note {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: #991B1B;
+}
+
+/* Screenshot display */
+.ph-screenshot-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ph-screenshot-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ph-screenshot-thumb {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.ph-screenshot-thumb:hover {
+  opacity: 0.85;
+  transform: scale(1.02);
+}
+
+.ph-view-btn {
+  padding: 7px 16px;
+  border: 1.5px solid #BAE6FD;
+  border-radius: 8px;
+  background: #F0F9FF;
+  color: #0369A1;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.ph-view-btn:hover { background: #E0F2FE; }
+
+/* Upload section */
+.ph-upload-section {
+  border-top: 1px solid var(--border, #E5E7EB);
+  padding-top: 14px;
+}
+
+.ph-toggle-upload-btn {
+  padding: 9px 18px;
+  border: 1.5px solid #7DD3FC;
+  border-radius: 8px;
+  background: #F0F9FF;
+  color: #0369A1;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ph-toggle-upload-btn:hover { background: #E0F2FE; border-color: #0EA5E9; }
+
+/* Upload panel (inside card) */
+.ph-upload-panel {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ph-file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  border: 2px dashed #7DD3FC;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  color: #0EA5E9;
+  font-weight: 600;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.ph-file-label:hover { border-color: #0EA5E9; background: #F0F9FF; }
+
+.ph-preview-img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.ph-upload-msg {
+  padding: 9px 13px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ph-upload-msg--success { background: #DCFCE7; color: #166534; }
+.ph-upload-msg--error   { background: #FEE2E2; color: #991B1B; }
+
+.ph-upload-btn {
+  height: 42px;
+  border: none;
+  border-radius: 9px;
+  background: #0EA5E9;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.ph-upload-btn:hover:not(:disabled) { background: #0284C7; }
+.ph-upload-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Order details link */
+.ph-details-link {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--primary, #2563EB);
+  text-decoration: none;
+}
+
+.ph-details-link:hover { text-decoration: underline; }
+
+/* ── Image modal ── */
+.ph-modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+}
+
+.ph-modal-box {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+
+.ph-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: #F3F4F6;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-modal-close:hover { background: #E5E7EB; }
+
+.ph-modal-img {
+  max-width: 80vw;
+  max-height: 76vh;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .ph-page { padding: 20px 14px 60px; }
+  .ph-card-meta { grid-template-columns: 1fr; }
+  .ph-bank-reminder-accounts { flex-direction: column; }
+  .ph-bank-reminder-item { min-width: unset; }
+}

@@ -1,0 +1,255 @@
+/* ============================================================
+   ACCOUNT DROPDOWN PANEL
+   Matches the reference image exactly:
+   – White panel, rounded corners, soft shadow
+   – Black "Sign in" pill button
+   – "Register" plain link
+   – Primary items: icon + label, generous spacing
+   – Secondary items: lighter gray, no icon emphasis
+   ============================================================ */
+
+/* Wrapper keeps the trigger + panel in the same stacking context */
+.acct-dropdown-wrap {
+  position: relative;
+}
+
+/* ── Panel ── */
+.acct-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+
+  width: 280px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+
+  z-index: 600;
+  padding-bottom: 8px;
+
+  /* smooth scroll inside */
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Custom scrollbar to match reference */
+.acct-panel::-webkit-scrollbar { width: 5px; }
+.acct-panel::-webkit-scrollbar-track { background: transparent; }
+.acct-panel::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+/* ── Auth section (not logged in) ── */
+.acct-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 20px 16px;
+}
+
+.acct-signin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  transition: background 0.18s;
+}
+
+.acct-signin-btn:hover { background: #1f2937; }
+
+.acct-register-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.acct-register-link:hover { color: #111827; }
+
+/* ── Logged-in user header ── */
+.acct-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 14px;
+}
+
+.acct-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.acct-user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.acct-user-email {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.acct-admin-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ── Divider ── */
+.acct-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 4px 0;
+}
+
+/* ── Primary menu items ── */
+.acct-primary-menu {
+  padding: 8px 0;
+}
+
+.acct-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 22px;
+  color: #111827;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 0.13s;
+  border-radius: 0;
+}
+
+.acct-menu-item:hover {
+  background: #f5f5f5;
+}
+
+.acct-menu-admin {
+  color: #1d4ed8;
+}
+
+.acct-item-icon {
+  font-size: 18px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 20px;
+}
+
+.acct-menu-admin .acct-item-icon {
+  color: #1d4ed8;
+}
+
+.acct-item-label {
+  line-height: 1;
+  flex: 1;
+}
+
+.acct-item-arrow {
+  margin-left: auto;
+  font-size: 13px;
+  color: #d1d5db;
+  flex-shrink: 0;
+}
+
+/* ── Secondary menu items ── */
+.acct-secondary-menu {
+  padding: 6px 0;
+}
+
+.acct-secondary-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 22px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 400;
+  transition: background 0.13s, color 0.13s;
+}
+
+.acct-secondary-item:hover {
+  background: #f9f9f9;
+  color: #374151;
+}
+
+.acct-secondary-icon {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 18px;
+}
+
+/* ── Logout ── */
+.acct-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 22px;
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.13s;
+  border-radius: 0;
+  font-family: inherit;
+}
+
+.acct-logout-btn:hover { background: #fef2f2; }
+
+/* ── Mobile: full-width, attached to bottom ── */
+@media (max-width: 480px) {
+  .acct-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    box-shadow: 0 -4px 32px rgba(0,0,0,.18);
+  }
+}

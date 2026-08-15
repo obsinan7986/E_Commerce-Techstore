@@ -1,0 +1,36 @@
+.filter-sidebar{
+    width:270px;
+    background:#fff;
+    border-radius:12px;
+    padding:25px;
+    border:1px solid #eee;
+}
+
+.filter-sidebar h2{
+    margin-bottom:25px;
+    font-size:26px;
+}
+
+.filter-group{
+    margin-bottom:35px;
+}
+
+.filter-group h3{
+    margin-bottom:15px;
+    font-size:18px;
+}
+
+.filter-group label{
+    display:block;
+    margin-bottom:12px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.filter-group input[type="radio"]{
+    margin-right:10px;
+}
+
+.filter-group input[type="range"]{
+    width:100%;
+}

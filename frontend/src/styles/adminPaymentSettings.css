@@ -1,0 +1,298 @@
+.aps-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 36px 24px 72px;
+}
+
+.aps-header {
+  margin-bottom: 28px;
+}
+
+.aps-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.aps-header p {
+  font-size: 14px;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.aps-msg {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 22px;
+}
+
+.aps-msg--success {
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+}
+
+.aps-msg--error {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+
+.aps-loading {
+  padding: 60px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.aps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-bottom: 24px;
+}
+
+.aps-card {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.aps-card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted, #F9FAFB);
+}
+
+.aps-card-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+
+.aps-card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aps-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.aps-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aps-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.aps-form-group input,
+.aps-form-group textarea {
+  padding: 10px 13px;
+  border: 1.5px solid var(--border-dark, #D1D5DB);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  background: white;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.aps-form-group input:focus,
+.aps-form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-border, rgba(37,99,235,.15));
+}
+
+.aps-qr-current {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.aps-qr-current p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.aps-qr-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #FAFAFA;
+}
+
+.aps-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border: 2px dashed #93C5FD;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  padding: 10px 16px;
+  text-align: center;
+}
+
+.aps-upload-label:hover {
+  border-color: var(--primary);
+  background: var(--primary-light, #EFF6FF);
+}
+
+.aps-clear-btn {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  background: #FEF2F2;
+  color: #DC2626;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.aps-clear-btn:hover { background: #FEE2E2; }
+
+.aps-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.aps-save-btn {
+  padding: 13px 36px;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary, #2563EB);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.aps-save-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #1D4ED8);
+  transform: translateY(-1px);
+}
+
+.aps-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 700px) {
+  .aps-grid { grid-template-columns: 1fr; }
+  .aps-page { padding: 20px 14px 56px; }
+}
+
+/* ── Multiple bank accounts ── */
+.aps-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted, #F9FAFB);
+}
+
+.aps-add-account-btn {
+  padding: 6px 14px;
+  border: 1.5px solid var(--primary, #2563EB);
+  border-radius: 7px;
+  background: #EFF6FF;
+  color: var(--primary, #2563EB);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.aps-add-account-btn:hover { background: #DBEAFE; }
+
+.aps-account-block {
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #FAFBFC;
+}
+
+.aps-account-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aps-account-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.aps-remove-btn {
+  padding: 4px 12px;
+  border: 1px solid #FCA5A5;
+  border-radius: 6px;
+  background: #FEF2F2;
+  color: #DC2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.aps-remove-btn:hover { background: #FEE2E2; }
+
+.aps-form-group textarea {
+  padding: 10px 13px;
+  border: 1.5px solid var(--border-dark, #D1D5DB);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  background: white;
+  resize: vertical;
+}
+
+.aps-form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}

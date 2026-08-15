@@ -10,17 +10,31 @@ import {
 } from "../controllers/orderController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
+import { admin } from "../middleware/adminMiddleware.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
 
 const router = express.Router();
 
-// Customer
+// ==========================================
+// CUSTOMER
+// ==========================================
+
 router.post("/", protect, createOrder);
 router.get("/my-orders", protect, getMyOrders);
-router.get("/:id", protect, getOrderById);
+router.get("/:id", protect, validateObjectId(), getOrderById);
+router.put("/:id/cancel", protect, validateObjectId(), cancelOrder);
 
-// Admin (admin middleware will be added later)
-router.get("/", protect, getAllOrders);
-router.put("/:id/status", protect, updateOrderStatus);
-router.put("/:id/cancel", protect, cancelOrder);
+// ==========================================
+// ADMIN (kept for existing frontend usage)
+// ==========================================
+
+router.get("/", protect, admin, getAllOrders);
+router.put(
+  "/:id/status",
+  protect,
+  admin,
+  validateObjectId(),
+  updateOrderStatus
+);
 
 export default router;

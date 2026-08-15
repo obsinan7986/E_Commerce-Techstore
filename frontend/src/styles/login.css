@@ -1,0 +1,92 @@
+/* =========================================================
+   LOGIN PAGE
+   ========================================================= */
+
+.login-page {
+  width: 100%;
+}
+
+/* Login card */
+
+.login-card {
+  max-width: 440px;
+}
+
+/* Forgot password */
+
+.login-forgot {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-forgot:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Remember me */
+
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+.login-remember input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* Login extra area */
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+}
+
+/* Bottom register message */
+
+.login-register {
+  margin-top: 24px;
+  padding-top: 20px;
+
+  border-top: 1px solid var(--border);
+
+  text-align: center;
+
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+.login-register a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-register a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Mobile */
+
+@media (max-width: 480px) {
+  .login-options {
+    gap: 10px;
+  }
+
+  .login-forgot {
+    font-size: 12px;
+  }
+}

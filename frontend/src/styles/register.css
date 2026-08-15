@@ -1,0 +1,142 @@
+/* =========================================================
+   REGISTER PAGE
+   ========================================================= */
+
+.register-page {
+  width: 100%;
+}
+
+/* Wider registration card */
+
+.register-card {
+  max-width: 620px;
+}
+
+/* Register heading */
+
+.register-card .auth-title {
+  margin-bottom: 7px;
+}
+
+/* Register form */
+
+.register-form {
+  width: 100%;
+}
+
+/* Two-column registration fields */
+
+.register-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+
+/* Full-width field */
+
+.register-field-full {
+  grid-column: 1 / -1;
+}
+
+/* Terms */
+
+.register-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  margin: 2px 0 20px;
+
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.register-terms input {
+  width: 16px;
+  height: 16px;
+
+  margin-top: 2px;
+
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.register-terms a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register-terms a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Login link */
+
+.register-login {
+  margin-top: 24px;
+  padding-top: 20px;
+
+  border-top: 1px solid var(--border);
+
+  text-align: center;
+
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+.register-login a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.register-login a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Password requirements */
+
+.register-password-help {
+  margin-top: -10px;
+  margin-bottom: 18px;
+
+  color: var(--text-4);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.register-password-help ul {
+  margin: 5px 0 0;
+  padding-left: 17px;
+}
+
+.register-password-help li {
+  margin-bottom: 2px;
+}
+
+/* Mobile */
+
+@media (max-width: 660px) {
+  .register-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .register-field-full {
+    grid-column: 1;
+  }
+
+  .register-card {
+    max-width: 460px;
+  }
+}
+
+@media (max-width: 400px) {
+  .register-card {
+    padding: 26px 16px 24px;
+  }
+}

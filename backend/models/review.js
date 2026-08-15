@@ -21,10 +21,24 @@ const reviewSchema = new mongoose.Schema(
       max: 5,
     },
 
+    title: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+      default: "",
+    },
+
     comment: {
       type: String,
       required: true,
       trim: true,
+      maxlength: 2000,
+    },
+
+    // Marks reviews from users who actually purchased the product
+    verifiedPurchase: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -32,11 +46,8 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
-// Prevent duplicate reviews from the same user
-reviewSchema.index(
-  { product: 1, user: 1 },
-  { unique: true }
-);
+// Prevent duplicate reviews from the same user on the same product
+reviewSchema.index({ product: 1, user: 1 }, { unique: true });
 
 const Review = mongoose.model("Review", reviewSchema);
 

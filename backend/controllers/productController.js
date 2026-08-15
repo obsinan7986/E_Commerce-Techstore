@@ -1,4 +1,5 @@
 import Product from "../models/Product.js";
+import Order from "../models/Order.js";
 
 
 // ==========================================
@@ -126,24 +127,150 @@ export const getProductById = async (req, res) => {
 };
 
 // =========================================
+// Search Products
+// GET /api/products/search/:keyword
+// =========================================
+export const searchProducts = async (req, res) => {
+  try {
+
+    const keyword = req.params.keyword;
+
+    const products = await Product.find({
+      $or: [
+        {
+          name: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          brand: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+        {
+          category: {
+            $regex: keyword,
+            $options: "i",
+          },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      products,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+// Get all unique categories
+export const getCategories = async (req, res) => {
+  try {
+
+    const categories = await Product.distinct("category");
+
+    res.json(categories);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: error.message,
+    });
+
+  }
+};
+
+// =========================================
+// Get Products By Category
+// GET /api/products/category/:category
+// =========================================
+export const getProductsByCategory = async (req, res) => {
+  try {
+
+    const products = await Product.find({
+      category: req.params.category,
+    });
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      products,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+// =========================================
 // Create Product
 // POST /api/products
 // =========================================
 export const createProduct = async (req, res) => {
   try {
+    const {
+      name,
+      description,
+      brand,
+      category,
+      image,
+      price,
+      stock,
+    } = req.body;
 
-    const product = await Product.create(req.body);
-    if (!req.body.image) {
-    return res.status(400).json({
+    if (!name || !description || !brand || !category || !image || price === undefined) {
+      return res.status(400).json({
         success: false,
-        message: "Product image is required",
+        message: "Name, description, brand, category, image, and price are required.",
+      });
+    }
+
+    if (Number(price) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Price must be greater than zero.",
+      });
+    }
+
+    if (stock !== undefined && Number(stock) < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Stock cannot be negative.",
+      });
+    }
+
+    const product = await Product.create({
+      name,
+      description,
+      brand,
+      category,
+      image,
+      price,
+      stock: stock ?? 0,
     });
-}
 
-    res.status(201).json(product);
-
+    res.status(201).json({
+      success: true,
+      message: "Product created successfully.",
+      product,
+    });
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
@@ -160,7 +287,22 @@ export const updateProduct = async (req, res) => {
 
     if (!product) {
       return res.status(404).json({
-        message: "Product not found",
+        success: false,
+        message: "Product not found.",
+      });
+    }
+
+    if (req.body.price !== undefined && Number(req.body.price) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Price must be greater than zero.",
+      });
+    }
+
+    if (req.body.stock !== undefined && Number(req.body.stock) < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Stock cannot be negative.",
       });
     }
 
@@ -174,7 +316,11 @@ export const updateProduct = async (req, res) => {
 
     const updatedProduct = await product.save();
 
-    res.status(200).json(updatedProduct);
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully.",
+      product: updatedProduct,
+    });
 
   } catch (error) {
     res.status(500).json({
@@ -189,12 +335,24 @@ export const updateProduct = async (req, res) => {
 // =========================================
 export const deleteProduct = async (req, res) => {
   try {
-
     const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
-        message: "Product not found",
+        success: false,
+        message: "Product not found.",
+      });
+    }
+
+    const orderReferences = await Order.countDocuments({
+      "orderItems.product": req.params.id,
+    });
+
+    if (orderReferences > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This product is referenced in existing orders and cannot be deleted. Order history is preserved.",
       });
     }
 
@@ -202,17 +360,22 @@ export const deleteProduct = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Product deleted successfully",
+      message: "Product deleted successfully.",
     });
-
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: error.message,
     });
   }
 };
 // ======================================
 // Get Related Products
+// ======================================
+
+// ======================================
+// Get Related Products
+// GET /api/products/related/:id
 // ======================================
 
 export const getRelatedProducts = async (req, res) => {
@@ -223,7 +386,7 @@ export const getRelatedProducts = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found.",
+        message: "Product not found",
       });
     }
 
@@ -274,5 +437,110 @@ export const getFeaturedProducts = async (req, res) => {
       message: error.message,
     });
 
+  }
+};
+
+// =========================================
+// Get All Products (Admin)
+// GET /api/admin/products
+// =========================================
+export const getAdminProducts = async (req, res) => {
+  try {
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const keyword = (req.query.keyword || "").trim();
+    const { category, stockFilter, sort } = req.query;
+
+    const filter = {};
+
+    if (keyword) {
+      filter.$or = [
+        { name: { $regex: keyword, $options: "i" } },
+        { brand: { $regex: keyword, $options: "i" } },
+        { description: { $regex: keyword, $options: "i" } },
+      ];
+    }
+
+    if (category) filter.category = category;
+
+    if (stockFilter === "out") {
+      filter.stock = 0;
+    } else if (stockFilter === "low") {
+      filter.stock = { $gt: 0, $lte: 5 };
+    } else if (stockFilter === "in") {
+      filter.stock = { $gt: 5 };
+    }
+
+    let sortOption = { createdAt: -1 };
+    if (sort === "priceAsc") sortOption = { price: 1 };
+    if (sort === "priceDesc") sortOption = { price: -1 };
+    if (sort === "stockAsc") sortOption = { stock: 1 };
+    if (sort === "stockDesc") sortOption = { stock: -1 };
+    if (sort === "nameAsc") sortOption = { name: 1 };
+
+    const total = await Product.countDocuments(filter);
+
+    const products = await Product.find(filter)
+      .sort(sortOption)
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// =========================================
+// Update Product Stock (Admin)
+// PATCH /api/admin/products/:id/stock
+// =========================================
+export const updateProductStock = async (req, res) => {
+  try {
+    const { stock } = req.body;
+
+    if (
+      stock === undefined ||
+      Number.isNaN(Number(stock)) ||
+      Number(stock) < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid non-negative stock value is required.",
+      });
+    }
+
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found.",
+      });
+    }
+
+    product.stock = Number(stock);
+    const updatedProduct = await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Product stock updated successfully.",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

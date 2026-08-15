@@ -1,0 +1,86 @@
+.payment-result {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: var(--background);
+}
+
+.payment-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 48px 36px;
+  text-align: center;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.payment-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.payment-icon.success { background: var(--success-bg); color: var(--success); }
+.payment-icon.error   { background: var(--danger-bg);  color: var(--danger); }
+.payment-icon.loading { background: var(--primary-light); color: var(--primary); }
+
+.payment-card h1 { margin: 0 0 12px; font-size: 26px; color: var(--text); }
+.payment-card p  { margin: 8px 0; color: var(--text-light); line-height: 1.6; }
+.payment-subtitle { font-size: 13px; }
+
+.payment-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.payment-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: var(--btn-radius);
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(37,99,235,.25);
+}
+
+.payment-actions a:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(37,99,235,.35);
+}
+
+.payment-actions a:last-child {
+  background: var(--background);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-dark);
+  box-shadow: none;
+}
+
+.payment-actions a:last-child:hover {
+  background: var(--border);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+  .payment-result { padding: 24px 14px; }
+  .payment-card   { padding: 36px 20px; }
+  .payment-card h1 { font-size: 22px; }
+  .payment-actions { flex-direction: column; }
+  .payment-actions a { width: 100%; }
+}

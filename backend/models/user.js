@@ -18,13 +18,27 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      // Not required for Google-auth users
       minlength: 6,
+      default: null,
     },
 
     phone: {
       type: String,
-      required: true,
+      default: "",
+    },
+
+    googleId: {
+      type: String,
+      default: null,
+      index: true,
+      sparse: true,   // allow multiple null values (non-Google users)
+    },
+
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
 
     role: {
@@ -46,11 +60,25 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    // Set to true after the user's first completed order discount is used
+    firstOrderDiscountUsed: {
+      type:    Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+userSchema.pre("save", async function () {
+  if (this.role === "admin") {
+    this.isAdmin = true;
+  } else if (this.role === "customer") {
+    this.isAdmin = false;
+  }
+});
 
 const User = mongoose.model("User", userSchema);
 

@@ -1,0 +1,329 @@
+.orders-page {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 36px var(--container-px) 72px;
+}
+
+/* Header */
+.orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.orders-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 5px;
+  letter-spacing: -0.3px;
+}
+
+.orders-header p { margin: 0; color: var(--text-light); font-size: 14px; }
+
+.shop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--btn-radius);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(37,99,235,.22);
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.shop-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+/* Orders list */
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Order card */
+.order-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.order-card:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--primary-border);
+}
+
+/* Card top */
+.order-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 16px 22px;
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.order-top-meta {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.order-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.order-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+}
+
+.order-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Status row */
+.order-status-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 14px 22px;
+  align-items: center;
+}
+
+/* Badges */
+.status, .payment-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.order-pending    { background: var(--warning-bg);  color: #92400E; }
+.order-processing { background: var(--primary-light); color: var(--primary-dark); }
+.order-shipped    { background: #F5F3FF; color: #6D28D9; }
+.order-delivered  { background: var(--success-bg);  color: #166534; }
+.order-cancelled  { background: var(--danger-bg);   color: #991B1B; }
+
+.payment-paid     { background: var(--success-bg);  color: #166534; }
+.payment-pending  { background: var(--warning-bg);  color: #92400E; }
+.payment-failed   { background: var(--danger-bg);   color: #991B1B; }
+.payment-refunded { background: var(--surface-muted); color: var(--text-secondary); }
+
+/* Products */
+.order-products { padding: 4px 22px; }
+
+.order-product {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.order-product:last-child { border-bottom: none; }
+
+.order-product img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--background);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.order-product-info { flex: 1; min-width: 0; }
+.order-product-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.order-product-info p { font-size: 13px; color: var(--text-muted); margin: 0 0 4px; }
+.order-product-info strong { font-size: 14px; color: var(--primary); font-weight: 700; }
+
+/* Bottom row */
+.order-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.order-total-block { display: flex; flex-direction: column; gap: 2px; }
+.order-total-block span  { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.order-total-block strong { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.3px; }
+
+.order-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.view-order-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 20px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--btn-radius);
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 6px rgba(37,99,235,.2);
+  white-space: nowrap;
+}
+
+.view-order-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+.cancel-order-btn {
+  padding: 9px 18px;
+  border: 1.5px solid #FECACA;
+  background: var(--surface);
+  color: var(--danger);
+  border-radius: var(--btn-radius);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  font-family: var(--font);
+}
+
+.cancel-order-btn:hover { background: var(--danger-bg); border-color: var(--danger); }
+
+/* Pay Now button — for unpaid Chapa orders */
+.pay-now-btn {
+  padding: 9px 20px;
+  background: #16A34A;
+  color: #fff;
+  border: none;
+  border-radius: var(--btn-radius);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  font-family: var(--font);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(22,163,74,.28);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pay-now-btn:hover:not(:disabled) {
+  background: #15803D;
+  box-shadow: 0 4px 14px rgba(22,163,74,.38);
+  transform: translateY(-1px);
+}
+
+.pay-now-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Pending payment hint badge */
+.pay-now-hint {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: #FEF3C7;
+  color: #B45309;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #FDE68A;
+}
+
+/* Empty */
+.empty-orders {
+  text-align: center;
+  padding: 80px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.empty-icon   { font-size: 52px; margin-bottom: 16px; opacity: 0.4; }
+.empty-orders h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
+.empty-orders p  { color: var(--text-light); margin: 0 0 24px; font-size: 15px; }
+
+.empty-orders a {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 28px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--btn-radius);
+  font-weight: 700;
+  font-size: 15px;
+  transition: background 0.15s;
+  box-shadow: 0 2px 10px rgba(37,99,235,.25);
+}
+
+.empty-orders a:hover { background: var(--primary-dark); }
+
+/* Loading / error */
+.orders-loading, .orders-error {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.orders-error h2 { margin-bottom: 8px; color: var(--text); }
+.orders-error p  { color: var(--danger); margin-bottom: 16px; }
+.orders-error button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: var(--btn-radius);
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: var(--font);
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  .orders-page   { padding: 24px 12px 56px; }
+  .orders-header { flex-direction: column; }
+  .shop-btn      { width: 100%; justify-content: center; }
+  .order-top     { flex-direction: column; gap: 12px; padding: 14px 16px; }
+  .order-top-meta { gap: 16px; }
+  .order-products { padding: 4px 14px; }
+  .order-product img { width: 56px; height: 56px; }
+  .order-bottom  { flex-direction: column; align-items: stretch; padding: 14px 16px; }
+  .order-actions { width: 100%; }
+  .view-order-btn, .cancel-order-btn { flex: 1; text-align: center; }
+}

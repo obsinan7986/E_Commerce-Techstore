@@ -1,607 +1,427 @@
-import User from "../models/User.js";
+import User    from "../models/User.js";
 import Product from "../models/Product.js";
-import Order from "../models/Order.js";
+import Order   from "../models/Order.js";
+import createNotification from "../utils/createNotification.js";
 
+// ======================================
+// Analytics — single endpoint for the analytics dashboard
+// GET /api/admin/analytics
+// ======================================
+export const getAnalytics = async (req, res) => {
+  try {
+    const now        = new Date();
+    const yearStart  = new Date(now.getFullYear(), 0, 1);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    const [
+      totalUsers,
+      totalProducts,
+      totalOrders,
+      pendingOrders,
+      processingOrders,
+      shippedOrders,
+      deliveredOrders,
+      cancelledOrders,
+      revenueAgg,
+      revenueThisMonth,
+      revenueLastMonth,
+      newCustomersThisMonth,
+      newCustomersLastMonth,
+      ordersThisMonth,
+      ordersLastMonth,
+      monthlySales,
+      topProducts,
+      lowStock,
+      recentOrders,
+    ] = await Promise.all([
+      User.countDocuments(),
+      Product.countDocuments(),
+      Order.countDocuments(),
+      Order.countDocuments({ orderStatus: "Pending" }),
+      Order.countDocuments({ orderStatus: "Processing" }),
+      Order.countDocuments({ orderStatus: "Shipped" }),
+      Order.countDocuments({ orderStatus: "Delivered" }),
+      Order.countDocuments({ orderStatus: "Cancelled" }),
+
+      // total revenue ever
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid" } },
+        { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      ]),
+
+      // revenue this month
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid", createdAt: { $gte: monthStart } } },
+        { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      ]),
+
+      // revenue last month
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid", createdAt: { $gte: lastMonth, $lte: lastMonthEnd } } },
+        { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      ]),
+
+      // new customers this month
+      User.countDocuments({ role: "customer", createdAt: { $gte: monthStart } }),
+
+      // new customers last month
+      User.countDocuments({ role: "customer", createdAt: { $gte: lastMonth, $lte: lastMonthEnd } }),
+
+      // orders this month
+      Order.countDocuments({ createdAt: { $gte: monthStart } }),
+
+      // orders last month
+      Order.countDocuments({ createdAt: { $gte: lastMonth, $lte: lastMonthEnd } }),
+
+      // monthly revenue for current year (last 12 months)
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid", createdAt: { $gte: new Date(now.getFullYear() - 1, now.getMonth() + 1, 1) } } },
+        {
+          $group: {
+            _id:          { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+            revenue:      { $sum: "$totalPrice" },
+            orderCount:   { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.year": 1, "_id.month": 1 } },
+      ]),
+
+      // top 8 selling products by total quantity ordered
+      Order.aggregate([
+        { $match: { orderStatus: { $ne: "Cancelled" } } },
+        { $unwind: "$orderItems" },
+        {
+          $group: {
+            _id:           "$orderItems.product",
+            name:          { $first: "$orderItems.name" },
+            image:         { $first: "$orderItems.image" },
+            totalQty:      { $sum: "$orderItems.quantity" },
+            totalRevenue:  { $sum: { $multiply: ["$orderItems.price", "$orderItems.quantity"] } },
+          },
+        },
+        { $sort: { totalQty: -1 } },
+        { $limit: 8 },
+      ]),
+
+      // low stock products (≤ 5)
+      Product.find({ stock: { $lte: 5 } })
+        .select("name image stock category price")
+        .sort({ stock: 1 })
+        .limit(10),
+
+      // recent 8 orders
+      Order.find({})
+        .populate("user", "fullName email")
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .select("user totalPrice paymentStatus orderStatus paymentMethod createdAt"),
+    ]);
+
+    const totalRevenue          = revenueAgg[0]?.total            || 0;
+    const revenueThisMonthVal   = revenueThisMonth[0]?.total      || 0;
+    const revenueLastMonthVal   = revenueLastMonth[0]?.total      || 0;
+    const pctRevenue            = revenueLastMonthVal > 0
+      ? (((revenueThisMonthVal - revenueLastMonthVal) / revenueLastMonthVal) * 100).toFixed(1)
+      : null;
+    const pctOrders             = ordersLastMonth > 0
+      ? (((ordersThisMonth - ordersLastMonth) / ordersLastMonth) * 100).toFixed(1)
+      : null;
+    const pctCustomers          = newCustomersLastMonth > 0
+      ? (((newCustomersThisMonth - newCustomersLastMonth) / newCustomersLastMonth) * 100).toFixed(1)
+      : null;
+
+    res.status(200).json({
+      success: true,
+      kpi: {
+        totalRevenue,
+        totalOrders,
+        totalUsers,
+        totalProducts,
+        revenueThisMonth:   revenueThisMonthVal,
+        revenueLastMonth:   revenueLastMonthVal,
+        pctRevenue,
+        ordersThisMonth,
+        ordersLastMonth,
+        pctOrders,
+        newCustomersThisMonth,
+        newCustomersLastMonth,
+        pctCustomers,
+      },
+      orderStatus: {
+        pending:    pendingOrders,
+        processing: processingOrders,
+        shipped:    shippedOrders,
+        delivered:  deliveredOrders,
+        cancelled:  cancelledOrders,
+      },
+      monthlySales,
+      topProducts,
+      lowStock,
+      recentOrders,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ======================================
+// Dashboard Stats (keep for backward compat)
+// ======================================
 export const getDashboardStats = async (req, res) => {
   try {
+    const [
+      totalUsers,
+      totalProducts,
+      totalOrders,
+      pendingOrders,
+      processingOrders,
+      shippedOrders,
+      deliveredOrders,
+      cancelledOrders,
+      paidOrders,
+      unpaidOrders,
+      revenueResult,
+      recentOrders,
+    ] = await Promise.all([
+      User.countDocuments(),
+      Product.countDocuments(),
+      Order.countDocuments(),
+      Order.countDocuments({ orderStatus: "Pending" }),
+      Order.countDocuments({ orderStatus: "Processing" }),
+      Order.countDocuments({ orderStatus: "Shipped" }),
+      Order.countDocuments({ orderStatus: "Delivered" }),
+      Order.countDocuments({ orderStatus: "Cancelled" }),
+      Order.countDocuments({ paymentStatus: "Paid" }),
+      Order.countDocuments({ paymentStatus: { $in: ["Pending", "Failed"] } }),
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid" } },
+        { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      ]),
+      Order.find({})
+        .populate("user", "fullName email")
+        .sort({ createdAt: -1 })
+        .limit(10),
+    ]);
 
-    const totalUsers = await User.countDocuments();
+    const totalRevenue = revenueResult[0]?.total || 0;
 
-    const totalProducts = await Product.countDocuments();
-
-    const totalOrders = await Order.countDocuments();
-
-    const pendingOrders = await Order.countDocuments({
-      orderStatus: "Pending",
-    });
-
-    const deliveredOrders = await Order.countDocuments({
-      orderStatus: "Delivered",
-    });
-
-    const paidOrders = await Order.find({
-      paymentStatus: "Paid",
-    });
-
-    const totalRevenue = paidOrders.reduce(
-      (sum, order) => sum + Number(order.totalPrice),
-      0
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Dashboard statistics fetched successfully.",
-      stats: {
-        users: totalUsers,
-        products: totalProducts,
-        orders: totalOrders,
-        pendingOrders,
-        deliveredOrders,
-        revenue: totalRevenue,
-      },
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-};
-// ======================================
-// Get All Products
-// ======================================
-
-export const getAllProducts = async (req, res) => {
-
-    try {
-
-        const products = await Product.find().sort({
-            createdAt: -1,
-        });
-
-        res.status(200).json({
-            success: true,
-            count: products.length,
-            products,
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-
-    }
-
-};
-// ======================================
-// Create Product
-// ======================================
-
-export const createProduct = async (req, res) => {
-
-    try {
-
-        const {
-            name,
-            description,
-            brand,
-            category,
-            image,
-            price,
-            stock,
-        } = req.body;
-
-        const product = await Product.create({
-            name,
-            description,
-            brand,
-            category,
-            image,
-            price,
-            stock,
-        });
-
-        res.status(201).json({
-            success: true,
-            message: "Product created successfully.",
-            product,
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-
-    }
-
-};
-// ======================================
-// Update Product
-// ======================================
-
-// ======================================
-// Update Product
-// ======================================
-
-export const updateProduct = async (req, res) => {
-  try {
-
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found.",
-      });
-    }
-
-    product.name = req.body.name || product.name;
-    product.description =
-      req.body.description || product.description;
-    product.brand = req.body.brand || product.brand;
-    product.category =
-      req.body.category || product.category;
-    product.image = req.body.image || product.image;
-
-    if (req.body.price !== undefined) {
-      product.price = Number(req.body.price);
-    }
-
-    if (req.body.stock !== undefined) {
-      product.stock = Number(req.body.stock);
-    }
-
-    const updatedProduct = await product.save();
+    // Both `statistics` and `stats` are returned so both old and new
+    // dashboard code works without another change.
+    const statistics = {
+      totalUsers,
+      totalProducts,
+      totalOrders,
+      totalRevenue,
+      pendingOrders,
+      processingOrders,
+      shippedOrders,
+      deliveredOrders,
+      cancelledOrders,
+      paidOrders,
+      unpaidOrders,
+    };
 
     res.status(200).json({
       success: true,
-      message: "Product updated successfully.",
-      product: updatedProduct,
+      statistics,
+      stats: statistics,           // legacy alias
+      recentOrders,
     });
-
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // ======================================
-// Delete Product
+// Get All Users (paginated)
 // ======================================
-
-export const deleteProduct = async (req, res) => {
-
-    try {
-
-        const product = await Product.findById(req.params.id);
-
-        if (!product) {
-
-            return res.status(404).json({
-                success: false,
-                message: "Product not found.",
-            });
-
-        }
-
-        await product.deleteOne();
-
-        res.status(200).json({
-            success: true,
-            message: "Product deleted successfully.",
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-
-    }
-
-};
-// ======================================
-// Get All Orders (Admin)
-// ======================================
-
-export const getAllOrders = async (req, res) => {
-  try {
-
-    const orders = await Order.find({})
-      .populate("user", "fullName email")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: orders.length,
-      orders,
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-};
-// ======================================
-// Update Order Status (Admin)
-// ======================================
-
-export const updateOrderStatus = async (req, res) => {
-  try {
-
-    const { orderStatus } = req.body;
-
-    const validStatuses = [
-      "Pending",
-      "Processing",
-      "Shipped",
-      "Delivered",
-      "Cancelled",
-    ];
-
-    if (!validStatuses.includes(orderStatus)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid order status.",
-      });
-    }
-
-    const order = await Order.findById(req.params.id);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found.",
-      });
-    }
-
-    order.orderStatus = orderStatus;
-
-    if (orderStatus === "Delivered") {
-      order.deliveredAt = new Date();
-    }
-
-    await order.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Order status updated successfully.",
-      order,
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-};
-// ======================================
-// Get All Users
-// ======================================
-
 export const getAllUsers = async (req, res) => {
   try {
+    const page    = Math.max(Number(req.query.page)  || 1, 1);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const keyword = (req.query.keyword || "").trim();
+    const { role } = req.query;
 
-    const users = await User.find({})
+    const filter = {};
+    if (role && ["customer", "admin"].includes(role)) filter.role = role;
+    if (keyword) {
+      filter.$or = [
+        { fullName: { $regex: keyword, $options: "i" } },
+        { email:    { $regex: keyword, $options: "i" } },
+        { phone:    { $regex: keyword, $options: "i" } },
+      ];
+    }
+
+    const total = await User.countDocuments(filter);
+    const users = await User.find(filter)
       .select("-password")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     res.status(200).json({
       success: true,
       count: users.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
       users,
     });
-
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // ======================================
 // Get Single User
 // ======================================
-
 export const getUserById = async (req, res) => {
   try {
-
-    const user = await User.findById(req.params.id)
-      .select("-password");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      user,
-    });
-
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+    res.status(200).json({ success: true, user });
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // ======================================
 // Update User Role
 // ======================================
-
 export const updateUserRole = async (req, res) => {
   try {
-
     const { role } = req.body;
 
-    if (!["user", "admin"].includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid role.",
-      });
+    // User model enum is "customer" | "admin"
+    if (!["customer", "admin"].includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role. Use 'customer' or 'admin'." });
     }
 
     const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
+    // Prevent removing the last admin
+    if (user.role === "admin" && role !== "admin") {
+      const adminCount = await User.countDocuments({ role: "admin" });
+      if (adminCount <= 1) {
+        return res.status(400).json({ success: false, message: "Cannot remove the last admin account." });
+      }
     }
 
-    user.role = role;
+    // Prevent admin from demoting themselves
+    if (req.user._id.toString() === req.params.id && role !== "admin") {
+      return res.status(400).json({ success: false, message: "You cannot remove your own admin access." });
+    }
 
+    user.role    = role;
+    user.isAdmin = role === "admin";
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "User role updated successfully.",
-      user,
-    });
-
+    res.status(200).json({ success: true, message: "User role updated.", user });
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // ======================================
 // Delete User
 // ======================================
-
 export const deleteUser = async (req, res) => {
   try {
-
-    // Prevent admin from deleting their own account
     if (req.user._id.toString() === req.params.id) {
-      return res.status(400).json({
-        success: false,
-        message: "You cannot delete your own account.",
-      });
+      return res.status(400).json({ success: false, message: "You cannot delete your own account." });
     }
 
     const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
+    if (user.role === "admin") {
+      const adminCount = await User.countDocuments({ role: "admin" });
+      if (adminCount <= 1) {
+        return res.status(400).json({ success: false, message: "Cannot delete the last admin account." });
+      }
     }
 
     await user.deleteOne();
-
-    res.status(200).json({
-      success: true,
-      message: "User deleted successfully.",
-    });
-
+    res.status(200).json({ success: true, message: "User deleted." });
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
 };
-// ======================================
-// Get Low Stock Products
-// ======================================
 
+// ======================================
+// Low Stock Products
+// ======================================
 export const getLowStockProducts = async (req, res) => {
   try {
-
-    const products = await Product.find({
-      stock: { $lte: 5 }
-    }).sort({
-      stock: 1
-    });
-
-    res.status(200).json({
-      success: true,
-      count: products.length,
-      products,
-    });
-
+    const products = await Product.find({ stock: { $lte: 5 } }).sort({ stock: 1 });
+    res.status(200).json({ success: true, count: products.length, products });
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // ======================================
 // Sales Report
 // ======================================
 export const getSalesReport = async (req, res) => {
   try {
-
     const orders = await Order.find();
-
-    const totalOrders = orders.length;
-
-    const paidOrders = orders.filter(
-      order => order.paymentStatus === "Paid"
-    ).length;
-
-    const pendingOrders = orders.filter(
-      order => order.orderStatus === "Pending"
-    ).length;
-
-    const deliveredOrders = orders.filter(
-      order => order.orderStatus === "Delivered"
-    ).length;
-
-    const cancelledOrders = orders.filter(
-      order => order.orderStatus === "Cancelled"
-    ).length;
-
     const totalRevenue = orders
-      .filter(order => order.paymentStatus === "Paid")
-      .reduce(
-        (sum, order) => sum + order.totalPrice,
-        0
-      );
+      .filter((o) => o.paymentStatus === "Paid")
+      .reduce((s, o) => s + o.totalPrice, 0);
 
     res.status(200).json({
       success: true,
       report: {
-        totalOrders,
-        paidOrders,
-        pendingOrders,
-        deliveredOrders,
-        cancelledOrders,
+        totalOrders:     orders.length,
+        paidOrders:      orders.filter((o) => o.paymentStatus === "Paid").length,
+        pendingOrders:   orders.filter((o) => o.orderStatus === "Pending").length,
+        deliveredOrders: orders.filter((o) => o.orderStatus === "Delivered").length,
+        cancelledOrders: orders.filter((o) => o.orderStatus === "Cancelled").length,
         totalRevenue,
       },
     });
-
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // ======================================
 // Monthly Sales Report
 // ======================================
 export const getMonthlySalesReport = async (req, res) => {
   try {
-
     const report = await Order.aggregate([
-      {
-        $match: {
-          paymentStatus: "Paid",
-        },
-      },
+      { $match: { paymentStatus: "Paid" } },
       {
         $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-          },
-          totalRevenue: {
-            $sum: "$totalPrice",
-          },
-          totalOrders: {
-            $sum: 1,
-          },
+          _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+          totalRevenue: { $sum: "$totalPrice" },
+          totalOrders:  { $sum: 1 },
         },
       },
-      {
-        $sort: {
-          "_id.year": 1,
-          "_id.month": 1,
-        },
-      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
     ]);
-
-    res.status(200).json({
-      success: true,
-      monthlySales: report,
-    });
-
+    res.status(200).json({ success: true, monthlySales: report });
   } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // ======================================
 // Product Statistics
 // ======================================
 export const getProductStatistics = async (req, res) => {
   try {
-
-    const products = await Product.find();
-
+    const products     = await Product.find();
     const totalProducts = products.length;
-
-    const totalStock = products.reduce(
-      (sum, product) => sum + product.stock,
-      0
-    );
-
-    const averagePrice =
-      totalProducts > 0
-        ? (
-            products.reduce(
-              (sum, product) => sum + product.price,
-              0
-            ) / totalProducts
-          ).toFixed(2)
-        : 0;
-
-    const mostExpensive =
-      totalProducts > 0
-        ? products.reduce((prev, current) =>
-            current.price > prev.price ? current : prev
-          )
-        : null;
-
-    const cheapest =
-      totalProducts > 0
-        ? products.reduce((prev, current) =>
-            current.price < prev.price ? current : prev
-          )
-        : null;
+    const totalStock    = products.reduce((s, p) => s + p.stock, 0);
+    const averagePrice  = totalProducts > 0
+      ? (products.reduce((s, p) => s + p.price, 0) / totalProducts).toFixed(2)
+      : 0;
 
     res.status(200).json({
       success: true,
@@ -609,17 +429,224 @@ export const getProductStatistics = async (req, res) => {
         totalProducts,
         totalStock,
         averagePrice: Number(averagePrice),
-        mostExpensive,
-        cheapest,
+        mostExpensive: totalProducts > 0 ? products.reduce((a, b) => b.price > a.price ? b : a) : null,
+        cheapest:      totalProducts > 0 ? products.reduce((a, b) => b.price < a.price ? b : a) : null,
       },
     });
-
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
-    res.status(500).json({
-      success: false,
-      message: error.message,
+// ======================================
+// Admin Customers (customers with order stats)
+// ======================================
+export const getAdminCustomers = async (req, res) => {
+  try {
+    const page    = Math.max(Number(req.query.page)  || 1, 1);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const keyword = (req.query.keyword || "").trim();
+
+    const filter = { role: "customer" };
+    if (keyword) {
+      filter.$or = [
+        { fullName: { $regex: keyword, $options: "i" } },
+        { email:    { $regex: keyword, $options: "i" } },
+        { phone:    { $regex: keyword, $options: "i" } },
+      ];
+    }
+
+    const total     = await User.countDocuments(filter);
+    const customers = await User.find(filter)
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const ids   = customers.map((c) => c._id);
+    const stats = await Order.aggregate([
+      { $match: { user: { $in: ids } } },
+      {
+        $group: {
+          _id:        "$user",
+          orderCount: { $sum: 1 },
+          totalSpent: {
+            $sum: { $cond: [{ $eq: ["$paymentStatus", "Paid"] }, "$totalPrice", 0] },
+          },
+        },
+      },
+    ]);
+
+    const statsMap = Object.fromEntries(stats.map((s) => [s._id.toString(), s]));
+
+    const enriched = customers.map((c) => {
+      const s = statsMap[c._id.toString()] || { orderCount: 0, totalSpent: 0 };
+      return { ...c.toObject(), orderCount: s.orderCount, totalSpent: s.totalSpent };
     });
 
+    res.status(200).json({
+      success: true,
+      count: enriched.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      customers: enriched,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ======================================
+// Admin Payments (payment records from orders)
+// ======================================
+export const getAdminPayments = async (req, res) => {
+  try {
+    const page    = Math.max(Number(req.query.page)  || 1, 1);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const keyword = (req.query.keyword || "").trim();
+    const { paymentStatus, paymentMethod } = req.query;
+
+    const filter = {};
+    if (paymentStatus)  filter.paymentStatus  = paymentStatus;
+    if (paymentMethod)  filter.paymentMethod  = paymentMethod;
+
+    if (keyword) {
+      const keywordRegex   = { $regex: keyword, $options: "i" };
+      const matchingUsers  = await User.find({
+        $or: [{ fullName: keywordRegex }, { email: keywordRegex }],
+      }).select("_id");
+
+      filter.$or = [
+        ...(matchingUsers.length ? [{ user: { $in: matchingUsers.map((u) => u._id) } }] : []),
+        { "paymentResult.txRef":         keywordRegex },
+        { "paymentResult.transactionId": keywordRegex },
+      ];
+
+      if (!filter.$or.length) {
+        return res.status(200).json({ success: true, count: 0, total: 0, page, pages: 0, payments: [] });
+      }
+    }
+
+    const total  = await Order.countDocuments(filter);
+    const orders = await Order.find(filter)
+      .populate("user", "fullName email phone")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .select("user paymentMethod paymentStatus totalPrice orderStatus paymentResult paidAt createdAt");
+
+    const payments = orders.map((o) => ({
+      orderId:       o._id,
+      customer:      o.user,
+      paymentMethod: o.paymentMethod,
+      paymentStatus: o.paymentStatus,
+      amount:        o.totalPrice,
+      orderStatus:   o.orderStatus,
+      txRef:         o.paymentResult?.txRef         || "",
+      transactionId: o.paymentResult?.transactionId || "",
+      paidAt:        o.paidAt,
+      createdAt:     o.createdAt,
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: payments.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      payments,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ======================================
+// Admin Categories (category stats from products)
+// ======================================
+export const getAdminCategories = async (req, res) => {
+  try {
+    const CATEGORIES = [
+      "Smartphones", "Laptops", "Tablets", "Accessories", "Gaming",
+      "Headphones", "Speakers", "Cameras", "Televisions", "Smartwatches",
+    ];
+
+    const counts = await Product.aggregate([
+      { $group: { _id: "$category", productCount: { $sum: 1 } } },
+    ]);
+
+    const countMap = Object.fromEntries(counts.map((c) => [c._id, c.productCount]));
+
+    const keyword = (req.query.keyword || "").trim();
+    let categories = CATEGORIES.map((name) => ({
+      name,
+      productCount: countMap[name] || 0,
+    }));
+
+    if (keyword) {
+      const re = new RegExp(keyword, "i");
+      categories = categories.filter((c) => re.test(c.name));
+    }
+
+    res.status(200).json({ success: true, count: categories.length, categories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ======================================
+// Admin Orders (paginated, filterable)
+// ======================================
+export const getAllOrders = async (req, res) => {
+  try {
+    const page    = Math.max(Number(req.query.page)  || 1, 1);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const keyword = (req.query.keyword || "").trim();
+    const { orderStatus, paymentStatus, paymentMethod, sort } = req.query;
+
+    const filter = {};
+    if (orderStatus)   filter.orderStatus   = orderStatus;
+    if (paymentStatus) filter.paymentStatus = paymentStatus;
+    if (paymentMethod) filter.paymentMethod = paymentMethod;
+
+    if (keyword) {
+      const re = { $regex: keyword, $options: "i" };
+      const matchingUsers = await User.find({
+        $or: [{ fullName: re }, { email: re }, { phone: re }],
+      }).select("_id");
+
+      filter.$or = [
+        ...(matchingUsers.length ? [{ user: { $in: matchingUsers.map((u) => u._id) } }] : []),
+        { "paymentResult.txRef": re },
+      ];
+
+      if (/^[a-f\d]{6,24}$/i.test(keyword)) filter.$or.push({ _id: keyword });
+    }
+
+    const SORT_MAP = {
+      newest:    { createdAt: -1 },
+      oldest:    { createdAt:  1 },
+      totalAsc:  { totalPrice: 1 },
+      totalDesc: { totalPrice: -1 },
+    };
+
+    const total  = await Order.countDocuments(filter);
+    const orders = await Order.find(filter)
+      .populate("user", "fullName email phone")
+      .sort(SORT_MAP[sort] || SORT_MAP.newest)
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

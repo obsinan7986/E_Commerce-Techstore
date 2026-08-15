@@ -1,0 +1,122 @@
+/* ═══════════════════════════════════════
+   Admin Coupons Page
+   ═══════════════════════════════════════ */
+
+/* Coupon code cell */
+.acp-code-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.acp-code {
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: 0.5px;
+}
+
+.acp-first-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #FEF3C7;
+  color: #92400E;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+/* Type badge */
+.acp-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.acp-type-badge--percentage { background: #EDE9FE; color: #6D28D9; }
+.acp-type-badge--fixed       { background: #DBEAFE; color: #1D4ED8; }
+
+/* Usage */
+.acp-usage {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Expired date */
+.acp-expired-date {
+  color: #EF4444;
+  font-weight: 600;
+}
+
+/* Status badges */
+.acp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.acp-badge--active   { background: #DCFCE7; color: #15803D; }
+.acp-badge--inactive { background: #F3F4F6; color: #6B7280; }
+.acp-badge--expired  { background: #FEE2E2; color: #B91C1C; }
+.acp-badge--used     { background: #FEF3C7; color: #B45309; }
+
+/* Action buttons cell */
+.acp-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Table adjustments */
+.acp-table th,
+.acp-table td { white-space: nowrap; }
+
+/* Empty state */
+.acp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 60px 20px;
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 15px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+}
+
+.acp-empty span { font-size: 44px; }
+
+/* Form helpers */
+.acp-full { grid-column: 1 / -1; }
+
+.acp-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+}
+
+.acp-check-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #2563EB;
+  cursor: pointer;
+}

@@ -305,3 +305,10 @@
   .new-price { font-size: 26px; }
   .product-right { padding: 18px; }
 }
+
+/* ── Stock status on product detail ── */
+.meta-low-stock {
+  color: #D97706;
+  font-weight: 700;
+  font-size: 13.5px;
+}

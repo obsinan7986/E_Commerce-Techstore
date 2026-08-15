@@ -518,3 +518,20 @@
     max-height: 135px;
   }
 }
+
+/* ── Stock status badges (on card image) ── */
+.stock-badge {
+  position: absolute;
+  top: 36px;
+  left: 10px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  z-index: 3;
+  letter-spacing: 0.2px;
+}
+
+.stock-badge--out { background: #FEE2E2; color: #B91C1C; }
+.stock-badge--low { background: #FEF3C7; color: #92400E; }
+.stock-badge--in  { background: #DCFCE7; color: #166534; }

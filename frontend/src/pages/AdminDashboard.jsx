@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   getAdminDashboard,
   updateOrderStatus,
+  getLowStockProducts,
 } from "../services/adminservice";
 import AdminNotificationBell from "../components/AdminNotificationBell";
 import "../styles/admin.css";
@@ -11,16 +12,17 @@ const AdminDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [lowStock, setLowStock] = useState([]);
 
   const loadDashboard = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const result =
-        await getAdminDashboard();
-
+      const result = await getAdminDashboard();
       setData(result);
+      const lowData = await getLowStockProducts();
+      setLowStock(lowData.products || []);
     } catch (err) {
       console.error(err);
 
@@ -155,6 +157,35 @@ const AdminDashboard = () => {
           </strong>
         </div>
       </div>
+
+      {/* ── Low Stock Alert ── */}
+      {lowStock.length > 0 && (
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 12, padding: "13px 18px", marginBottom: 4,
+          background: "#FFFBEB", border: "1.5px solid #FDE68A",
+          borderRadius: 10, flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 20 }}>⚠️</span>
+            <div>
+              <strong style={{ fontSize: 14, color: "#92400E" }}>
+                {lowStock.filter(p => p.stock === 0).length} out of stock · {lowStock.filter(p => p.stock > 0).length} low stock
+              </strong>
+              <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#B45309" }}>
+                {lowStock.slice(0, 3).map(p => p.name).join(", ")}{lowStock.length > 3 ? ` +${lowStock.length - 3} more` : ""}
+              </p>
+            </div>
+          </div>
+          <Link to="/admin/products" state={{ stockFilter: "low" }} style={{
+            padding: "7px 16px", background: "#F59E0B", color: "#fff",
+            borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: "none",
+            whiteSpace: "nowrap",
+          }}>
+            Manage Stock
+          </Link>
+        </div>
+      )}
 
       {/* Quick actions */}
       <div className="admin-actions">

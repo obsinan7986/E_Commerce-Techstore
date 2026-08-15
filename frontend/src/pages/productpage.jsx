@@ -126,9 +126,13 @@ const ProductPage = () => {
               </div>
               <div className="product-meta-row">
                 <span className="meta-label">Availability</span>
-                <span className={inStock ? "meta-in-stock" : "meta-out-stock"}>
-                  {inStock ? `✓ In Stock (${product.stock} left)` : "✗ Out of Stock"}
-                </span>
+                {product.stock === 0 ? (
+                  <span className="meta-out-stock">✗ Out of Stock</span>
+                ) : product.stock <= 9 ? (
+                  <span className="meta-low-stock">⚠ Low Stock — only {product.stock} left</span>
+                ) : (
+                  <span className="meta-in-stock">✓ In Stock ({product.stock} units)</span>
+                )}
               </div>
               <div className="product-meta-row">
                 <span className="meta-label">Shipping</span>

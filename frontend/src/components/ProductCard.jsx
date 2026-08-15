@@ -7,6 +7,13 @@ import "../styles/productcard.css";
 
 const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
 
+/* ── Stock status helper ── */
+const stockStatus = (stock) => {
+  if (stock === 0)  return { label: "Out of Stock", cls: "stock-badge--out",  text: "✗ Out of Stock" };
+  if (stock <= 9)   return { label: "Low Stock",    cls: "stock-badge--low",  text: `⚠ Only ${stock} left` };
+  return              { label: "In Stock",     cls: "stock-badge--in",   text: "✓ In Stock" };
+};
+
 const ProductCard = ({ product }) => {
   const { loadCartCount } = useCart();
 
@@ -27,10 +34,10 @@ const ProductCard = ({ product }) => {
     }
   };
 
-  const oldPrice  = Math.round(product.price * 1.2);
-  const discount  = 20;
-  const inStock   = product.stock > 0;
-  const imgSrc    = product.image?.startsWith("http")
+  const oldPrice = Math.round(product.price * 1.2);
+  const inStock  = product.stock > 0;
+  const status   = stockStatus(product.stock);
+  const imgSrc   = product.image?.startsWith("http")
     ? product.image
     : `${BASE}${product.image}`;
 
@@ -38,15 +45,15 @@ const ProductCard = ({ product }) => {
     <div className="product-card">
 
       {/* Discount badge */}
-      <div className="discount-badge">-{discount}%</div>
+      <div className="discount-badge">-20%</div>
+
+      {/* Stock badge — Out of Stock or Low Stock on the image */}
+      {product.stock <= 9 && (
+        <div className={`stock-badge ${status.cls}`}>{status.label}</div>
+      )}
 
       {/* Wishlist */}
-      <button
-        className="wishlist-btn"
-        onClick={handleWishlist}
-        aria-label="Add to wishlist"
-        type="button"
-      >
+      <button className="wishlist-btn" onClick={handleWishlist} aria-label="Add to wishlist" type="button">
         <FaHeart />
       </button>
 
@@ -56,45 +63,34 @@ const ProductCard = ({ product }) => {
           src={imgSrc}
           alt={product.name}
           onError={(e) => { e.target.style.opacity = "0.3"; }}
+          style={!inStock ? { opacity: 0.45, filter: "grayscale(40%)" } : undefined}
         />
         <span className="quick-view">Quick View</span>
       </Link>
 
       {/* Info */}
       <div className="product-info">
-
         <span className="brand">{product.brand}</span>
 
-        <Link to={`/product/${product._id}`} className="product-name">
-          {product.name}
-        </Link>
+        <Link to={`/product/${product._id}`} className="product-name">{product.name}</Link>
 
         {/* Stars */}
         <div className="rating">
           {[...Array(5)].map((_, i) => (
-            <FaStar
-              key={i}
-              size={12}
-              color={i < Math.round(product.rating) ? "#F59E0B" : "#E2E8F0"}
-            />
+            <FaStar key={i} size={12} color={i < Math.round(product.rating) ? "#F59E0B" : "#E2E8F0"} />
           ))}
           <span>({product.numReviews || 0})</span>
         </div>
 
         {/* Price */}
         <div className="price-box">
-          <span className="new-price">
-            ETB {product.price.toLocaleString()}
-          </span>
-          <span className="old-price">
-            ETB {oldPrice.toLocaleString()}
-          </span>
+          <span className="new-price">ETB {product.price.toLocaleString()}</span>
+          <span className="old-price">ETB {oldPrice.toLocaleString()}</span>
         </div>
 
-        <div className="shipping">🚚 Free Shipping</div>
-
-        <div className={`stock ${inStock ? "in-stock" : "out-stock"}`}>
-          {inStock ? "✓ In Stock" : "✗ Out of Stock"}
+        {/* Stock status text */}
+        <div className={`stock ${inStock ? "in-stock" : "out-stock"}`} style={{ fontSize: 12 }}>
+          {status.text}
         </div>
 
         <button
@@ -104,9 +100,8 @@ const ProductCard = ({ product }) => {
           type="button"
         >
           <FaShoppingCart size={13} />
-          Add to Cart
+          {inStock ? "Add to Cart" : "Out of Stock"}
         </button>
-
       </div>
     </div>
   );

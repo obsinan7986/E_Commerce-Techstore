@@ -3,6 +3,7 @@ import bcrypt         from "bcryptjs";
 import generateToken  from "../utils/generateToken.js";
 import { sendTemplate } from "../utils/emailService.js";
 import { welcomeEmail, passwordResetEmail } from "../utils/emailTemplates.js";
+import createAdminNotification from "../utils/createAdminNotification.js";
 
 // ============================================================
 // REGISTER USER
@@ -78,6 +79,14 @@ export const registerUser = async (req, res) => {
       email:       user.email,
       frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
     })).catch(() => {});
+
+    // Notify admins of new registration (fire-and-forget)
+    createAdminNotification({
+      type:    "admin_new_user",
+      title:   "New User Registered",
+      message: `${user.fullName} (${user.email}) just created an account.`,
+      link:    "/admin/users",
+    }).catch(() => {});
 
     return res.status(201).json({
       success:  true,

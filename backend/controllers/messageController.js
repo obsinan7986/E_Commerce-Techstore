@@ -1,4 +1,44 @@
 import Conversation from "../models/Message.js";
+import SiteSettings from "../models/SiteSettings.js";
+import createAdminNotification from "../utils/createAdminNotification.js";
+
+/* ── helper: get or create singleton settings ── */
+const getSettings = async () => {
+  let s = await SiteSettings.findOne();
+  if (!s) s = await SiteSettings.create({});
+  return s;
+};
+
+/* ══════════════════════════════════════════════════════
+   SETTINGS ENDPOINTS
+   ══════════════════════════════════════════════════════ */
+
+// GET /api/messages/settings  — public; tells users if chat is enabled
+export const getMessageSettings = async (req, res) => {
+  try {
+    const s = await getSettings();
+    return res.status(200).json({ success: true, messageCenterEnabled: s.messageCenterEnabled });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// PATCH /api/messages/admin/settings  — admin toggles the feature
+export const toggleMessageCenter = async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    if (typeof enabled !== "boolean") {
+      return res.status(400).json({ success: false, message: '"enabled" must be a boolean.' });
+    }
+    const s = await getSettings();
+    s.messageCenterEnabled = enabled;
+    await s.save();
+    console.log(`[toggleMessageCenter] messageCenterEnabled = ${enabled} by admin ${req.user._id}`);
+    return res.status(200).json({ success: true, messageCenterEnabled: s.messageCenterEnabled });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 /* ══════════════════════════════════════════════════════
    CUSTOMER ENDPOINTS
@@ -21,6 +61,15 @@ export const getMyConversation = async (req, res) => {
 // User sends first message (creates conversation) or appends to existing
 export const sendMessage = async (req, res) => {
   try {
+    // Check feature flag
+    const settings = await getSettings();
+    if (!settings.messageCenterEnabled) {
+      return res.status(403).json({
+        success: false,
+        message: "Message Center is currently unavailable. Please try again later.",
+      });
+    }
+
     const { text, subject } = req.body;
     if (!text?.trim()) {
       return res.status(400).json({ success: false, message: "Message text is required." });
@@ -43,6 +92,13 @@ export const sendMessage = async (req, res) => {
         unreadByAdmin: 1,
         unreadByUser:  0,
       });
+      // Notify admins of first message in a new conversation
+      createAdminNotification({
+        type:    "admin_new_message",
+        title:   "New Customer Message",
+        message: `New support request: "${subject?.trim() || "Support Request"}"`,
+        link:    "/admin/messages",
+      }).catch(() => {});
     } else {
       conv.messages.push(newMsg);
       conv.lastMessageAt = new Date();
@@ -52,6 +108,13 @@ export const sendMessage = async (req, res) => {
         conv.subject = subject.trim();
       }
       await conv.save();
+      // Notify admins of follow-up message
+      createAdminNotification({
+        type:    "admin_new_message",
+        title:   "New Customer Message",
+        message: `A customer replied in "${conv.subject}".`,
+        link:    "/admin/messages",
+      }).catch(() => {});
     }
 
     return res.status(201).json({ success: true, conversation: conv });

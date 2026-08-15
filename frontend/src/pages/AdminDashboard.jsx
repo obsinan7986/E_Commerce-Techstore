@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
 import {
   getAdminDashboard,
   updateOrderStatus,
 } from "../services/adminservice";
-
+import AdminNotificationBell from "../components/AdminNotificationBell";
 import "../styles/admin.css";
 
 const AdminDashboard = () => {
@@ -96,12 +95,10 @@ const AdminDashboard = () => {
           </p>
         </div>
 
-        <button
-          className="refresh-btn"
-          onClick={loadDashboard}
-        >
-          Refresh
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <AdminNotificationBell />
+          <button className="refresh-btn" onClick={loadDashboard}>Refresh</button>
+        </div>
       </div>
 
       {/* Statistics */}
@@ -178,6 +175,9 @@ const AdminDashboard = () => {
         </Link>
         <Link to="/admin/messages" style={{ color: "#7C3AED", borderColor: "#DDD6FE", background: "#F5F3FF" }}>
           💬 Messages
+        </Link>
+        <Link to="/admin/notifications" style={{ color: "#0369A1", borderColor: "#BAE6FD", background: "#F0F9FF" }}>
+          🔔 Notifications
         </Link>
         <Link to="/admin/manual-payments" style={{ color: "#B45309", borderColor: "#FDE68A", background: "#FFFBEB" }}>
           💳 Payment Verification

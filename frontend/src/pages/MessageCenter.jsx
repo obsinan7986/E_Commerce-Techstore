@@ -8,6 +8,7 @@ import {
   getMyConversation,
   sendMessage,
   markUserMessagesRead,
+  getMessageSettings,
 } from "../services/messageService";
 import "../styles/messageCenter.css";
 
@@ -63,15 +64,20 @@ const MessageCenter = () => {
   const [subject,  setSubject]  = useState("");
   const [sending,  setSending]  = useState(false);
   const [sendErr,  setSendErr]  = useState("");
+  const [enabled,  setEnabled]  = useState(true); // feature flag
 
   const userInitial = (user?.fullName || "U").charAt(0).toUpperCase();
 
   /* ── Load / poll ── */
   const load = useCallback(async () => {
     try {
+      // Check feature flag first
+      const settings = await getMessageSettings();
+      setEnabled(settings.messageCenterEnabled);
+      if (!settings.messageCenterEnabled) { setLoading(false); return; }
+
       const data = await getMyConversation();
       setConv(data.conversation);
-      // Mark admin replies as read
       if (data.conversation?.unreadByUser > 0) {
         markUserMessagesRead().catch(() => {});
       }
@@ -149,6 +155,35 @@ const MessageCenter = () => {
 
   if (loading) return <div className="mc-page"><div className="mc-loading">Loading messages…</div></div>;
   if (error)   return <div className="mc-page"><div className="mc-error">{error}</div></div>;
+
+  /* ── Feature disabled screen ── */
+  if (!enabled) return (
+    <div className="mc-page">
+      <div className="mc-header">
+        <div>
+          <h1>Message Center</h1>
+          <p>Customer support chat</p>
+        </div>
+      </div>
+      <div className="mc-chat-box">
+        <div className="mc-chat-header">
+          <div className="mc-chat-header-left">
+            <div className="mc-support-avatar">🛒</div>
+            <div>
+              <span className="mc-chat-title">TechStore Support</span>
+              <span className="mc-chat-sub">Currently unavailable</span>
+            </div>
+          </div>
+          <span className="mc-status-chip mc-status-chip--closed">Offline</span>
+        </div>
+        <div className="mc-empty-chat" style={{ flex: 1 }}>
+          <span className="mc-empty-chat-icon">🔕</span>
+          <p style={{ fontWeight: 700, color: "#374151" }}>Message Center is temporarily disabled</p>
+          <span>Our support chat is currently unavailable. Please try again later or contact us via email.</span>
+        </div>
+      </div>
+    </div>
+  );
 
   const isClosed = conv?.status === "closed";
 

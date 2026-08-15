@@ -1,6 +1,7 @@
 import Order           from "../models/Order.js";
 import PaymentSettings from "../models/PaymentSettings.js";
-import createNotification from "../utils/createNotification.js";
+import createNotification      from "../utils/createNotification.js";
+import createAdminNotification from "../utils/createAdminNotification.js";
 import { sendTemplate }   from "../utils/emailService.js";
 import { paymentVerifiedEmail, paymentRejectedEmail } from "../utils/emailTemplates.js";
 
@@ -95,14 +96,19 @@ export const uploadPaymentScreenshot = async (req, res) => {
     order.manualPayment.uploadedAt             = new Date();
     order.manualPayment.verificationStatus     = "Pending";
     order.manualPayment.adminNote              = "";
-    // Reset any previous rejection so admin reviews fresh
     order.manualPayment.reviewedAt             = undefined;
     order.manualPayment.reviewedBy             = undefined;
-
-    // Also flag payment as pending admin review
     order.paymentStatus = "Pending";
 
     await order.save();
+
+    // Notify admins of new screenshot (fire-and-forget)
+    createAdminNotification({
+      type:    "admin_payment_screenshot",
+      title:   "Payment Screenshot Uploaded",
+      message: `Order #${order._id.toString().slice(-8).toUpperCase()} — a customer uploaded a payment screenshot awaiting verification.`,
+      link:    "/admin/manual-payments",
+    }).catch(() => {});
 
     return res.status(200).json({
       success: true,

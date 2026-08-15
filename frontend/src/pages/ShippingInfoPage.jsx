@@ -19,7 +19,7 @@ const ShippingInfoPage = () => (
           </thead>
           <tbody>
             <tr><td>Addis Ababa</td><td>1–3 business days</td></tr>
-            <tr><td>Major cities (Dire Dawa, Hawassa, Bahir Dar, Ambo, Jimma, <Walaga></Walaga> )</td><td>3–5 business days</td></tr>
+            <tr><td>Major cities (Dire Dawa, Hawassa, Bahir Dar, Ambo, Jimma, Wollega)</td><td>3–5 business days</td></tr>
             <tr><td>Other regions</td><td>5–10 business days</td></tr>
           </tbody>
         </table>

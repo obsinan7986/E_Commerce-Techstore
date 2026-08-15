@@ -253,3 +253,13 @@
     box-shadow: 0 -4px 32px rgba(0,0,0,.18);
   }
 }
+
+/* ── Section label (e.g. "Admin Panel") ── */
+.acct-section-label {
+  margin: 4px 16px 4px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #9CA3AF;
+}

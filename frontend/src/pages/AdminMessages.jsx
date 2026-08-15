@@ -10,6 +10,8 @@ import {
   adminMarkRead,
   closeConversation,
   deleteConversation,
+  getMessageSettings,
+  toggleMessageCenter,
 } from "../services/messageService";
 import "../styles/messageCenter.css";
 
@@ -71,18 +73,36 @@ const AdminMessages = () => {
 
   /* Feedback */
   const [msg,        setMsg]        = useState({ type: "", text: "" });
+  const [mcEnabled,  setMcEnabled]  = useState(true);
+  const [toggling,   setToggling]   = useState(false);
 
   const flash = (type, text) => {
     setMsg({ type, text });
     setTimeout(() => setMsg({ type: "", text: "" }), 3000);
   };
+  const handleToggleMC = async () => {
+    try {
+      setToggling(true);
+      const data = await toggleMessageCenter(!mcEnabled);
+      setMcEnabled(data.messageCenterEnabled);
+      flash("success", `Message Center ${data.messageCenterEnabled ? "enabled" : "disabled"} for users.`);
+    } catch (err) {
+      flash("error", err.response?.data?.message || "Failed to toggle.");
+    } finally {
+      setToggling(false);
+    }
+  };
 
   /* ── Load list ── */
   const loadList = useCallback(async () => {
     try {
-      const data = await getAllConversations({ keyword: search, limit: 50 });
-      setConvList(data.conversations || []);
-      setUnreadTotal(data.unreadTotal || 0);
+      const [settingsData, listData] = await Promise.all([
+        getMessageSettings(),
+        getAllConversations({ keyword: search, limit: 50 }),
+      ]);
+      setMcEnabled(settingsData.messageCenterEnabled);
+      setConvList(listData.conversations || []);
+      setUnreadTotal(listData.unreadTotal || 0);
     } catch { /* silent */ }
     finally { setListLoading(false); }
   }, [search]);
@@ -205,11 +225,38 @@ const AdminMessages = () => {
           <h1>Customer Messages</h1>
           <p>Support inbox — reply to customer messages</p>
         </div>
-        {unreadTotal > 0 && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#FEF3C7", borderRadius: 20, fontSize: 13, fontWeight: 700, color: "#B45309" }}>
-            📬 {unreadTotal} unread
-          </span>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          {/* Enable / Disable toggle */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", background: mcEnabled ? "#F0FDF4" : "#FEF2F2", border: `1.5px solid ${mcEnabled ? "#86EFAC" : "#FCA5A5"}`, borderRadius: 10 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: mcEnabled ? "#166534" : "#991B1B" }}>
+              {mcEnabled ? "💬 Chat: ON" : "🔕 Chat: OFF"}
+            </span>
+            <button
+              onClick={handleToggleMC}
+              disabled={toggling}
+              style={{
+                padding: "5px 16px",
+                border: "none",
+                borderRadius: 7,
+                background: mcEnabled ? "#DC2626" : "#16A34A",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 12.5,
+                cursor: toggling ? "not-allowed" : "pointer",
+                fontFamily: "inherit",
+                opacity: toggling ? 0.6 : 1,
+              }}
+            >
+              {toggling ? "…" : mcEnabled ? "Disable" : "Enable"}
+            </button>
+          </div>
+
+          {unreadTotal > 0 && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "#FEF3C7", borderRadius: 20, fontSize: 13, fontWeight: 700, color: "#B45309" }}>
+              📬 {unreadTotal} unread
+            </span>
+          )}
+        </div>
       </div>
 
       {msg.text && (

@@ -1,5 +1,9 @@
 import api from "./api";
 
+/* ── Settings ── */
+export const getMessageSettings  = async ()          => { const { data } = await api.get("/messages/settings");                         return data; };
+export const toggleMessageCenter = async (enabled)   => { const { data } = await api.patch("/messages/admin/settings", { enabled });    return data; };
+
 /* ── Customer ── */
 export const getMyConversation     = async ()          => { const { data } = await api.get("/messages/mine");             return data; };
 export const sendMessage           = async (text, subject = "") => { const { data } = await api.post("/messages", { text, subject }); return data; };

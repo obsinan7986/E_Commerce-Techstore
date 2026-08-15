@@ -4,9 +4,10 @@ import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
 
-import { AuthProvider }         from "./context/AuthContext";
-import { CartProvider }         from "./context/CartContext";
-import { NotificationProvider } from "./context/NotificationContext";
+import { AuthProvider }             from "./context/AuthContext";
+import { CartProvider }             from "./context/CartContext";
+import { NotificationProvider }     from "./context/NotificationContext";
+import { AdminNotificationProvider } from "./context/AdminNotificationContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <CartProvider>
           <NotificationProvider>
-            <App />
+            <AdminNotificationProvider>
+              <App />
+            </AdminNotificationProvider>
           </NotificationProvider>
         </CartProvider>
       </AuthProvider>

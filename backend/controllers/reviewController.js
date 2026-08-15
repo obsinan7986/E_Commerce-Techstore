@@ -1,6 +1,7 @@
 import Review  from "../models/Review.js";
 import Product from "../models/Product.js";
 import Order   from "../models/Order.js";
+import createAdminNotification from "../utils/createAdminNotification.js";
 
 /* ── helper: recalculate product rating ─────────────────── */
 const recalcProduct = async (productId) => {
@@ -105,8 +106,15 @@ export const createReview = async (req, res) => {
     });
 
     await recalcProduct(productId);
-
     const populated = await review.populate("user", "fullName");
+
+    // Notify admins of new review (fire-and-forget)
+    createAdminNotification({
+      type:    "admin_new_review",
+      title:   "New Product Review",
+      message: `${review.user?.fullName || "A customer"} left a ${review.rating}★ review on "${product.name}".`,
+      link:    `/product/${productId}`,
+    }).catch(() => {});
 
     return res.status(201).json({ success: true, message: "Review added.", review: populated });
   } catch (err) {

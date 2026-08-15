@@ -3,7 +3,8 @@ import Cart    from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Coupon  from "../models/Coupon.js";
 import User    from "../models/User.js";
-import createNotification from "../utils/createNotification.js";
+import createNotification      from "../utils/createNotification.js";
+import createAdminNotification from "../utils/createAdminNotification.js";
 import { sendTemplate }   from "../utils/emailService.js";
 import {
   orderConfirmationEmail,
@@ -225,6 +226,14 @@ export const createOrder = async (req, res) => {
       message: `Your order #${order._id.toString().slice(-8).toUpperCase()} has been placed. Total: ETB ${order.totalPrice.toLocaleString()}.`,
       link:    `/orders/${order._id}`,
     });
+
+    // Notify admins of new order (fire-and-forget)
+    createAdminNotification({
+      type:    "admin_new_order",
+      title:   "New Order Received",
+      message: `Order #${order._id.toString().slice(-8).toUpperCase()} — ETB ${order.totalPrice.toLocaleString()} via ${order.paymentMethod}.`,
+      link:    "/admin/orders",
+    }).catch(() => {});
 
     // Send order confirmation email (fire-and-forget)
     const orderUser = await User.findById(req.user._id).select("fullName email");
@@ -581,6 +590,14 @@ export const cancelOrder = async (
         frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
       })).catch(() => {});
     }
+
+    // Notify admins of cancellation (fire-and-forget)
+    createAdminNotification({
+      type:    "admin_order_cancelled",
+      title:   "Order Cancelled",
+      message: `Order #${order._id.toString().slice(-8).toUpperCase()} has been cancelled by ${cancelOwner?.fullName || "a customer"}.`,
+      link:    "/admin/orders",
+    }).catch(() => {});
 
     return res.status(200).json({
       success: true,

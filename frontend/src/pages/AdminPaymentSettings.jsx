@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { getPaymentSettings, updatePaymentSettings } from "../services/paymentService";
 import "../styles/adminPaymentSettings.css";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 const EMPTY_ACCOUNT = { bankName: "", accountName: "", accountNumber: "" };
 

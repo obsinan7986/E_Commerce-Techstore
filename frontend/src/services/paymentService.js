@@ -1,6 +1,6 @@
 import api from "./api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 // ── Chapa ─────────────────────────────────────────────────────────────
 export const initializeChapaPayment = async ({ orderId, firstName, lastName, email, phone }) => {

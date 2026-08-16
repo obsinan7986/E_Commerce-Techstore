@@ -266,12 +266,12 @@ const AdminOrders = () => {
                       Payment Screenshot
                     </p>
                     <a
-                      href={`${import.meta.env.VITE_API_URL?.replace("/api","") || "http://localhost:5000"}${selectedOrder.manualPayment.screenshotUrl}`}
+                      href={`${import.meta.env.VITE_API_URL?.replace("/api","") || "https://e-commerce-techstore-y26d.onrender.com/api"}${selectedOrder.manualPayment.screenshotUrl}`}
                       target="_blank"
                       rel="noreferrer"
                     >
                       <img
-                        src={`${import.meta.env.VITE_API_URL?.replace("/api","") || "http://localhost:5000"}${selectedOrder.manualPayment.screenshotUrl}`}
+                        src={`${import.meta.env.VITE_API_URL?.replace("/api","") || "https://e-commerce-techstore-y26d.onrender.com/api"}${selectedOrder.manualPayment.screenshotUrl}`}
                         alt="Payment screenshot"
                         style={{ maxWidth: "100%", maxHeight: 200, objectFit: "contain", borderRadius: 8, border: "1px solid #E5E7EB", display: "block" }}
                       />
@@ -299,7 +299,7 @@ const AdminOrders = () => {
               {selectedOrder.orderItems?.map((item, i) => (
                 <div key={i} className="order-item-row">
                   <img
-                    src={item.image?.startsWith("http") ? item.image : `${import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000"}${item.image}`}
+                    src={item.image?.startsWith("http") ? item.image : `${import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api"}${item.image}`}
                     alt={item.name}
                     onError={(e) => { e.target.src = "/placeholder.png"; }}
                   />

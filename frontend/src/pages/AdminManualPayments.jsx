@@ -7,7 +7,7 @@ import {
 } from "../services/paymentService";
 import "../styles/adminManualPayments.css";
 
-const BASE          = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE          = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 const STATUS_TABS   = ["Pending", "Verified", "Rejected"];
 const METHOD_OPTIONS = ["All", "CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
 

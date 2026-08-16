@@ -6,7 +6,7 @@ import {
 } from "../services/categoryService";
 import "../styles/megamenu.css";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 const MegaMenu = () => {
   const [categories, setCategories] = useState([]);

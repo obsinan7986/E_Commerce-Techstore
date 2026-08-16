@@ -5,7 +5,7 @@ import { initializeChapaPayment } from "../services/paymentService";
 import { useAuth } from "../context/AuthContext";
 import "../styles/orders.css";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 const Orders = () => {
   const { user } = useAuth();

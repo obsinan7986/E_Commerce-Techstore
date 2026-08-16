@@ -8,7 +8,7 @@ import { Link }                from "react-router-dom";
 import { getAnalytics }        from "../services/adminservice";
 import "../styles/adminAnalytics.css";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 /* ─── helpers ─────────────────────────────────────────────── */
 const fmt   = (n) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });

@@ -10,7 +10,7 @@ import { getLowStockProducts } from "../services/adminservice";
 import { formatCurrency }      from "../utils/formatters";
 import "../styles/admin.css";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 const CATEGORIES = [
   "Smartphones","Laptops","Tablets","Accessories",

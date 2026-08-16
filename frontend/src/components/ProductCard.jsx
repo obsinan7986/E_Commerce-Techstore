@@ -5,7 +5,7 @@ import { addToWishlist } from "../services/wishlistService";
 import { useCart } from "../context/CartContext";
 import "../styles/productcard.css";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 /* ── Stock status helper ── */
 const stockStatus = (stock) => {

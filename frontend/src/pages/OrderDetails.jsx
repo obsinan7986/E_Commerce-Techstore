@@ -8,7 +8,7 @@ import { initializeChapaPayment,
 import { useAuth }                         from "../context/AuthContext";
 import "../styles/orderDetails.css";
 
-const BASE           = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE           = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 const STEPS          = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered"];
 const MANUAL_METHODS = ["CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
 

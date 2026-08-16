@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { FaArrowRight, FaTruck, FaLock, FaUndo, FaHeadphones } from "react-icons/fa";
 import "../styles/herobanner.css";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 const SIDEBAR_CATS = [
   { label: "Smartphones",  to: "/category/Smartphones",  icon: "📱" },

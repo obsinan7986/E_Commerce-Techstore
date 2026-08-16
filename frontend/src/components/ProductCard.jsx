@@ -5,8 +5,9 @@ import { addToWishlist } from "../services/wishlistService";
 import { useCart } from "../context/CartContext";
 import "../styles/productcard.css";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
-
+const BASE =
+  import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
+  "https://e-commerce-techstore-y26d.onrender.com";
 /* ── Stock status helper ── */
 const stockStatus = (stock) => {
   if (stock === 0)  return { label: "Out of Stock", cls: "stock-badge--out",  text: "✗ Out of Stock" };

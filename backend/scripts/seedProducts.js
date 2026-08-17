@@ -5,11 +5,13 @@ import mongoose from "mongoose";
 import Product from "../models/Product.js";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname  = path.dirname(__filename);
 
-dotenv.config({
-  path: path.join(__dirname, "../.env"),
-});
+// Only load .env file in local development.
+// On Render/production, env vars are injected directly — no .env file needed.
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config({ path: path.join(__dirname, "../.env") });
+}
 
 console.log("MONGO_URI loaded:", !!process.env.MONGO_URI);
 

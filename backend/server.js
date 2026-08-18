@@ -32,6 +32,7 @@ import reviewRoutes       from "./routes/reviewRoutes.js";
 import couponRoutes       from "./routes/couponRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import messageRoutes      from "./routes/messageRoutes.js";
+import seedRoutes         from "./routes/seedRoutes.js";
 
 // ── Connect to MongoDB ────────────────────────────────────────────
 connectDB();
@@ -77,6 +78,7 @@ app.use("/api/reviews",       reviewRoutes);
 app.use("/api/coupons",       couponRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/messages",      messageRoutes);
+app.use("/api/seed",          seedRoutes);       // one-time seed — remove after use
 
 // ── Health check ──────────────────────────────────────────────────
 app.get("/", (req, res) => {

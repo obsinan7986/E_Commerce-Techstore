@@ -9,7 +9,12 @@ const __dirname  = path.dirname(__filename);
 
 // Only load .env file in local development.
 // On Render/production, env vars are injected directly — no .env file needed.
+// Use __dirname-based path to ensure it finds the right .env regardless of CWD.
 if (process.env.NODE_ENV !== "production") {
+  dotenv.config({ path: path.join(__dirname, "../.env") });
+} else {
+  // Even in production, load .env with explicit path as a fallback
+  // in case Render env vars aren't injected (defensive)
   dotenv.config({ path: path.join(__dirname, "../.env") });
 }
 

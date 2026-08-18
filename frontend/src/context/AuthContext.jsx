@@ -13,7 +13,10 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  // ── Persist user changes ──
+  // true while the profile refresh is in-flight on mount
+  // AdminRoute and ProtectedRoute wait for this before rendering
+  const [loading, setLoading] = useState(true);
+
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -25,42 +28,36 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Silently refresh user data from the server on app boot.
-   * This keeps isAdmin (and other fields) in sync with the DB.
-   * If the token is expired or the user is deleted, we log them out.
+   * On every app boot: silently re-validate the stored token by hitting
+   * GET /api/auth/profile.  This keeps isAdmin (and role) fresh from DB.
+   * If the token is expired/invalid we clear the stale session.
    */
   useEffect(() => {
     const refresh = async () => {
       try {
         const saved = localStorage.getItem("user");
-        if (!saved) return;
+        if (!saved) { setLoading(false); return; }
 
         const cached = JSON.parse(saved);
-        if (!cached?.token) return;
+        if (!cached?.token) { setLoading(false); return; }
 
-        // Call GET /api/auth/profile with the stored token
         const { data } = await api.get("/auth/profile");
 
-        // Merge fresh DB data with the stored token
-        const updated = {
-          ...data,
-          token: cached.token,
-        };
-
+        const updated = { ...data, token: cached.token };
         setUser(updated);
         localStorage.setItem("user", JSON.stringify(updated));
       } catch (err) {
-        // 401 = token expired/invalid → clear stale session
         if (err.response?.status === 401) {
           setUser(null);
           localStorage.removeItem("user");
         }
-        // Other errors (network) → keep existing cached state
+        // Network errors → keep cached state, still clear loading
+      } finally {
+        setLoading(false);
       }
     };
 
     refresh();
-    // Run once on mount only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -70,6 +67,7 @@ export const AuthProvider = ({ children }) => {
         user,
         login,
         logout,
+        loading,
         isAuthenticated: !!user,
         isAdmin: !!(user?.isAdmin),
       }}
@@ -81,8 +79,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used inside AuthProvider");
   return context;
 };

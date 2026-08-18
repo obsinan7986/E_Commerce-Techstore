@@ -60,4 +60,59 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ── Make admin endpoint ───────────────────────────────────────────
+// GET /api/seed/make-admin?key=SEED_SECRET_2024&email=your@email.com
+import User   from "../models/User.js";
+import bcrypt from "bcryptjs";
+
+router.get("/make-admin", async (req, res) => {
+  if (req.query.key !== SEED_KEY) {
+    return res.status(401).json({ success: false, message: "Unauthorized." });
+  }
+
+  const { email, password, name } = req.query;
+  if (!email) {
+    return res.status(400).json({ success: false, message: "email query param required." });
+  }
+
+  try {
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (user) {
+      // Promote existing user to admin
+      user.role    = "admin";
+      user.isAdmin = true;
+      await user.save();
+      return res.status(200).json({
+        success: true,
+        message: `✅ User ${email} promoted to admin.`,
+        user: { _id: user._id, email: user.email, role: user.role, isAdmin: user.isAdmin },
+      });
+    }
+
+    // Create new admin user if not exists
+    if (!password || !name) {
+      return res.status(400).json({ success: false, message: "User not found. Provide name and password to create new admin." });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    user = await User.create({
+      fullName: name,
+      email:    email.toLowerCase(),
+      password: hashed,
+      phone:    "0000000000",
+      role:     "admin",
+      isAdmin:  true,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `✅ Admin user created: ${email}`,
+      user: { _id: user._id, email: user.email, role: user.role, isAdmin: user.isAdmin },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;

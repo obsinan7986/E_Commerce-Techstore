@@ -78,7 +78,6 @@ app.use("/api/reviews",       reviewRoutes);
 app.use("/api/coupons",       couponRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/messages",      messageRoutes);
-app.use("/api/seed",          seedRoutes);       // one-time seed — remove after use
 
 // ── Health check ──────────────────────────────────────────────────
 app.get("/", (req, res) => {

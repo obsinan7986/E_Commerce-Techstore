@@ -47,12 +47,16 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   process.env.FRONTEND_URL,
+  // Accept any Vercel preview/production deployment for this project
+  "https://e-commerce-techstore.vercel.app",
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);              // Postman, health checks
     if (allowedOrigins.includes(origin)) return cb(null, true);
+    // Also allow any *.vercel.app subdomain for this project
+    if (origin.endsWith(".vercel.app")) return cb(null, true);
     if (process.env.NODE_ENV !== "production") return cb(null, true); // dev: allow all
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },

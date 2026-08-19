@@ -41,6 +41,7 @@ import AdminPaymentSettings from "./pages/AdminPaymentSettings";
 import AdminCoupons from "./pages/AdminCoupons";
 import AdminMessages from "./pages/AdminMessages";
 import AdminNotificationsPage from "./pages/AdminNotificationsPage";
+import AdminBanners from "./pages/AdminBanners";
 
 // Informational pages
 import ContactPage from "./pages/ContactPage";
@@ -110,6 +111,7 @@ function App() {
           <Route path="/admin/coupons"           element={<AdminCoupons />} />
           <Route path="/admin/messages"          element={<AdminMessages />} />
           <Route path="/admin/notifications"     element={<AdminNotificationsPage />} />
+          <Route path="/admin/banners"           element={<AdminBanners />} />
         </Route>
       </Route>
 

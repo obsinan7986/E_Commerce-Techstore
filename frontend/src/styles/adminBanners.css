@@ -1,0 +1,376 @@
+/* ============================================================
+   ADMIN BANNERS — adminBanners.css
+   Used by: AdminBanners.jsx
+   ============================================================ */
+
+/* ── Page ────────────────────────────────────────────────── */
+.ab-page .admin-header h1 { font-size: 24px; }
+
+/* ── Add button ──────────────────────────────────────────── */
+.ab-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: var(--primary, #2563EB);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s;
+  white-space: nowrap;
+}
+.ab-add-btn:hover { background: var(--primary-dark, #1D4ED8); }
+
+/* ── Alert ───────────────────────────────────────────────── */
+.ab-alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+.ab-alert--error {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.ab-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #6B7280;
+  font-size: 15px;
+  text-align: center;
+}
+.ab-empty-icon { font-size: 42px; }
+
+/* ── Banner list ─────────────────────────────────────────── */
+.ab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Banner card ─────────────────────────────────────────── */
+.ab-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  flex-wrap: wrap;
+}
+
+/* Thumbnail */
+.ab-thumb {
+  flex: 0 0 140px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #F3F4F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ab-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ab-thumb-placeholder { font-size: 28px; opacity: 0.4; }
+
+/* Info block */
+.ab-info {
+  flex: 1;
+  min-width: 200px;
+}
+.ab-info-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+.ab-title {
+  margin: 0 0 3px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+.ab-subtitle {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #6B7280;
+}
+.ab-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12.5px;
+  color: #9CA3AF;
+}
+.ab-order {
+  font-size: 12px;
+  color: #9CA3AF;
+  background: #F3F4F6;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+/* Status badges */
+.ab-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.bst--live      { background: #D1FAE5; color: #065F46; }
+.bst--scheduled { background: #DBEAFE; color: #1E40AF; }
+.bst--expired   { background: #F3F4F6; color: #6B7280; }
+.bst--inactive  { background: #FEF3C7; color: #92400E; }
+
+/* Action buttons column */
+.ab-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 110px;
+}
+
+/* ── Generic button base ─────────────────────────────────── */
+.ab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.ab-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ab-btn--edit   { background: #EFF6FF; color: #2563EB; }
+.ab-btn--edit:hover { background: #DBEAFE; }
+
+.ab-btn--delete { background: #FEF2F2; color: #DC2626; }
+.ab-btn--delete:hover { background: #FEE2E2; }
+
+.ab-btn--cancel { background: #F3F4F6; color: #374151; }
+.ab-btn--cancel:hover { background: #E5E7EB; }
+
+.ab-btn--save   { background: var(--primary, #2563EB); color: #fff; }
+.ab-btn--save:hover { background: var(--primary-dark, #1D4ED8); }
+
+.ab-btn--on  { background: #D1FAE5; color: #065F46; }
+.ab-btn--on:hover  { background: #A7F3D0; }
+.ab-btn--off { background: #FEF3C7; color: #92400E; }
+.ab-btn--off:hover { background: #FDE68A; }
+
+/* ── Overlay / Modal ─────────────────────────────────────── */
+.ab-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.ab-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.ab-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 0;
+}
+.ab-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+}
+.ab-modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.ab-modal-close:hover { color: #374151; }
+
+/* ── Form ────────────────────────────────────────────────── */
+.ab-form {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ab-field { display: flex; flex-direction: column; gap: 5px; }
+.ab-field--checkbox { justify-content: center; }
+
+.ab-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.ab-req { color: #EF4444; }
+
+.ab-input {
+  padding: 9px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #fff;
+}
+.ab-input:focus { border-color: var(--primary, #2563EB); }
+
+.ab-hint {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.ab-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Checkbox label */
+.ab-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  padding: 9px 0;
+}
+.ab-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary, #2563EB);
+  cursor: pointer;
+}
+
+/* ── Image upload area ───────────────────────────────────── */
+.ab-upload-area {
+  position: relative;
+  height: 160px;
+  border: 2px dashed #D1D5DB;
+  border-radius: 10px;
+  background: #F9FAFB;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+.ab-upload-area:hover { border-color: var(--primary, #2563EB); }
+
+.ab-upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ab-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #9CA3AF;
+  font-size: 13px;
+}
+.ab-upload-icon { font-size: 28px; }
+.ab-upload-hint { font-size: 11.5px; color: #D1D5DB; }
+
+.ab-upload-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary, #2563EB);
+}
+
+.ab-upload-path {
+  font-size: 11.5px;
+  color: #6B7280;
+  margin: 2px 0 0;
+  word-break: break-all;
+}
+
+.ab-file-input { display: none; }
+
+/* ── Modal footer ────────────────────────────────────────── */
+.ab-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid #F3F4F6;
+  margin-top: 4px;
+}
+.ab-modal-footer .ab-btn { min-width: 100px; }
+
+/* ── Confirm dialog ──────────────────────────────────────── */
+.ab-confirm {
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 28px;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.ab-confirm-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+.ab-confirm h3 { margin: 0 0 6px; font-size: 17px; color: #111827; }
+.ab-confirm p  { margin: 0 0 22px; font-size: 13.5px; color: #6B7280; }
+.ab-confirm-actions { display: flex; justify-content: center; gap: 12px; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .ab-card { flex-direction: column; align-items: flex-start; }
+  .ab-thumb { width: 100%; flex: none; height: 120px; }
+  .ab-actions { flex-direction: row; flex: none; width: 100%; }
+  .ab-actions .ab-btn { flex: 1; }
+  .ab-row { grid-template-columns: 1fr; }
+}

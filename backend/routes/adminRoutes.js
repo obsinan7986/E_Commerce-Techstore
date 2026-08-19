@@ -20,6 +20,14 @@ import {
 } from "../controllers/adminController.js";
 
 import {
+  getAllBanners,
+  createBanner,
+  updateBanner,
+  deleteBanner,
+  toggleBanner,
+} from "../controllers/bannerController.js";
+
+import {
   getAdminProducts,
   createProduct,
   updateProduct,
@@ -114,5 +122,12 @@ router.delete(
   validateObjectId(),
   deleteUser
 );
+
+// Banners
+router.get(   "/banners",            ...adminOnly, getAllBanners);
+router.post(  "/banners",            ...adminOnly, createBanner);
+router.put(   "/banners/:id",        ...adminOnly, updateBanner);
+router.delete("/banners/:id",        ...adminOnly, deleteBanner);
+router.patch( "/banners/:id/toggle", ...adminOnly, toggleBanner);
 
 export default router;

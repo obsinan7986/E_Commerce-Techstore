@@ -155,3 +155,47 @@ export const getAdminPayments = async (params = {}) => {
   const { data } = await api.get("/admin/payments", { params });
   return data;
 };
+
+// ==========================================
+// BANNERS (admin)
+// ==========================================
+
+/** Get all banners (including inactive/expired) */
+export const getAdminBanners = async () => {
+  const { data } = await api.get("/admin/banners");
+  return data;
+};
+
+/** Create a new banner */
+export const createAdminBanner = async (bannerData) => {
+  const { data } = await api.post("/admin/banners", bannerData);
+  return data;
+};
+
+/** Update an existing banner by id */
+export const updateAdminBanner = async (id, bannerData) => {
+  const { data } = await api.put(`/admin/banners/${id}`, bannerData);
+  return data;
+};
+
+/** Delete a banner by id */
+export const deleteAdminBanner = async (id) => {
+  const { data } = await api.delete(`/admin/banners/${id}`);
+  return data;
+};
+
+/** Toggle isActive on a banner */
+export const toggleAdminBanner = async (id) => {
+  const { data } = await api.patch(`/admin/banners/${id}/toggle`);
+  return data;
+};
+
+// ==========================================
+// BANNERS (public — used by frontend slider)
+// ==========================================
+
+/** Get currently active, in-date banners for the homepage slider */
+export const getActiveBanners = async () => {
+  const { data } = await api.get("/banners");
+  return data;
+};

@@ -28,6 +28,7 @@ import couponRoutes       from "./routes/couponRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import messageRoutes      from "./routes/messageRoutes.js";
 import seedRoutes         from "./routes/seedRoutes.js";
+import bannerRoutes       from "./routes/bannerRoutes.js";
 
 // ── Connect to MongoDB ────────────────────────────────────────────
 connectDB();
@@ -80,6 +81,7 @@ app.use("/api/reviews",       reviewRoutes);
 app.use("/api/coupons",       couponRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/messages",      messageRoutes);
+app.use("/api/banners",       bannerRoutes);
 
 // ── Health check ──────────────────────────────────────────────────
 app.get("/", (req, res) => {

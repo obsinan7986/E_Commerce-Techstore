@@ -216,6 +216,9 @@ const AdminDashboard = () => {
         <Link to="/admin/payment-settings" style={{ color: "#166534", borderColor: "#86EFAC", background: "#F0FDF4" }}>
           ⚙ Payment Settings
         </Link>
+        <Link to="/admin/banners" style={{ color: "#7C3AED", borderColor: "#DDD6FE", background: "#F5F3FF" }}>
+          🖼 Promo Banners
+        </Link>
       </div>
 
       {/* Recent Orders */}

@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
-import { FaArrowRight, FaTruck, FaLock, FaUndo, FaHeadphones } from "react-icons/fa";
+import { FaTruck, FaLock, FaUndo, FaHeadphones } from "react-icons/fa";
+import PromoBannerSlider from "./PromoBannerSlider";
 import "../styles/herobanner.css";
-
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 const SIDEBAR_CATS = [
   { label: "Smartphones",  to: "/category/Smartphones",  icon: "📱" },
@@ -42,48 +41,9 @@ const HeroBanner = () => (
           </div>
         </aside>
 
-        {/* Main banner */}
+        {/* Main banner — dynamic promo slider */}
         <div className="hero-main">
-
-          {/* Discount badge */}
-          <div className="hero-off-badge">
-            <span className="off-label">UP TO</span>
-            <span className="off-number">20%</span>
-            <span className="off-pct">OFF</span>
-          </div>
-
-          {/* Text */}
-          <div className="hero-text">
-            <h1>
-              New Era of
-              <span className="hero-accent">Technology</span>
-            </h1>
-            <p>
-              Discover the latest smartphones, laptops and accessories
-              at the best prices.
-            </p>
-            <Link to="/products" className="hero-cta-btn">
-              Shop Now <FaArrowRight size={13} />
-            </Link>
-          </div>
-
-          {/* Product image */}
-          <div className="hero-image-wrap">
-            <img
-              src={`${BASE}/uploads/Samsung-s25.jpg`}
-              alt="Latest Technology Products"
-              onError={(e) => { e.target.style.opacity = "0"; }}
-            />
-          </div>
-
-          {/* Slider dots */}
-          <div className="hero-dots">
-            <span className="hero-dot active" />
-            <span className="hero-dot" />
-            <span className="hero-dot" />
-            <span className="hero-dot" />
-          </div>
-
+          <PromoBannerSlider />
         </div>
       </div>
     </div>

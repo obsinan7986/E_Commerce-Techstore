@@ -1,0 +1,221 @@
+/* ============================================================
+   PROMO BANNER SLIDER — promoBannerSlider.css
+   Replaces the static hero-main content area inside HeroBanner.
+   herobanner.css remains untouched — all .hero-* classes are reused.
+   ============================================================ */
+
+/* ── Root container — fills hero-main exactly ────────────── */
+.pbs-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  overflow: hidden;
+}
+
+/* ── Skeleton placeholder while fetching ─────────────────── */
+.pbs-skeleton {
+  width: 100%;
+  min-height: 360px;
+  background: linear-gradient(115deg, #eff6ff 0%, #e5efff 48%, #dbeafe 100%);
+}
+
+/* ── Individual slide ────────────────────────────────────── */
+.pbs-slide {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+
+  /* default slide background — same as original hero gradient */
+  background: linear-gradient(115deg, #eff6ff 0%, #e5efff 48%, #dbeafe 100%);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+
+.pbs-slide--active {
+  opacity: 1;
+  pointer-events: auto;
+  /* make sure active slide stacks above others */
+  z-index: 1;
+}
+
+/* ── Background image layer (promo slides with full images) ── */
+.pbs-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  /* dark scrim so text is always readable over any photo */
+  filter: brightness(0.55);
+  z-index: 0;
+}
+
+/* when there's a bg image, adjust text colours */
+.pbs-slide:has(.pbs-bg) .pbs-text h1,
+.pbs-slide:has(.pbs-bg) .pbs-text p {
+  color: #ffffff;
+}
+.pbs-slide:has(.pbs-bg) .hero-accent {
+  color: #93C5FD;   /* lighter blue that reads on dark backgrounds */
+}
+
+/* ── Content row (text + product image) ─────────────────── */
+.pbs-content {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  padding: 40px 48px;
+  gap: 24px;
+}
+
+/* ── Text block — reuse hero-text sizing from herobanner.css */
+.pbs-text {
+  flex: 1;
+  min-width: 240px;
+  max-width: 470px;
+  position: relative;
+  z-index: 3;
+}
+
+.pbs-text h1 {
+  margin: 0 0 12px;
+  color: var(--text, #0f172a);
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -1px;
+}
+
+.pbs-text p {
+  max-width: 390px;
+  margin: 0 0 22px;
+  color: var(--text-2, #475569);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* ── Product / banner image ──────────────────────────────── */
+.pbs-image-wrap {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 200px;
+  max-width: 420px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.pbs-image-wrap img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 290px;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 28px rgba(15, 23, 42, 0.18));
+  transition: transform 0.3s ease;
+}
+
+/* On photo-background slides, don't double-drop-shadow */
+.pbs-slide:has(.pbs-bg) .pbs-image-wrap img {
+  filter: none;
+  max-height: 270px;
+  opacity: 0.92;
+}
+
+.pbs-image-wrap img:hover { transform: scale(1.025); }
+
+/* ── Prev / Next arrows ──────────────────────────────────── */
+.pbs-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--primary, #2563EB);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: background 0.18s, transform 0.15s;
+}
+
+.pbs-arrow:hover {
+  background: #ffffff;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.pbs-arrow--prev { left: 14px; }
+.pbs-arrow--next { right: 14px; }
+
+/* ── Dot indicators — override hero-dots button reset ────── */
+.hero-dots .hero-dot {
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+/* ≤ 1100px — tighten padding */
+@media (max-width: 1100px) {
+  .pbs-content { padding: 32px 32px; }
+  .pbs-text h1 { font-size: 32px; }
+}
+
+/* ≤ 900px — reduce image size */
+@media (max-width: 900px) {
+  .pbs-text h1 { font-size: 26px; }
+  .pbs-image-wrap img { max-height: 220px; }
+}
+
+/* ≤ 768px — stack vertically, hide image */
+@media (max-width: 768px) {
+  .pbs-root { min-height: 240px; }
+  .pbs-skeleton { min-height: 240px; }
+
+  .pbs-content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 28px 20px 48px;
+    gap: 0;
+  }
+
+  .pbs-text {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .pbs-text h1 { font-size: 22px; }
+  .pbs-text p  { font-size: 13.5px; }
+
+  .pbs-image-wrap { display: none; }
+
+  .pbs-arrow { width: 28px; height: 28px; }
+  .pbs-arrow--prev { left: 8px; }
+  .pbs-arrow--next { right: 8px; }
+}
+
+/* ≤ 480px */
+@media (max-width: 480px) {
+  .pbs-text h1 { font-size: 19px; }
+}

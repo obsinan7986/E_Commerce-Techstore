@@ -650,3 +650,77 @@ export const getAllOrders = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ======================================
+// PRODUCT APPROVAL — List pending products
+// GET /api/admin/product-approvals?status=pending|approved|rejected
+// ======================================
+export const getProductApprovals = async (req, res) => {
+  try {
+    const page   = Math.max(Number(req.query.page) || 1, 1);
+    const limit  = Math.min(Math.max(Number(req.query.limit) || 12, 1), 100);
+    const status = ["pending", "approved", "rejected"].includes(req.query.status)
+      ? req.query.status
+      : "pending";
+
+    const total    = await Product.countDocuments({ approvalStatus: status });
+    const products = await Product.find({ approvalStatus: status })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("seller", "fullName email")
+      .populate("reviewedBy", "fullName");
+
+    res.status(200).json({ success: true, total, page, pages: Math.ceil(total / limit), products });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ======================================
+// APPROVE PRODUCT
+// PATCH /api/admin/product-approvals/:id/approve
+// ======================================
+export const approveProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ success: false, message: "Product not found." });
+
+    product.approvalStatus  = "approved";
+    product.rejectionReason = "";
+    product.reviewedBy      = req.user._id;
+    product.reviewedAt      = new Date();
+    await product.save();
+
+    res.status(200).json({ success: true, message: "Product approved and now visible in the store.", product });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ======================================
+// REJECT PRODUCT
+// PATCH /api/admin/product-approvals/:id/reject
+// Body: { reason }
+// ======================================
+export const rejectProduct = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    if (!reason?.trim()) {
+      return res.status(400).json({ success: false, message: "Rejection reason is required." });
+    }
+
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ success: false, message: "Product not found." });
+
+    product.approvalStatus  = "rejected";
+    product.rejectionReason = reason.trim();
+    product.reviewedBy      = req.user._id;
+    product.reviewedAt      = new Date();
+    await product.save();
+
+    res.status(200).json({ success: true, message: "Product rejected.", product });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

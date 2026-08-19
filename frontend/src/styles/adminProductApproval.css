@@ -1,0 +1,123 @@
+/* ============================================================
+   ADMIN PRODUCT APPROVAL — adminProductApproval.css
+   ============================================================ */
+.apa-page .admin-header h1 { font-size: 24px; }
+
+/* Status tabs */
+.apa-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.apa-tab {
+  padding: 8px 20px; border-radius: 8px; border: 1px solid #E5E7EB;
+  background: #fff; font-size: 13.5px; font-weight: 600; color: #6B7280;
+  cursor: pointer; transition: all 0.15s;
+}
+.apa-tab:hover { background: #F3F4F6; }
+.apa-tab--active { background: #2563EB; color: #fff; border-color: #2563EB; }
+
+.apa-alert { padding: 11px 14px; background: #FEF2F2; color: #B91C1C;
+  border: 1px solid #FECACA; border-radius: 8px; font-size: 13.5px; margin-bottom: 14px; }
+
+.apa-count { font-size: 13px; color: #6B7280; margin-bottom: 14px; }
+
+.apa-empty { display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 60px; color: #9CA3AF; text-align: center; }
+.apa-empty span { font-size: 40px; }
+
+/* Product grid */
+.apa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+.apa-card {
+  background: #fff; border: 1px solid #E5E7EB; border-radius: 12px;
+  overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  display: flex; flex-direction: column;
+}
+.apa-img {
+  height: 160px; background: #F3F4F6;
+  display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 36px;
+}
+.apa-img img { width: 100%; height: 100%; object-fit: cover; }
+
+.apa-body { padding: 14px; flex: 1; }
+.apa-top { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; flex-wrap: wrap; }
+.apa-cat { font-size: 11.5px; color: #9CA3AF; background: #F3F4F6; padding: 2px 8px; border-radius: 20px; }
+.apa-name { margin: 0 0 4px; font-size: 14.5px; font-weight: 700; color: #111827; }
+.apa-meta { margin: 0 0 4px; font-size: 12.5px; color: #6B7280; }
+.apa-seller { margin: 0 0 4px; font-size: 12px; color: #6B7280; }
+.apa-reason { padding: 5px 10px; background: #FEF2F2; border-left: 3px solid #DC2626;
+  border-radius: 4px; font-size: 12px; color: #DC2626; margin: 6px 0; }
+.apa-desc { margin: 6px 0 0; font-size: 12.5px; color: #9CA3AF; line-height: 1.5; }
+
+.apa-actions { padding: 10px 14px; border-top: 1px solid #F3F4F6; }
+
+/* Status badges */
+.apa-badge {
+  display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700;
+}
+.apa--pending  { background: #FEF3C7; color: #92400E; }
+.apa--approved { background: #D1FAE5; color: #065F46; }
+.apa--rejected { background: #FEE2E2; color: #DC2626; }
+
+/* Buttons */
+.apa-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  border: none; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+}
+.apa-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.apa-btn--review  { background: #EFF6FF; color: #2563EB; width: 100%; }
+.apa-btn--review:hover  { background: #DBEAFE; }
+.apa-btn--approve { background: #D1FAE5; color: #065F46; }
+.apa-btn--approve:hover { background: #A7F3D0; }
+.apa-btn--reject  { background: #FEE2E2; color: #DC2626; }
+.apa-btn--reject:hover  { background: #FECACA; }
+.apa-btn--cancel  { background: #F3F4F6; color: #374151; }
+.apa-btn--cancel:hover  { background: #E5E7EB; }
+.apa-btn--nav     { background: #F3F4F6; color: #374151; }
+.apa-btn--nav:disabled  { opacity: 0.4; }
+
+/* Pagination */
+.apa-pagination {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; margin-top: 22px; font-size: 13px;
+}
+
+/* Modal */
+.apa-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.apa-modal {
+  background: #fff; border-radius: 14px; width: 100%; max-width: 600px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.apa-modal-header {
+  display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 0;
+}
+.apa-modal-header h2 { margin: 0; font-size: 17px; font-weight: 800; color: #111827; }
+.apa-modal-close { background: none; border: none; font-size: 22px; color: #9CA3AF; cursor: pointer; }
+
+/* Preview */
+.apa-preview { display: flex; gap: 16px; padding: 16px 24px; }
+.apa-preview-img { width: 160px; height: 130px; object-fit: cover; border-radius: 8px;
+  border: 1px solid #E5E7EB; flex: 0 0 160px; }
+.apa-preview-info { flex: 1; font-size: 13.5px; color: #374151; line-height: 1.8; }
+.apa-preview-info p { margin: 0; }
+.apa-preview-info strong { color: #111827; }
+
+/* Review form */
+.apa-review-form { padding: 0 24px 12px; }
+.apa-review-label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+.apa-textarea {
+  width: 100%; padding: 9px 12px; border: 1px solid #D1D5DB; border-radius: 8px;
+  font-size: 14px; color: #111827; resize: vertical; outline: none; box-sizing: border-box;
+}
+.apa-textarea:focus { border-color: #2563EB; }
+
+.apa-modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 12px 24px 20px; border-top: 1px solid #F3F4F6;
+}
+
+@media (max-width: 600px) {
+  .apa-preview { flex-direction: column; }
+  .apa-preview-img { width: 100%; flex: none; }
+}

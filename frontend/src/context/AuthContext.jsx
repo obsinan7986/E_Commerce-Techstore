@@ -69,7 +69,11 @@ export const AuthProvider = ({ children }) => {
         logout,
         loading,
         isAuthenticated: !!user,
-        isAdmin: !!(user?.isAdmin),
+        isAdmin:   !!(user?.isAdmin),
+        isOwner:   user?.role === "owner",
+        isSeller:  user?.role === "seller",
+        isFinance: user?.role === "finance",
+        role:      user?.role || null,
       }}
     >
       {children}

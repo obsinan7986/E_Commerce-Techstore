@@ -27,14 +27,31 @@ const CUSTOMER_ITEMS = [
    ADMIN menu — each link once, all with real pages
    ───────────────────────────────────────────────────────────── */
 const ADMIN_ITEMS = [
-  { icon: <FiDatabase />,    label: "Dashboard",          to: "/admin/dashboard"        },
-  { icon: <FiBarChart2 />,   label: "Analytics",          to: "/admin/analytics"        },
-  { icon: <FiShoppingCart />,label: "Orders",             to: "/admin/orders"           },
-  { icon: "📦",              label: "Products",           to: "/admin/products"         },
-  { icon: <FiUsers />,       label: "Users",              to: "/admin/users"            },
-  { icon: <FiTag />,         label: "Coupons",            to: "/admin/coupons"          },
-  { icon: <FiCreditCard />,  label: "Payments",           to: "/admin/manual-payments"  },
-  { icon: <FiMessageSquare />,label: "Customer Messages", to: "/admin/messages"         },
+  { icon: <FiDatabase />,    label: "Dashboard",           to: "/admin/dashboard"          },
+  { icon: <FiBarChart2 />,   label: "Analytics",           to: "/admin/analytics"          },
+  { icon: <FiShoppingCart />,label: "Orders",              to: "/admin/orders"             },
+  { icon: "📦",              label: "Products",            to: "/admin/products"           },
+  { icon: "✅",              label: "Product Approvals",   to: "/admin/product-approvals"  },
+  { icon: <FiUsers />,       label: "Users",               to: "/admin/users"              },
+  { icon: <FiTag />,         label: "Coupons",             to: "/admin/coupons"            },
+  { icon: <FiCreditCard />,  label: "Payments",            to: "/admin/manual-payments"    },
+  { icon: <FiMessageSquare />,label: "Customer Messages",  to: "/admin/messages"           },
+];
+
+const OWNER_ITEMS = [
+  { icon: "👑",              label: "Owner Dashboard",     to: "/owner/dashboard"          },
+  { icon: <FiUsers />,       label: "User Management",     to: "/owner/users"              },
+  { icon: "🪪",              label: "KYC Review",          to: "/owner/kyc"                },
+  { icon: <FiDatabase />,    label: "Admin Panel",         to: "/admin/dashboard"          },
+  { icon: "✅",              label: "Product Approvals",   to: "/admin/product-approvals"  },
+  { icon: <FiBarChart2 />,   label: "Analytics",           to: "/admin/analytics"          },
+];
+
+const SELLER_ITEMS = [
+  { icon: "🏪",              label: "Seller Dashboard",    to: "/seller/dashboard"         },
+  { icon: <FiUser />,        label: "My Profile",          to: "/profile"                  },
+  { icon: <FiShoppingBag />, label: "My Orders",           to: "/orders"                   },
+  { icon: <FiBell />,        label: "Notifications",       to: "/notifications"            },
 ];
 
 /* ─────────────────────────────────────────────────────────────
@@ -53,7 +70,7 @@ const AccountDropdown = () => {
   const [open, setOpen] = useState(false);
   const wrapRef         = useRef(null);
 
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isOwner, isSeller } = useAuth();
   const { resetCartCount }        = useCart();
   const navigate                  = useNavigate();
 
@@ -137,17 +154,34 @@ const AccountDropdown = () => {
                 <div className="acct-user-text">
                   <span className="acct-user-name">{user.fullName}</span>
                   <span className="acct-user-email">{user.email}</span>
-                  {isAdmin && <span className="acct-admin-chip">Admin</span>}
+                {isAdmin && <span className="acct-admin-chip">
+                  {isOwner ? "Owner" : "Admin"}
+                </span>}
+                {isSeller && !isOwner && !isAdmin && <span className="acct-admin-chip acct-seller-chip">Seller</span>}
                 </div>
               </div>
 
               <div className="acct-divider" role="separator" />
 
-              {/* ── Admin menu ── */}
-              {isAdmin ? (
+              {/* ── Role-based menu ── */}
+              {isOwner ? (
+                <nav aria-label="Owner navigation">
+                  <p className="acct-section-label">Owner Panel</p>
+                  {OWNER_ITEMS.map(({ icon, label, to }) => (
+                    <MenuItem key={label} icon={icon} label={label} to={to} className="acct-menu-item acct-menu-admin" />
+                  ))}
+                </nav>
+              ) : isAdmin ? (
                 <nav aria-label="Admin navigation">
                   <p className="acct-section-label">Admin Panel</p>
                   {ADMIN_ITEMS.map(({ icon, label, to }) => (
+                    <MenuItem key={label} icon={icon} label={label} to={to} className="acct-menu-item acct-menu-admin" />
+                  ))}
+                </nav>
+              ) : isSeller ? (
+                <nav aria-label="Seller navigation">
+                  <p className="acct-section-label">Seller Panel</p>
+                  {SELLER_ITEMS.map(({ icon, label, to }) => (
                     <MenuItem key={label} icon={icon} label={label} to={to} className="acct-menu-item acct-menu-admin" />
                   ))}
                 </nav>

@@ -17,6 +17,9 @@ import {
   getAdminPayments,
   getAdminCategories,
   getAnalytics,
+  getProductApprovals,
+  approveProduct,
+  rejectProduct,
 } from "../controllers/adminController.js";
 
 import {
@@ -129,5 +132,10 @@ router.post(  "/banners",            ...adminOnly, createBanner);
 router.put(   "/banners/:id",        ...adminOnly, updateBanner);
 router.delete("/banners/:id",        ...adminOnly, deleteBanner);
 router.patch( "/banners/:id/toggle", ...adminOnly, toggleBanner);
+
+// Product approval workflow
+router.get(   "/product-approvals",              ...adminOnly, getProductApprovals);
+router.patch( "/product-approvals/:id/approve",  ...adminOnly, approveProduct);
+router.patch( "/product-approvals/:id/reject",   ...adminOnly, rejectProduct);
 
 export default router;

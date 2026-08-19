@@ -1,0 +1,270 @@
+/* ============================================================
+   OWNER DASHBOARD + USER MANAGEMENT
+   Used by: OwnerDashboard.jsx, OwnerUserManagement.jsx
+   ============================================================ */
+
+.od-page {
+  min-height: calc(100vh - 120px);
+  padding: 32px 28px 60px;
+  background: #F8FAFC;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.od-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.od-header h1 { font-size: 26px; font-weight: 800; color: #111827; margin: 0 0 4px; }
+.od-header p  { margin: 0; color: #6B7280; font-size: 14px; }
+
+.od-badge {
+  display: inline-flex; align-items: center;
+  padding: 5px 14px; border-radius: 20px;
+  background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  color: #fff; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Stats row */
+.od-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.od-stat {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.od-stat--warn { border-color: #FDE68A; background: #FFFBEB; }
+.od-stat--info { border-color: #BAE6FD; background: #F0F9FF; }
+.od-stat-icon { font-size: 28px; }
+.od-stat strong { display: block; font-size: 26px; font-weight: 900; color: #111827; line-height: 1; }
+.od-stat span   { font-size: 12.5px; color: #6B7280; }
+
+/* Tool grid */
+.od-tools {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.od-tool {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-left: 4px solid var(--tool-color, #2563EB);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: box-shadow 0.18s, transform 0.15s;
+}
+.od-tool:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.od-tool-icon { font-size: 26px; }
+.od-tool strong { display: block; font-size: 14px; font-weight: 700; color: #111827; }
+.od-tool span   { font-size: 12.5px; color: #6B7280; }
+
+/* Filters bar */
+.od-filters {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.od-input {
+  padding: 8px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+.od-input:focus { border-color: #2563EB; }
+.od-filters .od-input { flex: 1; min-width: 180px; }
+
+.od-select {
+  padding: 8px 10px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #111827;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+}
+.od-select--sm { padding: 4px 6px; font-size: 12.5px; }
+
+.od-count { font-size: 13px; color: #6B7280; margin-bottom: 12px; }
+
+/* Buttons */
+.od-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 600;
+  border: none; cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.od-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.od-btn--primary  { background: #2563EB; color: #fff; }
+.od-btn--primary:hover  { background: #1D4ED8; }
+.od-btn--ghost    { background: #F3F4F6; color: #374151; }
+.od-btn--ghost:hover    { background: #E5E7EB; }
+.od-btn--warn     { background: #FEF3C7; color: #92400E; }
+.od-btn--warn:hover     { background: #FDE68A; }
+.od-btn--success  { background: #D1FAE5; color: #065F46; }
+.od-btn--success:hover  { background: #A7F3D0; }
+.od-btn--danger   { background: #FEE2E2; color: #DC2626; }
+.od-btn--danger:hover   { background: #FECACA; }
+.od-btn--xs { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+
+/* Table */
+.od-table-wrap { overflow-x: auto; }
+.od-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.od-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 2px solid #F3F4F6;
+  background: #F9FAFB;
+}
+.od-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #F3F4F6;
+  vertical-align: middle;
+}
+.od-table tbody tr:hover { background: #F9FAFB; }
+.od-row--suspended { opacity: 0.65; }
+
+.od-user-cell { display: flex; flex-direction: column; gap: 2px; }
+.od-user-cell strong { font-size: 13.5px; color: #111827; }
+.od-user-cell span   { font-size: 12px; color: #9CA3AF; }
+
+.od-action-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Role badges */
+.role-badge {
+  display: inline-block; padding: 2px 10px;
+  border-radius: 20px; font-size: 11.5px; font-weight: 700;
+}
+.role-owner    { background: #F5F3FF; color: #7C3AED; }
+.role-admin    { background: #EFF6FF; color: #2563EB; }
+.role-finance  { background: #F0FDF4; color: #166534; }
+.role-seller   { background: #FFF7ED; color: #C2410C; }
+.role-customer { background: #F3F4F6; color: #374151; }
+
+/* KYC badges */
+.kyc-badge {
+  display: inline-block; padding: 2px 10px;
+  border-radius: 20px; font-size: 11.5px; font-weight: 700;
+}
+.kyc-ns      { background: #F3F4F6; color: #6B7280; }
+.kyc-pending { background: #FEF3C7; color: #92400E; cursor: pointer; }
+.kyc-ok      { background: #D1FAE5; color: #065F46; }
+.kyc-rej     { background: #FEE2E2; color: #DC2626; }
+
+/* Status badges */
+.status-badge {
+  display: inline-block; padding: 2px 10px;
+  border-radius: 20px; font-size: 11.5px; font-weight: 700;
+}
+.status-active { background: #D1FAE5; color: #065F46; }
+.status-susp   { background: #FEE2E2; color: #DC2626; }
+
+/* Alerts */
+.od-alert { padding: 11px 14px; border-radius: 8px; font-size: 13.5px; margin-bottom: 14px; }
+.od-alert--error { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+
+.od-loading { padding: 40px; text-align: center; color: #9CA3AF; }
+
+/* Pagination */
+.od-pagination {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; margin-top: 22px; font-size: 13px; color: #374151;
+}
+
+/* Modal */
+.od-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.od-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.od-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px 0;
+}
+.od-modal-header h2 { margin: 0; font-size: 18px; font-weight: 800; color: #111827; }
+.od-modal-close {
+  background: none; border: none;
+  font-size: 22px; color: #9CA3AF; cursor: pointer; padding: 0 4px;
+}
+.od-modal-close:hover { color: #374151; }
+.od-form { padding: 18px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+.od-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.od-field { display: flex; flex-direction: column; gap: 5px; }
+.od-field label { font-size: 13px; font-weight: 600; color: #374151; }
+.od-textarea { resize: vertical; }
+.od-modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 12px 24px 20px; border-top: 1px solid #F3F4F6;
+}
+
+/* KYC docs in modal */
+.od-kyc-docs {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; padding: 14px 24px;
+}
+.od-kyc-doc-label { font-size: 12px; font-weight: 600; color: #6B7280; margin: 0 0 6px; }
+.od-kyc-img {
+  width: 100%; height: 100px; object-fit: cover;
+  border-radius: 6px; border: 1px solid #E5E7EB;
+  display: block;
+}
+.od-kyc-missing {
+  height: 100px; background: #F3F4F6; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #9CA3AF;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .od-stats { grid-template-columns: 1fr 1fr; }
+  .od-tools { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .od-page { padding: 20px 14px 40px; }
+  .od-stats { grid-template-columns: 1fr; }
+  .od-tools { grid-template-columns: 1fr; }
+  .od-form-row { grid-template-columns: 1fr; }
+  .od-kyc-docs { grid-template-columns: 1fr; }
+}

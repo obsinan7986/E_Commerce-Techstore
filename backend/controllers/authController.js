@@ -11,7 +11,8 @@ import createAdminNotification from "../utils/createAdminNotification.js";
 // ============================================================
 export const registerUser = async (req, res) => {
   try {
-    const { fullName, email, password, phone, address } = req.body;
+    const { fullName, email, password, phone, address, role,
+            kycIdFront, kycIdBack, kycSelfie } = req.body;
 
     // ── Field validation (400) ──────────────────────────────
     const missing = [];
@@ -42,6 +43,20 @@ export const registerUser = async (req, res) => {
       });
     }
 
+    // ── Role validation — only customer/seller allowed via registration ──
+    const allowedRoles = ["customer", "seller"];
+    const chosenRole   = role && allowedRoles.includes(role) ? role : "customer";
+
+    // ── Seller KYC docs required at registration ────────────
+    if (chosenRole === "seller") {
+      if (!kycIdFront || !kycIdBack || !kycSelfie) {
+        return res.status(400).json({
+          success: false,
+          message: "Sellers must upload National ID (front & back) and a selfie for KYC verification.",
+        });
+      }
+    }
+
     // ── Duplicate email (409) ───────────────────────────────
     const userExists = await User.findOne({
       email: email.trim().toLowerCase(),
@@ -59,18 +74,26 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // ── Create user (201) ───────────────────────────────────
-    const user = await User.create({
+    const userData = {
       fullName: fullName.trim(),
       email:    email.trim().toLowerCase(),
       password: hashedPassword,
       phone:    phone.trim(),
       address:  address?.trim() || "",
-    });
+      role:     chosenRole,
+    };
+
+    if (chosenRole === "seller") {
+      userData.kycDocs   = { idFront: kycIdFront, idBack: kycIdBack, selfie: kycSelfie };
+      userData.kycStatus = "pending";
+    }
+
+    const user = await User.create(userData);
 
     const token = generateToken(user._id);
 
     console.log(
-      `[register] New user created: ${user.email} (id: ${user._id})`
+      `[register] New user created: ${user.email} (role: ${user.role}, id: ${user._id})`
     );
 
     // Send welcome email (fire-and-forget)
@@ -84,19 +107,20 @@ export const registerUser = async (req, res) => {
     createAdminNotification({
       type:    "admin_new_user",
       title:   "New User Registered",
-      message: `${user.fullName} (${user.email}) just created an account.`,
+      message: `${user.fullName} (${user.email}) just created an account as ${user.role}.`,
       link:    "/admin/users",
     }).catch(() => {});
 
     return res.status(201).json({
-      success:  true,
-      _id:      user._id,
-      fullName: user.fullName,
-      email:    user.email,
-      phone:    user.phone,
-      address:  user.address,
-      role:     user.role,
-      isAdmin:  user.isAdmin,
+      success:    true,
+      _id:        user._id,
+      fullName:   user.fullName,
+      email:      user.email,
+      phone:      user.phone,
+      address:    user.address,
+      role:       user.role,
+      isAdmin:    user.isAdmin,
+      kycStatus:  user.kycStatus,
       token,
     });
 
@@ -161,19 +185,28 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    // Suspended accounts cannot log in
+    if (user.isSuspended) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended. Please contact support.",
+      });
+    }
+
     const token = generateToken(user._id);
 
     console.log(`[login] User authenticated: ${user.email}`);
 
     return res.status(200).json({
-      success:  true,
-      _id:      user._id,
-      fullName: user.fullName,
-      email:    user.email,
-      phone:    user.phone,
-      address:  user.address,
-      role:     user.role,
-      isAdmin:  user.isAdmin,
+      success:   true,
+      _id:       user._id,
+      fullName:  user.fullName,
+      email:     user.email,
+      phone:     user.phone,
+      address:   user.address,
+      role:      user.role,
+      isAdmin:   user.isAdmin,
+      kycStatus: user.kycStatus,
       token,
     });
 

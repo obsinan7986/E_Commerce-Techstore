@@ -47,6 +47,7 @@ export const getProducts = async (req, res) => {
     }
 
     const filter = {
+      approvalStatus: "approved",   // only show approved products publicly
       ...keyword,
       ...category,
       ...brand,
@@ -117,6 +118,11 @@ export const getProductById = async (req, res) => {
       });
     }
 
+    // Only show approved products on public endpoint
+    if (product.approvalStatus !== "approved") {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
     res.status(200).json(product);
 
   } catch (error) {
@@ -137,25 +143,11 @@ export const searchProducts = async (req, res) => {
 
     const products = await Product.find({
       $or: [
-        {
-          name: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          brand: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          category: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
+        { name:     { $regex: keyword, $options: "i" } },
+        { brand:    { $regex: keyword, $options: "i" } },
+        { category: { $regex: keyword, $options: "i" } },
       ],
+      approvalStatus: "approved",
     });
 
     res.status(200).json({
@@ -199,6 +191,7 @@ export const getProductsByCategory = async (req, res) => {
 
     const products = await Product.find({
       category: req.params.category,
+      approvalStatus: "approved",
     });
 
     res.status(200).json({
@@ -261,6 +254,7 @@ export const createProduct = async (req, res) => {
       image,
       price,
       stock: stock ?? 0,
+      approvalStatus: "approved",   // admin/owner created products are pre-approved
     });
 
     res.status(201).json({
@@ -393,6 +387,7 @@ export const getRelatedProducts = async (req, res) => {
     const relatedProducts = await Product.find({
       category: product.category,
       _id: { $ne: product._id },
+      approvalStatus: "approved",
     }).limit(4);
 
     res.status(200).json({
@@ -417,11 +412,8 @@ export const getRelatedProducts = async (req, res) => {
 export const getFeaturedProducts = async (req, res) => {
   try {
 
-    const featuredProducts = await Product.find()
-      .sort({
-        rating: -1,
-        numReviews: -1,
-      })
+    const featuredProducts = await Product.find({ approvalStatus: "approved" })
+      .sort({ rating: -1, numReviews: -1 })
       .limit(8);
 
     res.status(200).json({

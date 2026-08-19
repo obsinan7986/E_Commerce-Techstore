@@ -42,6 +42,16 @@ import AdminCoupons from "./pages/AdminCoupons";
 import AdminMessages from "./pages/AdminMessages";
 import AdminNotificationsPage from "./pages/AdminNotificationsPage";
 import AdminBanners from "./pages/AdminBanners";
+import AdminProductApproval from "./pages/AdminProductApproval";
+
+// Owner pages
+import OwnerRoute from "./components/OwnerRoute";
+import OwnerDashboard from "./pages/OwnerDashboard";
+import OwnerUserManagement from "./pages/OwnerUserManagement";
+
+// Seller pages
+import SellerRoute from "./components/SellerRoute";
+import SellerDashboard from "./pages/SellerDashboard";
 
 // Informational pages
 import ContactPage from "./pages/ContactPage";
@@ -112,6 +122,21 @@ function App() {
           <Route path="/admin/messages"          element={<AdminMessages />} />
           <Route path="/admin/notifications"     element={<AdminNotificationsPage />} />
           <Route path="/admin/banners"           element={<AdminBanners />} />
+          <Route path="/admin/product-approvals" element={<AdminProductApproval />} />
+        </Route>
+
+        {/* ── Owner only ── */}
+        <Route element={<OwnerRoute />}>
+          <Route path="/owner"           element={<OwnerDashboard />} />
+          <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+          <Route path="/owner/users"     element={<OwnerUserManagement />} />
+          <Route path="/owner/kyc"       element={<OwnerUserManagement />} />
+        </Route>
+
+        {/* ── Seller only ── */}
+        <Route element={<SellerRoute />}>
+          <Route path="/seller"           element={<SellerDashboard />} />
+          <Route path="/seller/dashboard" element={<SellerDashboard />} />
         </Route>
       </Route>
 

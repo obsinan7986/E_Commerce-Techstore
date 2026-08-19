@@ -219,6 +219,9 @@ const AdminDashboard = () => {
         <Link to="/admin/banners" style={{ color: "#7C3AED", borderColor: "#DDD6FE", background: "#F5F3FF" }}>
           🖼 Promo Banners
         </Link>
+        <Link to="/admin/product-approvals" style={{ color: "#0369A1", borderColor: "#BAE6FD", background: "#F0F9FF" }}>
+          ✅ Product Approvals
+        </Link>
       </div>
 
       {/* Recent Orders */}

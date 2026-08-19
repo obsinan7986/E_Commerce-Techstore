@@ -263,3 +263,9 @@
   letter-spacing: 0.7px;
   color: #9CA3AF;
 }
+
+/* ── Role chips ── */
+.acct-seller-chip {
+  background: #FFF7ED;
+  color: #C2410C;
+}

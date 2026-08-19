@@ -15,6 +15,7 @@ import SearchPage from "./pages/searchpage";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword  from "./pages/ResetPassword";
+import GoogleAuthSuccess from "./pages/GoogleAuthSuccess";
 
 // Protected customer pages
 import Cart from "./pages/Cart";
@@ -64,6 +65,7 @@ function App() {
         <Route path="/search/:keyword"   element={<SearchPage />} />
         <Route path="/forgot-password"   element={<ForgotPassword />} />
         <Route path="/reset-password"    element={<ResetPassword />} />
+        <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
 
         {/* ── Informational ── */}
         <Route path="/contact" element={<ContactPage />} />

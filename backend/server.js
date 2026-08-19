@@ -5,19 +5,14 @@ import path             from "path";
 import { fileURLToPath } from "url";
 
 // ── ESM-safe path resolution ──────────────────────────────────────
-// Must be declared before dotenv so __dirname is available.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
-// ── Load .env FIRST — explicit path so it works regardless of CWD ─
-// On Render the process is started from the repo root, not /backend.
-// Using __dirname ensures we always find backend/.env correctly.
+// ── Load .env FIRST ───────────────────────────────────────────────
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 // ── All other imports come AFTER dotenv ───────────────────────────
-// (static imports are hoisted by the JS engine, but dotenv mutates
-//  process.env synchronously so by the time these modules execute
-//  their top-level code, process.env.MONGO_URI etc. are available.)
+import passport          from "./config/passport.js";
 import connectDB          from "./config/db.js";
 import productRoutes      from "./routes/productRoutes.js";
 import authRoutes         from "./routes/authRoutes.js";
@@ -64,6 +59,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// ── Passport (no sessions — JWT only) ─────────────────────────────
+app.use(passport.initialize());
 
 // ── Static uploads ────────────────────────────────────────────────
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

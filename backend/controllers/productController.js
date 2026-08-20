@@ -46,8 +46,16 @@ export const getProducts = async (req, res) => {
       }
     }
 
+    // Show approved products + legacy products that predate the approval system
+    const approvalFilter = {
+      $or: [
+        { approvalStatus: "approved" },
+        { approvalStatus: { $exists: false } },
+      ],
+    };
+
     const filter = {
-      approvalStatus: "approved",   // only show approved products publicly
+      ...approvalFilter,
       ...keyword,
       ...category,
       ...brand,
@@ -118,8 +126,8 @@ export const getProductById = async (req, res) => {
       });
     }
 
-    // Only show approved products on public endpoint
-    if (product.approvalStatus !== "approved") {
+    // Only show approved + legacy products publicly
+    if (product.approvalStatus && product.approvalStatus !== "approved") {
       return res.status(404).json({ message: "Product not found" });
     }
 
@@ -147,7 +155,9 @@ export const searchProducts = async (req, res) => {
         { brand:    { $regex: keyword, $options: "i" } },
         { category: { $regex: keyword, $options: "i" } },
       ],
-      approvalStatus: "approved",
+      $and: [
+        { $or: [{ approvalStatus: "approved" }, { approvalStatus: { $exists: false } }] },
+      ],
     });
 
     res.status(200).json({
@@ -191,7 +201,10 @@ export const getProductsByCategory = async (req, res) => {
 
     const products = await Product.find({
       category: req.params.category,
-      approvalStatus: "approved",
+      $or: [
+        { approvalStatus: "approved" },
+        { approvalStatus: { $exists: false } },
+      ],
     });
 
     res.status(200).json({
@@ -387,7 +400,10 @@ export const getRelatedProducts = async (req, res) => {
     const relatedProducts = await Product.find({
       category: product.category,
       _id: { $ne: product._id },
-      approvalStatus: "approved",
+      $or: [
+        { approvalStatus: "approved" },
+        { approvalStatus: { $exists: false } },
+      ],
     }).limit(4);
 
     res.status(200).json({
@@ -412,7 +428,12 @@ export const getRelatedProducts = async (req, res) => {
 export const getFeaturedProducts = async (req, res) => {
   try {
 
-    const featuredProducts = await Product.find({ approvalStatus: "approved" })
+    const featuredProducts = await Product.find({
+      $or: [
+        { approvalStatus: "approved" },
+        { approvalStatus: { $exists: false } },
+      ],
+    })
       .sort({ rating: -1, numReviews: -1 })
       .limit(8);
 

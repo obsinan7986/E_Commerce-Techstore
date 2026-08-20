@@ -8,6 +8,7 @@ import MegaMenu           from "./MegaMenu";
 import AccountDropdown    from "./AccountDropdown";
 import NotificationBell   from "./NotificationBell";
 import { useCart }        from "../context/CartContext";
+import oictLogo           from "../assets/OICT logo.jpg";
 import "../styles/navbar.css";
 
 const Navbar = () => {
@@ -38,7 +39,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="logo">
             <Link to="/">
-              <img src="/oict-logo.png" alt="OICT_TechStore" className="logo-img" />
+              <img src={oictLogo} alt="OICT_TechStore" className="logo-img" />
               <span>OICT_Tech<span className="logo-text-blue">Store</span></span>
             </Link>
           </div>

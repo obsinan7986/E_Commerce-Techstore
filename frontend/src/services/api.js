@@ -5,7 +5,7 @@ import axios from "axios";
 // (e.g. https://e-commerce-techstore-y26d.onrender.com/api).
 // The fallback is the deployed Render URL so the app still works if the
 // Vercel env var is accidentally missing.
-const API_URL = import.meta.env.VITE_API_URL || "https://e-commerce-techstore-2.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://e-commerce-techstore-y26d.onrender.com/api";
 
 // Base URL for images served from the backend (/uploads/*)
 // Strip the trailing "/api" from the API URL.

@@ -158,7 +158,7 @@ const Login = () => {
         {/* ── Google Sign-In ── */}
         <div className="auth-divider">or</div>
         <a
-          href={`${import.meta.env.VITE_API_URL?.replace("/api","") || "https://e-commerce-techstore-2.onrender.com"}/api/auth/google`}
+          href={`${import.meta.env.VITE_API_URL?.replace("/api","") || "https://e-commerce-techstore-y26d.onrender.com"}/api/auth/google`}
           className="google-btn"
           aria-label="Sign in with Google"
         >

@@ -8,7 +8,7 @@ const ShippingInfoPage = () => (
 
       <div className="info-section">
         <h2>Delivery Areas</h2>
-        <p>OBSA_TechStore currently delivers across Ethiopia. Delivery availability and timelines vary by location.</p>
+        <p>OICT_TechStore currently delivers across Ethiopia. Delivery availability and timelines vary by location.</p>
       </div>
 
       <div className="info-section">

@@ -35,7 +35,7 @@ const Home = () => {
       {/* ── Registration success banner ── */}
       {showBanner && (
         <div className="home-success-banner" role="status">
-          <span>🎉 Welcome to OBSA_TechStore! Your account has been created successfully.</span>
+          <span>🎉 Welcome to OICT_TechStore! Your account has been created successfully.</span>
           <button
             type="button"
             className="home-success-close"

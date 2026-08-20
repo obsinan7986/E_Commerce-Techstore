@@ -98,7 +98,7 @@ const Orders = () => {
       <div className="orders-header">
         <div>
           <h1>My Orders</h1>
-          <p>Track and manage your TechStore orders</p>
+          <p>Track and manage your OICT_TechStore orders</p>
         </div>
         <Link to="/products" className="shop-btn">Continue Shopping</Link>
       </div>

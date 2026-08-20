@@ -149,7 +149,7 @@ const AdminAnalytics = () => {
         <div>
           <h1>Analytics Dashboard</h1>
           <p>
-            OBSA_TechStore · {lastRefresh && (
+            OICT_TechStore · {lastRefresh && (
               <span>Last updated {lastRefresh.toLocaleTimeString("en-US", { timeStyle: "short" })}</span>
             )}
           </p>

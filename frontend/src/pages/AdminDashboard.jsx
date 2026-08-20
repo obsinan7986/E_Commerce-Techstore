@@ -93,7 +93,7 @@ const AdminDashboard = () => {
           <h1>Admin Dashboard</h1>
 
           <p>
-            Manage your <b>OBSA_TechStore</b> store
+            Manage your <b>OICT_TechStore</b> store
           </p>
         </div>
 

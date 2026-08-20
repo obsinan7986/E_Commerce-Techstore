@@ -19,7 +19,7 @@ const FAQPage = () => {
     <div className="info-page">
       <div className="info-container">
         <h1>Frequently Asked Questions</h1>
-        <p className="info-lead">Find answers to the most common questions about OBSA_TechStore.</p>
+        <p className="info-lead">Find answers to the most common questions about OICT_TechStore.</p>
 
         <div className="faq-list">
           {FAQS.map((item, i) => (

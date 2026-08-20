@@ -84,6 +84,15 @@
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
 }
 
+/* OICT logo image in footer */
+.footer-logo-img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 .footer-tagline {
   max-width: 320px;
 

@@ -133,7 +133,7 @@ const PaymentSuccess = () => {
         <h1>Payment Successful!</h1>
         <p>{message}</p>
         <p className="payment-subtitle">
-          Thank you for shopping at TechStore. Your order is confirmed.
+          Thank you for shopping at OICT_TechStore. Your order is confirmed.
         </p>
         <div className="payment-actions">
           {orderId && <Link to={`/orders/${orderId}`}>View Order Details</Link>}

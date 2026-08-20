@@ -160,11 +160,11 @@ const Register = () => {
         {/* Brand */}
         <div className="auth-brand">
           <FaShoppingBag className="auth-brand-icon" />
-          <span>TechStore</span>
+          <span>OICT_TechStore</span>
         </div>
 
         <h1 className="auth-title">Create your account</h1>
-        <p className="auth-subtitle">Join TechStore and start shopping today</p>
+        <p className="auth-subtitle">Join OICT_TechStore and start shopping today</p>
 
         {success && <div className="auth-success" role="status">{success}</div>}
         {error   && <div className="auth-error"   role="alert">{error}</div>}

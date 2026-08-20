@@ -170,7 +170,7 @@ const MessageCenter = () => {
           <div className="mc-chat-header-left">
             <div className="mc-support-avatar">🛒</div>
             <div>
-              <span className="mc-chat-title">TechStore Support</span>
+              <span className="mc-chat-title">OICT_TechStore Support</span>
               <span className="mc-chat-sub">Currently unavailable</span>
             </div>
           </div>
@@ -192,7 +192,7 @@ const MessageCenter = () => {
       <div className="mc-header">
         <div>
           <h1>Message Center</h1>
-          <p>Chat with TechStore support · We reply within 24 hours</p>
+          <p>Chat with OICT_TechStore support · We reply within 24 hours</p>
         </div>
       </div>
 
@@ -216,7 +216,7 @@ const MessageCenter = () => {
           <div className="mc-chat-header-left">
             <div className="mc-support-avatar">🛒</div>
             <div>
-              <span className="mc-chat-title">TechStore Support</span>
+              <span className="mc-chat-title">OICT_TechStore Support</span>
               <span className="mc-chat-sub">
                 {conv?.subject || "Support Chat"} · {conv?.messages?.length || 0} message{conv?.messages?.length !== 1 ? "s" : ""}
               </span>

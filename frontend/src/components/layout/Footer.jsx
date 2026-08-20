@@ -16,8 +16,8 @@ const Footer = () => {
           {/* ── Brand ── */}
           <div className="footer-col footer-brand-col">
             <Link to="/" className="footer-logo">
-              <span className="footer-logo-icon">🛒</span>
-              OBSA_TechStore
+              <img src="/oict-logo.png" alt="OICT_TechStore" className="footer-logo-img" />
+              OICT_TechStore
             </Link>
             <p className="footer-tagline">
               Your trusted destination for the latest technology and electronics.
@@ -111,7 +111,7 @@ const Footer = () => {
 
       {/* ── Bottom bar ── */}
       <div className="footer-bottom">
-        <p>© {year} OBSA_TechStore. All rights reserved.</p>
+        <p>© {year} OICT_TechStore. All rights reserved.</p>
         <div className="footer-bottom-links">
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms &amp; Conditions</Link>

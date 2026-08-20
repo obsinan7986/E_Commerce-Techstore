@@ -68,7 +68,7 @@ const Login = () => {
         {/* Brand */}
         <div className="auth-brand">
           <FaShoppingBag className="auth-brand-icon" />
-          <span>TechStore</span>
+          <span>OICT_TechStore</span>
         </div>
 
         <h1 className="auth-title">Welcome back</h1>

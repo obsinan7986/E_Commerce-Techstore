@@ -3,6 +3,7 @@ import {
   FaFacebook, FaTwitter, FaInstagram, FaYoutube,
   FaPhone, FaEnvelope, FaMapMarkerAlt,
 } from "react-icons/fa";
+import oictLogo from "../../assets/OICT logo.jpg";
 import "../../styles/footer.css";
 
 const Footer = () => {
@@ -16,7 +17,7 @@ const Footer = () => {
           {/* ── Brand ── */}
           <div className="footer-col footer-brand-col">
             <Link to="/" className="footer-logo">
-              <img src="/oict-logo.png" alt="OICT_TechStore" className="footer-logo-img" />
+              <img src={oictLogo} alt="OICT_TechStore" className="footer-logo-img" />
               OICT_TechStore
             </Link>
             <p className="footer-tagline">

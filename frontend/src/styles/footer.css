@@ -88,8 +88,8 @@
 .footer-logo-img {
   width: 34px;
   height: 34px;
-  object-fit: contain;
-  border-radius: 6px;
+  object-fit: cover;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 

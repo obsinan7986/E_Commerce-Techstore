@@ -50,6 +50,11 @@ const notificationSchema = new mongoose.Schema(
         "admin_new_message",
         "admin_new_review",
         "admin_order_cancelled",
+        // ── Meeting / Announcement notifications ────────────
+        "meeting_invited",
+        "meeting_updated",
+        "meeting_cancelled",
+        "announcement_published",
       ],
       required: true,
     },

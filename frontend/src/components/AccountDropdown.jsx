@@ -62,6 +62,13 @@ const FINANCE_ITEMS = [
   { icon: "↩",               label: "Refunds",             to: "/finance/payments?paymentStatus=Refunded" },
 ];
 
+// Communication module — shown to all staff roles below the role-specific section
+const COMM_ITEMS = [
+  { icon: "📅", label: "Meetings",      to: "/comm/meetings"      },
+  { icon: "📢", label: "Announcements", to: "/comm/announcements" },
+  { icon: "🗓", label: "Schedule",      to: "/comm/schedule"      },
+];
+
 /* ─────────────────────────────────────────────────────────────
    FOOTER links — real informational pages only
    ───────────────────────────────────────────────────────────── */
@@ -208,6 +215,19 @@ const AccountDropdown = () => {
                     <MenuItem key={label} icon={icon} label={label} to={to} />
                   ))}
                 </nav>
+              )}
+
+              {/* ── Communication module (all staff) ── */}
+              {(isOwner || isAdmin || isSeller || isFinance) && (
+                <>
+                  <div className="acct-divider" role="separator" />
+                  <nav aria-label="Communication">
+                    <p className="acct-section-label">Communication</p>
+                    {COMM_ITEMS.map(({ icon, label, to }) => (
+                      <MenuItem key={label} icon={icon} label={label} to={to} className="acct-menu-item acct-menu-admin" />
+                    ))}
+                  </nav>
+                </>
               )}
 
               <div className="acct-divider" role="separator" />

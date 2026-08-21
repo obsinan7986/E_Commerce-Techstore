@@ -265,3 +265,67 @@ export const financeMarkRefund = async (orderId, reason = "") => {
   const { data } = await api.patch(`/finance/payments/${orderId}/refund`, { reason });
   return data;
 };
+
+// ==========================================
+// MEETINGS
+// ==========================================
+export const getMeetings = async (params = {}) => {
+  const { data } = await api.get("/meetings", { params });
+  return data;
+};
+export const getMeetingSchedule = async () => {
+  const { data } = await api.get("/meetings/schedule");
+  return data;
+};
+export const getMeetingById = async (id) => {
+  const { data } = await api.get(`/meetings/${id}`);
+  return data;
+};
+export const getStaffUsers = async () => {
+  const { data } = await api.get("/meetings/staff-users");
+  return data;
+};
+export const createMeeting = async (payload) => {
+  const { data } = await api.post("/meetings", payload);
+  return data;
+};
+export const updateMeeting = async (id, payload) => {
+  const { data } = await api.put(`/meetings/${id}`, payload);
+  return data;
+};
+export const cancelMeeting = async (id, reason = "") => {
+  const { data } = await api.patch(`/meetings/${id}/cancel`, { reason });
+  return data;
+};
+export const deleteMeeting = async (id) => {
+  const { data } = await api.delete(`/meetings/${id}`);
+  return data;
+};
+
+// ==========================================
+// ANNOUNCEMENTS
+// ==========================================
+export const getAnnouncements = async (params = {}) => {
+  const { data } = await api.get("/announcements", { params });
+  return data;
+};
+export const getAnnouncementById = async (id) => {
+  const { data } = await api.get(`/announcements/${id}`);
+  return data;
+};
+export const createAnnouncement = async (payload) => {
+  const { data } = await api.post("/announcements", payload);
+  return data;
+};
+export const updateAnnouncement = async (id, payload) => {
+  const { data } = await api.put(`/announcements/${id}`, payload);
+  return data;
+};
+export const deleteAnnouncement = async (id) => {
+  const { data } = await api.delete(`/announcements/${id}`);
+  return data;
+};
+export const markAnnouncementRead = async (id) => {
+  const { data } = await api.patch(`/announcements/${id}/read`);
+  return data;
+};

@@ -60,6 +60,11 @@ import FinanceRoute from "./components/FinanceRoute";
 import FinanceDashboard from "./pages/FinanceDashboard";
 import FinancePayments from "./pages/FinancePayments";
 
+// Communication module pages
+import MeetingsPage      from "./pages/MeetingsPage";
+import AnnouncementsPage from "./pages/AnnouncementsPage";
+import SchedulePage      from "./pages/SchedulePage";
+
 // Informational pages
 import ContactPage from "./pages/ContactPage";
 import FAQPage from "./pages/FAQPage";
@@ -153,6 +158,13 @@ function App() {
           <Route path="/finance"            element={<FinanceDashboard />} />
           <Route path="/finance/dashboard"  element={<FinanceDashboard />} />
           <Route path="/finance/payments"   element={<FinancePayments />} />
+        </Route>
+
+        {/* ── Communication module (all staff) ── */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/comm/meetings"      element={<MeetingsPage />} />
+          <Route path="/comm/announcements" element={<AnnouncementsPage />} />
+          <Route path="/comm/schedule"      element={<SchedulePage />} />
         </Route>
       </Route>
 

@@ -32,6 +32,8 @@ import bannerRoutes       from "./routes/bannerRoutes.js";
 import ownerRoutes        from "./routes/ownerRoutes.js";
 import sellerRoutes       from "./routes/sellerRoutes.js";
 import financeRoutes      from "./routes/financeRoutes.js";
+import meetingRoutes      from "./routes/meetingRoutes.js";
+import announcementRoutes from "./routes/announcementRoutes.js";
 
 // ── Connect to MongoDB ────────────────────────────────────────────
 connectDB();
@@ -91,7 +93,9 @@ app.use("/api/messages",      messageRoutes);
 app.use("/api/banners",       bannerRoutes);
 app.use("/api/owner",         ownerRoutes);
 app.use("/api/seller",        sellerRoutes);
-app.use("/api/finance",       financeRoutes);
+app.use("/api/finance",        financeRoutes);
+app.use("/api/meetings",       meetingRoutes);
+app.use("/api/announcements",  announcementRoutes);
 
 // ── Health check ──────────────────────────────────────────────────
 app.get("/", (req, res) => {

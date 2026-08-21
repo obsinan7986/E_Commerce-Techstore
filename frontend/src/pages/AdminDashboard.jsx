@@ -225,6 +225,15 @@ const AdminDashboard = () => {
         <Link to="/admin/reviews" style={{ color: "#D97706", borderColor: "#FDE68A", background: "#FFFBEB" }}>
           ⭐ Reviews
         </Link>
+        <Link to="/comm/meetings" style={{ color: "#059669", borderColor: "#A7F3D0", background: "#F0FDF4" }}>
+          📅 Meetings
+        </Link>
+        <Link to="/comm/announcements" style={{ color: "#7C3AED", borderColor: "#DDD6FE", background: "#F5F3FF" }}>
+          📢 Announcements
+        </Link>
+        <Link to="/comm/schedule" style={{ color: "#0369A1", borderColor: "#BAE6FD", background: "#F0F9FF" }}>
+          🗓 Schedule
+        </Link>
       </div>
 
       {/* Recent Orders */}

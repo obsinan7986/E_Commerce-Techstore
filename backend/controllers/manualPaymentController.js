@@ -1,4 +1,5 @@
 import Order           from "../models/Order.js";
+import User            from "../models/User.js";
 import PaymentSettings from "../models/PaymentSettings.js";
 import createNotification      from "../utils/createNotification.js";
 import createAdminNotification from "../utils/createAdminNotification.js";
@@ -188,7 +189,6 @@ export const verifyManualPayment = async (req, res) => {
     }
 
     // Send email to the order owner (fire-and-forget)
-    const { default: User } = await import("../models/User.js");
     const paymentOwner = await User.findById(order.user).select("fullName email");
     if (paymentOwner?.email) {
       const FE   = process.env.FRONTEND_URL || "http://localhost:5173";

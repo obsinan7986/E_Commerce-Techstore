@@ -1,5 +1,6 @@
 import User           from "../models/User.js";
 import bcrypt         from "bcryptjs";
+import jwt            from "jsonwebtoken";
 import generateToken  from "../utils/generateToken.js";
 import { sendTemplate } from "../utils/emailService.js";
 import { welcomeEmail, passwordResetEmail } from "../utils/emailTemplates.js";
@@ -310,7 +311,6 @@ export const forgotPassword = async (req, res) => {
     }
 
     // Generate a simple token (JWT with 1h expiry)
-    const jwt = (await import("jsonwebtoken")).default;
     const resetToken = jwt.sign(
       { id: user._id, purpose: "password_reset" },
       process.env.JWT_SECRET,
@@ -355,7 +355,6 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
     }
 
-    const jwt = (await import("jsonwebtoken")).default;
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);

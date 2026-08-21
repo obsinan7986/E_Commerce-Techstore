@@ -1,6 +1,7 @@
 import Review  from "../models/Review.js";
 import Product from "../models/Product.js";
 import Order   from "../models/Order.js";
+import mongoose from "mongoose";
 import createAdminNotification from "../utils/createAdminNotification.js";
 
 /* ── helper: recalculate product rating ─────────────────── */
@@ -37,7 +38,7 @@ export const getProductReviews = async (req, res) => {
         .skip((page - 1) * limit)
         .limit(limit),
       Review.aggregate([
-        { $match: { product: new (await import("mongoose")).default.Types.ObjectId(req.params.productId) } },
+        { $match: { product: new mongoose.Types.ObjectId(req.params.productId) } },
         { $group: { _id: "$rating", count: { $sum: 1 } } },
       ]),
     ]);

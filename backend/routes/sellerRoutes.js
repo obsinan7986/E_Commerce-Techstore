@@ -9,6 +9,7 @@ import {
   sellerGetSales,
   sellerSubmitKYC,
   sellerGetKYCStatus,
+  sellerGetReviews,
 } from "../controllers/sellerController.js";
 
 const router    = express.Router();
@@ -26,5 +27,8 @@ router.get( "/sales", ...sellerOnly, sellerGetSales);
 // KYC
 router.get(  "/kyc", ...sellerOnly, sellerGetKYCStatus);
 router.post( "/kyc", ...sellerOnly, sellerSubmitKYC);
+
+// Reviews (read-only)
+router.get( "/reviews", ...sellerOnly, sellerGetReviews);
 
 export default router;

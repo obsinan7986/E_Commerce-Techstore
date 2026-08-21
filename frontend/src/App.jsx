@@ -43,6 +43,7 @@ import AdminMessages from "./pages/AdminMessages";
 import AdminNotificationsPage from "./pages/AdminNotificationsPage";
 import AdminBanners from "./pages/AdminBanners";
 import AdminProductApproval from "./pages/AdminProductApproval";
+import AdminReviews from "./pages/AdminReviews";
 
 // Owner pages
 import OwnerRoute from "./components/OwnerRoute";
@@ -52,6 +53,7 @@ import OwnerUserManagement from "./pages/OwnerUserManagement";
 // Seller pages
 import SellerRoute from "./components/SellerRoute";
 import SellerDashboard from "./pages/SellerDashboard";
+import SellerReviews from "./pages/SellerReviews";
 
 // Informational pages
 import ContactPage from "./pages/ContactPage";
@@ -123,6 +125,7 @@ function App() {
           <Route path="/admin/notifications"     element={<AdminNotificationsPage />} />
           <Route path="/admin/banners"           element={<AdminBanners />} />
           <Route path="/admin/product-approvals" element={<AdminProductApproval />} />
+          <Route path="/admin/reviews"           element={<AdminReviews />} />
         </Route>
 
         {/* ── Owner only ── */}
@@ -137,6 +140,7 @@ function App() {
         <Route element={<SellerRoute />}>
           <Route path="/seller"           element={<SellerDashboard />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
+          <Route path="/seller/reviews"   element={<SellerReviews />} />
         </Route>
       </Route>
 

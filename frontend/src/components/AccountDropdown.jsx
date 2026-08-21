@@ -49,6 +49,7 @@ const OWNER_ITEMS = [
 
 const SELLER_ITEMS = [
   { icon: "🏪",              label: "Seller Dashboard",    to: "/seller/dashboard"         },
+  { icon: "⭐",              label: "My Reviews",          to: "/seller/reviews"           },
   { icon: <FiUser />,        label: "My Profile",          to: "/profile"                  },
   { icon: <FiShoppingBag />, label: "My Orders",           to: "/orders"                   },
   { icon: <FiBell />,        label: "Notifications",       to: "/notifications"            },

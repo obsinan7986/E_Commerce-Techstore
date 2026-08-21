@@ -192,6 +192,10 @@ const SellerDashboard = () => {
             <span>🛒</span>
             <div><strong>{sales.summary?.totalOrders || 0}</strong><span>Orders</span></div>
           </div>
+          <Link to="/seller/reviews" className="sd-sale-card" style={{ textDecoration: "none", cursor: "pointer" }}>
+            <span>⭐</span>
+            <div><strong>My Reviews</strong><span>View customer feedback</span></div>
+          </Link>
         </div>
       )}
 

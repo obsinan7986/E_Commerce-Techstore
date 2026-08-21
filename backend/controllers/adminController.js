@@ -1,6 +1,7 @@
 import User    from "../models/User.js";
 import Product from "../models/Product.js";
 import Order   from "../models/Order.js";
+import Review  from "../models/Review.js";
 import createNotification from "../utils/createNotification.js";
 
 // ======================================
@@ -720,6 +721,132 @@ export const rejectProduct = async (req, res) => {
     await product.save();
 
     res.status(200).json({ success: true, message: "Product rejected.", product });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ======================================
+// REVIEW MANAGEMENT (Admin/Owner)
+// ======================================
+
+// GET /api/admin/reviews
+// Query: page, limit, keyword (product name or customer), rating, verified
+export const getAllReviews = async (req, res) => {
+  try {
+    const page    = Math.max(Number(req.query.page)  || 1, 1);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 15, 1), 100);
+    const { keyword, rating, verified } = req.query;
+
+    // Build match stage
+    const match = {};
+    if (rating)  match.rating = Number(rating);
+    if (verified === "true")  match.verifiedPurchase = true;
+    if (verified === "false") match.verifiedPurchase = false;
+
+    // Keyword: search by product name or user name via $lookup
+    let reviews;
+    let total;
+
+    if (keyword && keyword.trim()) {
+      const re = { $regex: keyword.trim(), $options: "i" };
+      // First find matching user/product ids
+      const [matchingUsers, matchingProducts] = await Promise.all([
+        User.find({ $or: [{ fullName: re }, { email: re }] }).select("_id"),
+        Product.find({ name: re }).select("_id"),
+      ]);
+      match.$or = [
+        ...(matchingUsers.length    ? [{ user:    { $in: matchingUsers.map(u => u._id) } }] : []),
+        ...(matchingProducts.length ? [{ product: { $in: matchingProducts.map(p => p._id) } }] : []),
+      ];
+      if (!match.$or.length) {
+        return res.status(200).json({ success: true, total: 0, page, pages: 0, reviews: [] });
+      }
+    }
+
+    [total, reviews] = await Promise.all([
+      Review.countDocuments(match),
+      Review.find(match)
+        .populate("user",    "fullName email")
+        .populate("product", "name image category")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+    ]);
+
+    res.status(200).json({ success: true, total, page, pages: Math.ceil(total / limit), reviews });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// GET /api/admin/reviews/stats
+// Returns: total reviews, average rating, breakdown [1–5], top/bottom/most-reviewed products
+export const getReviewStats = async (req, res) => {
+  try {
+    const [
+      totalReviews,
+      ratingBreakdown,
+      topRated,
+      bottomRated,
+      mostReviewed,
+      recentReviews,
+      overallAvg,
+    ] = await Promise.all([
+      Review.countDocuments(),
+
+      Review.aggregate([
+        { $group: { _id: "$rating", count: { $sum: 1 } } },
+        { $sort: { _id: -1 } },
+      ]),
+
+      // Top 5 highest-rated products (min 1 review)
+      Product.find({ numReviews: { $gt: 0 } })
+        .sort({ rating: -1, numReviews: -1 })
+        .limit(5)
+        .select("name image rating numReviews category"),
+
+      // Bottom 5 lowest-rated products (min 1 review)
+      Product.find({ numReviews: { $gt: 0 } })
+        .sort({ rating: 1, numReviews: -1 })
+        .limit(5)
+        .select("name image rating numReviews category"),
+
+      // Top 5 most-reviewed products
+      Product.find({ numReviews: { $gt: 0 } })
+        .sort({ numReviews: -1 })
+        .limit(5)
+        .select("name image rating numReviews category"),
+
+      // 5 most recent reviews
+      Review.find()
+        .populate("user",    "fullName")
+        .populate("product", "name")
+        .sort({ createdAt: -1 })
+        .limit(5),
+
+      // Overall average rating
+      Review.aggregate([
+        { $group: { _id: null, avg: { $avg: "$rating" } } },
+      ]),
+    ]);
+
+    const breakdownMap = Object.fromEntries(ratingBreakdown.map(b => [b._id, b.count]));
+    const breakdown    = [5,4,3,2,1].map(star => ({ star, count: breakdownMap[star] || 0 }));
+    const avgRating    = overallAvg[0]?.avg || 0;
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalReviews,
+        avgRating:   Number(avgRating.toFixed(2)),
+        breakdown,
+        topRated,
+        bottomRated,
+        mostReviewed,
+        recentReviews,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

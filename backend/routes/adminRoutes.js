@@ -20,6 +20,8 @@ import {
   getProductApprovals,
   approveProduct,
   rejectProduct,
+  getAllReviews,
+  getReviewStats,
 } from "../controllers/adminController.js";
 
 import {
@@ -44,6 +46,10 @@ import {
   updateOrderStatus,
   cancelOrder,
 } from "../controllers/orderController.js";
+
+import {
+  deleteReview,
+} from "../controllers/reviewController.js";
 
 const router = express.Router();
 
@@ -137,5 +143,10 @@ router.patch( "/banners/:id/toggle", ...adminOnly, toggleBanner);
 router.get(   "/product-approvals",              ...adminOnly, getProductApprovals);
 router.patch( "/product-approvals/:id/approve",  ...adminOnly, approveProduct);
 router.patch( "/product-approvals/:id/reject",   ...adminOnly, rejectProduct);
+
+// Reviews management
+router.get(    "/reviews",       ...adminOnly, getAllReviews);
+router.get(    "/reviews/stats", ...adminOnly, getReviewStats);
+router.delete( "/reviews/:id",   ...adminOnly, validateObjectId(), deleteReview);
 
 export default router;

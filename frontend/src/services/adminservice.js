@@ -199,3 +199,35 @@ export const getActiveBanners = async () => {
   const { data } = await api.get("/banners");
   return data;
 };
+
+// ==========================================
+// REVIEWS (admin/owner)
+// ==========================================
+
+/** Get all reviews with optional filters: page, limit, keyword, rating, verified */
+export const getAdminReviews = async (params = {}) => {
+  const { data } = await api.get("/admin/reviews", { params });
+  return data;
+};
+
+/** Get review statistics: totals, breakdown, top/bottom/most-reviewed products */
+export const getAdminReviewStats = async () => {
+  const { data } = await api.get("/admin/reviews/stats");
+  return data;
+};
+
+/** Delete a review by id (admin/owner only) */
+export const deleteAdminReview = async (id) => {
+  const { data } = await api.delete(`/admin/reviews/${id}`);
+  return data;
+};
+
+// ==========================================
+// REVIEWS (seller — read-only)
+// ==========================================
+
+/** Get reviews for this seller's products: page, limit, productId, rating */
+export const getSellerReviews = async (params = {}) => {
+  const { data } = await api.get("/seller/reviews", { params });
+  return data;
+};

@@ -214,3 +214,66 @@ export const sellerGetKYCStatus = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// ============================================================
+// SELLER — View reviews on own products (read-only)
+// GET /api/seller/reviews
+// Query: page, limit, productId, rating
+// ============================================================
+import Review from "../models/Review.js";
+
+export const sellerGetReviews = async (req, res) => {
+  try {
+    const page    = Math.max(Number(req.query.page)  || 1, 1);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 15, 1), 100);
+    const { productId, rating } = req.query;
+
+    // Only reviews for products owned by this seller
+    const sellerProductIds = await Product.find({ seller: req.user._id }).distinct("_id");
+
+    if (!sellerProductIds.length) {
+      return res.status(200).json({
+        success: true, total: 0, page, pages: 0, reviews: [],
+        stats: { avgRating: 0, totalReviews: 0, breakdown: [] },
+      });
+    }
+
+    const match = { product: { $in: sellerProductIds } };
+    if (productId) match.product = productId;
+    if (rating)    match.rating  = Number(rating);
+
+    const [total, reviews, breakdown] = await Promise.all([
+      Review.countDocuments(match),
+      Review.find(match)
+        .populate("user",    "fullName")
+        .populate("product", "name image")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      Review.aggregate([
+        { $match: match },
+        { $group: { _id: "$rating", count: { $sum: 1 } } },
+        { $sort: { _id: -1 } },
+      ]),
+    ]);
+
+    const breakdownMap = Object.fromEntries(breakdown.map(b => [b._id, b.count]));
+    const totalVotes   = breakdown.reduce((s, b) => s + b.count, 0);
+    const weightedSum  = breakdown.reduce((s, b) => s + b._id * b.count, 0);
+
+    res.status(200).json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      reviews,
+      stats: {
+        totalReviews: total,
+        avgRating:    totalVotes > 0 ? Number((weightedSum / totalVotes).toFixed(2)) : 0,
+        breakdown:    [5,4,3,2,1].map(star => ({ star, count: breakdownMap[star] || 0 })),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

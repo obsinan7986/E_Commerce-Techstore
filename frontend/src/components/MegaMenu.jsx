@@ -5,8 +5,9 @@ import {
   getCategoryProducts,
 } from "../services/categoryService";
 import "../styles/megamenu.css";
+import { BASE_URL } from "../services/api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 
 const MegaMenu = () => {
   const [categories, setCategories] = useState([]);
@@ -86,7 +87,7 @@ const MegaMenu = () => {
             >
               <div className="preview-image">
                 <img
-                  src={product.image?.startsWith("http") ? product.image : `${BASE}${product.image}`}
+                  src={product.image?.startsWith("http") ? product.image : `${BASE_URL}${product.image}`}
                   alt={product.name}
                   onError={(e) => { e.target.src = "/placeholder.png"; }}
                 />

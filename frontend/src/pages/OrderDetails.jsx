@@ -7,8 +7,9 @@ import { initializeChapaPayment,
          getPaymentSettings }              from "../services/paymentService";
 import { useAuth }                         from "../context/AuthContext";
 import "../styles/orderDetails.css";
+import { BASE_URL } from "../services/api";
 
-const BASE           = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 const STEPS          = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered"];
 const MANUAL_METHODS = ["CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
 
@@ -233,7 +234,7 @@ const OrderDetails = () => {
           {qrSettings?.bankQrCode && (
             <div className="mp-qr-reminder">
               <img
-                src={`${BASE}${qrSettings.bankQrCode}`}
+                src={`${BASE_URL}${qrSettings.bankQrCode}`}
                 alt="Bank QR"
                 className="mp-qr-small"
               />
@@ -289,12 +290,12 @@ const OrderDetails = () => {
             <div className="mp-existing">
               <p>Previously submitted:</p>
               <a
-                href={`${BASE}${order.manualPayment.screenshotUrl}`}
+                href={`${BASE_URL}${order.manualPayment.screenshotUrl}`}
                 target="_blank"
                 rel="noreferrer"
               >
                 <img
-                  src={`${BASE}${order.manualPayment.screenshotUrl}`}
+                  src={`${BASE_URL}${order.manualPayment.screenshotUrl}`}
                   alt="Submitted"
                   className="mp-preview"
                 />
@@ -345,7 +346,7 @@ const OrderDetails = () => {
               {order.orderItems?.map((item, i) => (
                 <div className="details-item" key={i}>
                   <img
-                    src={item.image?.startsWith("http") ? item.image : `${BASE}${item.image}`}
+                    src={item.image?.startsWith("http") ? item.image : `${BASE_URL}${item.image}`}
                     alt={item.name}
                     onError={(e) => { e.target.src = "/placeholder.png"; }}
                   />

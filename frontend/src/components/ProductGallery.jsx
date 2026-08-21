@@ -1,10 +1,11 @@
 import { useState } from "react";
 import "../styles/ProductGallery.css";
+import { BASE_URL } from "../services/api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 
 const resolve = (img) =>
-  img?.startsWith("http") ? img : `${BASE}${img}`;
+  img?.startsWith("http") ? img : `${BASE_URL}${img}`;
 
 const ProductGallery = ({ product }) => {
   const main = resolve(product.image);

@@ -1,6 +1,6 @@
-import api from "./api";
+import api, { BASE_URL } from "./api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 
 // ── Chapa ─────────────────────────────────────────────────────────────
 export const initializeChapaPayment = async ({ orderId, firstName, lastName, email, phone }) => {
@@ -54,5 +54,4 @@ export const verifyManualPayment = async (orderId, action, adminNote = "") => {
   const { data } = await api.put(`/payments/manual/${orderId}/verify`, { action, adminNote });
   return data;
 };
-
-export { BASE };
+

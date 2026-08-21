@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { getPaymentSettings, updatePaymentSettings } from "../services/paymentService";
 import "../styles/adminPaymentSettings.css";
+import { BASE_URL } from "../services/api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 
 const EMPTY_ACCOUNT = { bankName: "", accountName: "", accountNumber: "" };
 
@@ -166,7 +167,7 @@ const AdminPaymentSettings = () => {
             {currentQr && !qrPreview && (
               <div className="aps-qr-current">
                 <p>Current QR:</p>
-                <img src={`${BASE}${currentQr}`} alt="Current QR" className="aps-qr-img" />
+                <img src={`${BASE_URL}${currentQr}`} alt="Current QR" className="aps-qr-img" />
               </div>
             )}
 

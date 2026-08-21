@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 import { Link }                from "react-router-dom";
 import { getAnalytics }        from "../services/adminservice";
 import "../styles/adminAnalytics.css";
+import { BASE_URL } from "../services/api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 
 /* ─── helpers ─────────────────────────────────────────────── */
 const fmt   = (n) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -244,7 +245,7 @@ const AdminAnalytics = () => {
                   <div className="ana-top-item" key={String(p._id)}>
                     <span className="ana-top-rank">{i + 1}</span>
                     <img
-                      src={p.image?.startsWith("http") ? p.image : `${BASE}${p.image}`}
+                      src={p.image?.startsWith("http") ? p.image : `${BASE_URL}${p.image}`}
                       alt={p.name}
                       className="ana-top-img"
                       onError={(e) => { e.target.src = "/placeholder.png"; }}
@@ -278,7 +279,7 @@ const AdminAnalytics = () => {
                 {lowStock.map((p) => (
                   <div className="ana-stock-item" key={p._id}>
                     <img
-                      src={p.image?.startsWith("http") ? p.image : `${BASE}${p.image}`}
+                      src={p.image?.startsWith("http") ? p.image : `${BASE_URL}${p.image}`}
                       alt={p.name}
                       className="ana-stock-img"
                       onError={(e) => { e.target.src = "/placeholder.png"; }}

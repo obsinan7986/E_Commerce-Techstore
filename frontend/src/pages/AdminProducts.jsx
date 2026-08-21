@@ -9,8 +9,9 @@ import {
 import { getLowStockProducts } from "../services/adminservice";
 import { formatCurrency }      from "../utils/formatters";
 import "../styles/admin.css";
+import { BASE_URL } from "../services/api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 
 const CATEGORIES = [
   "Smartphones","Laptops","Tablets","Accessories",
@@ -275,7 +276,7 @@ const AdminProducts = () => {
                     <tr key={p._id} style={p.stock === 0 ? { background: "#FFF8F8" } : p.stock <= 9 ? { background: "#FFFDF0" } : {}}>
                       <td>
                         <img
-                          src={p.image?.startsWith("http") ? p.image : `${BASE}${p.image}`}
+                          src={p.image?.startsWith("http") ? p.image : `${BASE_URL}${p.image}`}
                           alt={p.name}
                           style={{ width: 52, height: 52, objectFit: "contain", borderRadius: 6, border: "1px solid #E5E7EB" }}
                           onError={(e) => { e.target.src = "/placeholder.png"; }}

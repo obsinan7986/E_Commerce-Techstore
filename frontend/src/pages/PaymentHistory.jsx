@@ -9,8 +9,9 @@ import { getMyOrders }                  from "../services/orderService";
 import { uploadPaymentScreenshot,
          getPaymentSettings }           from "../services/paymentService";
 import "../styles/paymentHistory.css";
+import { BASE_URL } from "../services/api";
 
-const BASE           = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 const MANUAL_METHODS = ["CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
 
 const VERIFY_CFG = {
@@ -164,7 +165,7 @@ const PaymentHistory = () => {
               <div className="ph-bank-reminder-item" key={i}>
                 {qrSettings.bankQrCode && i === 0 && (
                   <img
-                    src={`${BASE}${qrSettings.bankQrCode}`}
+                    src={`${BASE_URL}${qrSettings.bankQrCode}`}
                     alt="QR"
                     className="ph-bank-qr"
                   />
@@ -191,7 +192,7 @@ const PaymentHistory = () => {
             {!qrSettings.bankAccounts?.length && qrSettings.accountNumber && (
               <div className="ph-bank-reminder-item">
                 {qrSettings.bankQrCode && (
-                  <img src={`${BASE}${qrSettings.bankQrCode}`} alt="QR" className="ph-bank-qr" />
+                  <img src={`${BASE_URL}${qrSettings.bankQrCode}`} alt="QR" className="ph-bank-qr" />
                 )}
                 <div>
                   {qrSettings.bankName      && <span className="ph-bank-name">{qrSettings.bankName}</span>}
@@ -239,7 +240,7 @@ const PaymentHistory = () => {
             const vs     = mp.verificationStatus || "None";
             const vcfg   = VERIFY_CFG[vs] || VERIFY_CFG.None;
             const pcfg   = PAY_CFG[order.paymentStatus] || PAY_CFG.Pending;
-            const scrFull = mp.screenshotUrl ? `${BASE}${mp.screenshotUrl}` : null;
+            const scrFull = mp.screenshotUrl ? `${BASE_URL}${mp.screenshotUrl}` : null;
 
             return (
               <div className="ph-card" key={order._id}>

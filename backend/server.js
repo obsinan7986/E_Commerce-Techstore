@@ -67,8 +67,12 @@ app.use(express.json());
 // ── Passport (no sessions — JWT only) ─────────────────────────────
 app.use(passport.initialize());
 
-// ── Static uploads ────────────────────────────────────────────────
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// ── Static uploads — with CORS headers so browsers can load images ──
+app.use("/uploads", (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+}, express.static(path.join(__dirname, "uploads")));
 
 // ── API Routes ────────────────────────────────────────────────────
 app.use("/api/products",      productRoutes);

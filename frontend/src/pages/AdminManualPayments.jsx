@@ -6,8 +6,9 @@ import {
   getManualPaymentStats,
 } from "../services/paymentService";
 import "../styles/adminManualPayments.css";
+import { BASE_URL } from "../services/api";
 
-const BASE          = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 const STATUS_TABS   = ["Pending", "Verified", "Rejected"];
 const METHOD_OPTIONS = ["All", "CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
 
@@ -226,7 +227,7 @@ const AdminManualPayments = () => {
               const mp        = order.manualPayment || {};
               const customer  = order.user          || {};
               const isActing  = acting[order._id];
-              const screenshotFull = mp.screenshotUrl ? `${BASE}${mp.screenshotUrl}` : null;
+              const screenshotFull = mp.screenshotUrl ? `${BASE_URL}${mp.screenshotUrl}` : null;
 
               return (
                 <div className="amp-card" key={order._id}>

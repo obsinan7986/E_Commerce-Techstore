@@ -4,8 +4,9 @@ import { getMyOrders, cancelOrder } from "../services/orderService";
 import { initializeChapaPayment } from "../services/paymentService";
 import { useAuth } from "../context/AuthContext";
 import "../styles/orders.css";
+import { BASE_URL } from "../services/api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 
 const Orders = () => {
   const { user } = useAuth();
@@ -161,7 +162,7 @@ const Orders = () => {
                 {order.orderItems.map((item) => (
                   <div className="order-product" key={item.product}>
                     <img
-                      src={item.image?.startsWith("http") ? item.image : `${BASE}${item.image}`}
+                      src={item.image?.startsWith("http") ? item.image : `${BASE_URL}${item.image}`}
                       alt={item.name}
                       onError={(e) => { e.target.src = "/placeholder.png"; }}
                     />

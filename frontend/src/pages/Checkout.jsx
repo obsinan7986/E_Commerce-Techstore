@@ -9,8 +9,9 @@ import { useCart }                                from "../context/CartContext";
 import { useAuth }                                from "../context/AuthContext";
 
 import "../styles/checkout.css";
+import { BASE_URL } from "../services/api";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "https://e-commerce-techstore-y26d.onrender.com/api";
+
 
 const MANUAL_METHODS = ["CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
 
@@ -271,7 +272,7 @@ const Checkout = () => {
                 </div>
                 {qrSettings?.bankQrCode && (
                   <div className="qr-code-block">
-                    <img src={`${BASE}${qrSettings.bankQrCode}`} alt="Bank QR Code" className="qr-code-img" />
+                    <img src={`${BASE_URL}${qrSettings.bankQrCode}`} alt="Bank QR Code" className="qr-code-img" />
                     <p className="qr-scan-hint">Scan to pay</p>
                   </div>
                 )}
@@ -316,7 +317,7 @@ const Checkout = () => {
               {cart.items.map((item) => (
                 <div className="checkout-product" key={item.product._id}>
                   <img
-                    src={item.product.image?.startsWith("http") ? item.product.image : `${BASE}${item.product.image}`}
+                    src={item.product.image?.startsWith("http") ? item.product.image : `${BASE_URL}${item.product.image}`}
                     alt={item.product.name}
                     onError={(e) => { e.target.src = "/placeholder.png"; }}
                   />

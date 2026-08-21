@@ -17,6 +17,7 @@ import {
 
 import { protect } from "../middleware/authMiddleware.js";
 import { admin }   from "../middleware/adminMiddleware.js";
+import { requireRole } from "../middleware/roleMiddleware.js";
 import upload      from "../middleware/uploadMiddleware.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 
@@ -40,9 +41,10 @@ router.post(
   uploadPaymentScreenshot
 );
 
-// ── Admin manual verification ────────────────────────────────────────
-router.get( "/manual/stats",             protect, admin, getManualPaymentStats);
-router.get( "/manual/pending",           protect, admin, getPendingManualPayments);
-router.put( "/manual/:orderId/verify",   protect, admin, validateObjectId("orderId"), verifyManualPayment);
+// ── Admin/Finance manual verification ───────────────────────────────
+const staffPayment = [protect, requireRole("admin", "owner", "finance")];
+router.get( "/manual/stats",             ...staffPayment, getManualPaymentStats);
+router.get( "/manual/pending",           ...staffPayment, getPendingManualPayments);
+router.put( "/manual/:orderId/verify",   ...staffPayment, validateObjectId("orderId"), verifyManualPayment);
 
 export default router;

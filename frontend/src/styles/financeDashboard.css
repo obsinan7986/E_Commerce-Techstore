@@ -1,0 +1,194 @@
+/* ============================================================
+   FINANCE DASHBOARD — financeDashboard.css
+   ============================================================ */
+.fd-page {
+  min-height: calc(100vh - 120px);
+  padding: 32px 28px 60px;
+  background: #F8FAFC;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.fd-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+}
+.fd-header h1 { font-size: 26px; font-weight: 800; color: #111827; margin: 0 0 4px; }
+.fd-header p  { margin: 0; color: #6B7280; font-size: 14px; }
+
+.fd-refresh-btn {
+  padding: 9px 18px; background: #F3F4F6; color: #374151;
+  border: none; border-radius: 8px; font-size: 13.5px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s;
+}
+.fd-refresh-btn:hover { background: #E5E7EB; }
+
+.fd-primary-btn {
+  padding: 9px 18px; background: #2563EB; color: #fff;
+  border-radius: 8px; font-size: 13.5px; font-weight: 600;
+  text-decoration: none; transition: background 0.15s;
+}
+.fd-primary-btn:hover { background: #1D4ED8; }
+
+/* KPI Cards */
+.fd-kpis {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 20px;
+}
+.fd-kpi {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px; background: #fff;
+  border: 1px solid #E5E7EB; border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  border-left: 4px solid #E5E7EB;
+}
+.fd-kpi--revenue  { border-left-color: #2563EB; }
+.fd-kpi--pending  { border-left-color: #D97706; }
+.fd-kpi--failed   { border-left-color: #DC2626; }
+.fd-kpi--refunded { border-left-color: #7C3AED; }
+
+.fd-kpi-icon { font-size: 28px; }
+.fd-kpi strong { display: block; font-size: 22px; font-weight: 800; color: #111827; line-height: 1.1; }
+.fd-kpi span   { display: block; font-size: 12.5px; color: #6B7280; }
+.fd-kpi small  { display: block; font-size: 11.5px; color: #9CA3AF; }
+
+/* Alert */
+.fd-alert {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; margin-bottom: 20px;
+  background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 10px;
+  flex-wrap: wrap;
+}
+.fd-alert span:first-child { font-size: 22px; }
+.fd-alert div { flex: 1; }
+.fd-alert strong { display: block; font-size: 14px; color: #92400E; }
+.fd-alert span   { font-size: 13px; color: #B45309; }
+.fd-alert-btn {
+  padding: 7px 16px; background: #F59E0B; color: #fff;
+  border-radius: 8px; font-size: 13px; font-weight: 700;
+  text-decoration: none; white-space: nowrap;
+}
+
+/* Row */
+.fd-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 16px; }
+
+/* Cards */
+.fd-card {
+  background: #fff; border: 1px solid #E5E7EB; border-radius: 12px;
+  padding: 20px 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.fd-card-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 16px; gap: 8px;
+}
+.fd-card-header h2 { margin: 0; font-size: 15px; font-weight: 700; color: #111827; }
+.fd-card-header span { font-size: 12px; color: #9CA3AF; }
+
+/* Bar chart */
+.fd-bar-chart {
+  display: flex; align-items: flex-end; gap: 8px;
+  height: 140px; padding-top: 10px;
+}
+.fd-bar-col {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 4px; height: 100%; position: relative;
+}
+.fd-bar-col:hover .fd-bar-tooltip { opacity: 1; }
+.fd-bar-tooltip {
+  position: absolute; top: -42px; left: 50%; transform: translateX(-50%);
+  background: #111827; color: #fff; font-size: 11px; padding: 4px 8px;
+  border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity 0.15s; z-index: 10;
+}
+.fd-bar {
+  width: 100%; background: #2563EB; border-radius: 4px 4px 0 0;
+  transition: height 0.3s; min-height: 4px;
+}
+.fd-bar-label { font-size: 11px; color: #9CA3AF; }
+
+/* Method breakdown */
+.fd-method-list { display: flex; flex-direction: column; gap: 8px; }
+.fd-method-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid #F9FAFB;
+}
+.fd-method-row:last-child { border-bottom: none; }
+.fd-method-name { font-size: 13.5px; font-weight: 600; color: #374151; flex: 1; }
+.fd-method-count { font-size: 12px; color: #9CA3AF; }
+.fd-method-amt { font-size: 13px; font-weight: 700; color: #111827; }
+
+.fd-manual-stats {
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid #F3F4F6;
+}
+.fd-manual-stats h3 { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #374151; }
+.fd-manual-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; font-size: 13px; color: #6B7280;
+}
+.fd-manual-row strong { font-size: 14px; color: #111827; }
+
+/* Recent transactions table */
+.fd-card--recent { margin-bottom: 20px; }
+.fd-view-all { font-size: 13px; color: #2563EB; font-weight: 600; text-decoration: none; }
+.fd-table-wrap { overflow-x: auto; }
+.fd-table {
+  width: 100%; border-collapse: collapse; font-size: 13.5px;
+}
+.fd-table th {
+  padding: 9px 12px; text-align: left; font-size: 11.5px; font-weight: 700;
+  color: #6B7280; text-transform: uppercase; letter-spacing: 0.4px;
+  border-bottom: 2px solid #F3F4F6; background: #F9FAFB;
+}
+.fd-table td { padding: 11px 12px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+.fd-table tbody tr:hover { background: #F9FAFB; }
+
+.fd-order-link { color: #2563EB; font-weight: 700; text-decoration: none; font-size: 13px; }
+.fd-customer-cell { display: flex; flex-direction: column; gap: 2px; }
+.fd-customer-cell strong { font-size: 13px; color: #111827; }
+.fd-customer-cell small  { font-size: 11.5px; color: #9CA3AF; }
+.fd-method-tag {
+  display: inline-block; padding: 2px 8px; background: #F3F4F6;
+  border-radius: 20px; font-size: 12px; color: #374151;
+}
+
+/* Payment status badges */
+.fd-badge {
+  display: inline-block; padding: 2px 10px;
+  border-radius: 20px; font-size: 11.5px; font-weight: 700;
+}
+.fd-badge--paid     { background: #D1FAE5; color: #065F46; }
+.fd-badge--pending  { background: #FEF3C7; color: #92400E; }
+.fd-badge--failed   { background: #FEE2E2; color: #DC2626; }
+.fd-badge--refunded { background: #EDE9FE; color: #6D28D9; }
+
+/* Quick links */
+.fd-quick-links {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.fd-quick-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; background: #fff;
+  border: 1px solid #E5E7EB; border-left: 4px solid var(--ql-color, #2563EB);
+  border-radius: 10px; text-decoration: none;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.fd-quick-link:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.fd-quick-link span   { font-size: 26px; }
+.fd-quick-link strong { display: block; font-size: 14px; font-weight: 700; color: #111827; }
+.fd-quick-link div > span { font-size: 12.5px; color: #6B7280; }
+
+.fd-loading { padding: 60px; text-align: center; color: #9CA3AF; font-size: 15px; }
+.fd-error   { padding: 40px; text-align: center; color: #DC2626; }
+.fd-error button {
+  margin-top: 10px; padding: 8px 18px; background: #2563EB; color: #fff;
+  border: none; border-radius: 8px; cursor: pointer;
+}
+.fd-empty { padding: 20px; text-align: center; color: #9CA3AF; font-size: 13.5px; }
+
+@media (max-width: 1100px) { .fd-row { grid-template-columns: 1fr; } }
+@media (max-width: 900px)  {
+  .fd-kpis        { grid-template-columns: 1fr 1fr; }
+  .fd-quick-links { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) { .fd-kpis { grid-template-columns: 1fr; } .fd-page { padding: 20px 14px 40px; } }

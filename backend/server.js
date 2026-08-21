@@ -31,6 +31,7 @@ import seedRoutes         from "./routes/seedRoutes.js";
 import bannerRoutes       from "./routes/bannerRoutes.js";
 import ownerRoutes        from "./routes/ownerRoutes.js";
 import sellerRoutes       from "./routes/sellerRoutes.js";
+import financeRoutes      from "./routes/financeRoutes.js";
 
 // ── Connect to MongoDB ────────────────────────────────────────────
 connectDB();
@@ -86,6 +87,7 @@ app.use("/api/messages",      messageRoutes);
 app.use("/api/banners",       bannerRoutes);
 app.use("/api/owner",         ownerRoutes);
 app.use("/api/seller",        sellerRoutes);
+app.use("/api/finance",       financeRoutes);
 
 // ── Health check ──────────────────────────────────────────────────
 app.get("/", (req, res) => {

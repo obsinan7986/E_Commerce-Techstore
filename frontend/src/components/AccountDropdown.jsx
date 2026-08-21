@@ -55,6 +55,13 @@ const SELLER_ITEMS = [
   { icon: <FiBell />,        label: "Notifications",       to: "/notifications"            },
 ];
 
+const FINANCE_ITEMS = [
+  { icon: "💰",              label: "Finance Dashboard",   to: "/finance/dashboard"        },
+  { icon: <FiCreditCard />,  label: "All Payments",        to: "/finance/payments"         },
+  { icon: "⏳",              label: "Pending Payments",    to: "/finance/payments?paymentStatus=Pending" },
+  { icon: "↩",               label: "Refunds",             to: "/finance/payments?paymentStatus=Refunded" },
+];
+
 /* ─────────────────────────────────────────────────────────────
    FOOTER links — real informational pages only
    ───────────────────────────────────────────────────────────── */
@@ -71,7 +78,7 @@ const AccountDropdown = () => {
   const [open, setOpen] = useState(false);
   const wrapRef         = useRef(null);
 
-  const { user, logout, isAdmin, isOwner, isSeller } = useAuth();
+  const { user, logout, isAdmin, isOwner, isSeller, isFinance } = useAuth();
   const { resetCartCount }        = useCart();
   const navigate                  = useNavigate();
 
@@ -158,7 +165,8 @@ const AccountDropdown = () => {
                 {isAdmin && <span className="acct-admin-chip">
                   {isOwner ? "Owner" : "Admin"}
                 </span>}
-                {isSeller && !isOwner && !isAdmin && <span className="acct-admin-chip acct-seller-chip">Seller</span>}
+                {isSeller  && !isOwner && !isAdmin && <span className="acct-admin-chip acct-seller-chip">Seller</span>}
+                {isFinance && !isOwner && !isAdmin && <span className="acct-admin-chip" style={{ background: "#D1FAE5", color: "#065F46" }}>Finance</span>}
                 </div>
               </div>
 
@@ -183,6 +191,13 @@ const AccountDropdown = () => {
                 <nav aria-label="Seller navigation">
                   <p className="acct-section-label">Seller Panel</p>
                   {SELLER_ITEMS.map(({ icon, label, to }) => (
+                    <MenuItem key={label} icon={icon} label={label} to={to} className="acct-menu-item acct-menu-admin" />
+                  ))}
+                </nav>
+              ) : isFinance ? (
+                <nav aria-label="Finance navigation">
+                  <p className="acct-section-label">Finance Panel</p>
+                  {FINANCE_ITEMS.map(({ icon, label, to }) => (
                     <MenuItem key={label} icon={icon} label={label} to={to} className="acct-menu-item acct-menu-admin" />
                   ))}
                 </nav>

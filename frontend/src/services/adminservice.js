@@ -231,3 +231,37 @@ export const getSellerReviews = async (params = {}) => {
   const { data } = await api.get("/seller/reviews", { params });
   return data;
 };
+
+// ==========================================
+// FINANCE
+// ==========================================
+
+export const getFinanceDashboard = async () => {
+  const { data } = await api.get("/finance/dashboard");
+  return data;
+};
+
+export const getFinanceStats = async () => {
+  const { data } = await api.get("/finance/stats");
+  return data;
+};
+
+export const getFinancePayments = async (params = {}) => {
+  const { data } = await api.get("/finance/payments", { params });
+  return data;
+};
+
+export const getFinanceOrderDetail = async (orderId) => {
+  const { data } = await api.get(`/finance/payments/${orderId}`);
+  return data;
+};
+
+export const financeVerifyPayment = async (orderId, action, adminNote = "") => {
+  const { data } = await api.put(`/finance/payments/${orderId}/verify`, { action, adminNote });
+  return data;
+};
+
+export const financeMarkRefund = async (orderId, reason = "") => {
+  const { data } = await api.patch(`/finance/payments/${orderId}/refund`, { reason });
+  return data;
+};

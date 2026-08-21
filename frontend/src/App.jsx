@@ -55,6 +55,11 @@ import SellerRoute from "./components/SellerRoute";
 import SellerDashboard from "./pages/SellerDashboard";
 import SellerReviews from "./pages/SellerReviews";
 
+// Finance pages
+import FinanceRoute from "./components/FinanceRoute";
+import FinanceDashboard from "./pages/FinanceDashboard";
+import FinancePayments from "./pages/FinancePayments";
+
 // Informational pages
 import ContactPage from "./pages/ContactPage";
 import FAQPage from "./pages/FAQPage";
@@ -141,6 +146,13 @@ function App() {
           <Route path="/seller"           element={<SellerDashboard />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
           <Route path="/seller/reviews"   element={<SellerReviews />} />
+        </Route>
+
+        {/* ── Finance only ── */}
+        <Route element={<FinanceRoute />}>
+          <Route path="/finance"            element={<FinanceDashboard />} />
+          <Route path="/finance/dashboard"  element={<FinanceDashboard />} />
+          <Route path="/finance/payments"   element={<FinancePayments />} />
         </Route>
       </Route>
 

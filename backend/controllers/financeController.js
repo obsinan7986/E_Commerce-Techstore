@@ -9,8 +9,9 @@
  *  - Verify / reject manual payments (mirrors admin capability)
  *  - Mark order paymentStatus = "Refunded" (no payment gateway — DB only)
  */
-import Order from "../models/Order.js";
-import User  from "../models/User.js";
+import Order              from "../models/Order.js";
+import User               from "../models/User.js";
+import createNotification from "../utils/createNotification.js";
 
 const MANUAL_METHODS = ["CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
 
@@ -256,7 +257,6 @@ export const financeVerifyPayment = async (req, res) => {
     await order.save();
 
     // Notify customer
-    const { default: createNotification } = await import("../utils/createNotification.js");
     if (action === "verify") {
       await createNotification({
         userId:  order.user,

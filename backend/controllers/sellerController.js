@@ -14,6 +14,7 @@
 import Product from "../models/Product.js";
 import Order   from "../models/Order.js";
 import User    from "../models/User.js";
+import Review  from "../models/Review.js";
 
 // ============================================================
 // GET OWN PRODUCTS  –  GET /api/seller/products
@@ -220,8 +221,6 @@ export const sellerGetKYCStatus = async (req, res) => {
 // GET /api/seller/reviews
 // Query: page, limit, productId, rating
 // ============================================================
-import Review from "../models/Review.js";
-
 export const sellerGetReviews = async (req, res) => {
   try {
     const page    = Math.max(Number(req.query.page)  || 1, 1);

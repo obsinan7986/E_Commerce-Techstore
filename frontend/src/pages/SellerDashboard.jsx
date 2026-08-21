@@ -3,6 +3,7 @@
  * Manage own products (add/edit/delete), view approval status, view sales summary
  */
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import api, { BASE_URL } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import "../styles/sellerDashboard.css";

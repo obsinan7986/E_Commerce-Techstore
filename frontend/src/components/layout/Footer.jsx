@@ -26,16 +26,23 @@ const Footer = () => {
             </p>
             <div className="footer-social">
               <a
-                href="https://www.facebook.com/fikadu.tesfayedamesa"
+                href="https://www.facebook.com/oictsolutions"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
               >
                 <FaFacebook />
               </a>
-              <a href="#" aria-label="Twitter"><FaTwitter /></a>
               <a
-                href="https://www.instagram.com/obsa1213"
+                href="https://twitter.com/oictsolutions"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Twitter"
+              >
+                <FaTwitter />
+              </a>
+              <a
+                href="https://www.instagram.com/oictsolutions"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -43,7 +50,7 @@ const Footer = () => {
                 <FaInstagram />
               </a>
               <a
-                href="https://www.youtube.com/@Obsaesfaye-86"
+                href="https://www.youtube.com/@oictsolutions"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
@@ -94,15 +101,15 @@ const Footer = () => {
             <ul className="footer-contact-list">
               <li className="footer-contact-item">
                 <span className="footer-contact-icon"><FaPhone /></span>
-                <span>+251 931 597 986</span>
+                <span>Tel: 0902381111 | 0903439943</span>
               </li>
               <li className="footer-contact-item">
                 <span className="footer-contact-icon"><FaEnvelope /></span>
-                <span>obsatesfaye6370@gmail.com</span>
+                <span>oictsolutions@gmail.com</span>
               </li>
               <li className="footer-contact-item">
                 <span className="footer-contact-icon"><FaMapMarkerAlt /></span>
-                <span>Ayer Tena, Addis Ababa, Ethiopia</span>
+                <span>Lebu, Addis Ababa, Ethiopia</span>
               </li>
             </ul>
           </div>

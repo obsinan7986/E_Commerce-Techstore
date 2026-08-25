@@ -12,7 +12,7 @@ const Header = () => {
         alignItems: "center",
       }}
     >
-      <h2>Tech E-Commerce</h2>
+      <h2>OICT_TechStore E-Commerce</h2>
 
       <nav style={{ display: "flex", gap: "20px" }}>
         <Link to="/" style={{ color: "white", textDecoration: "none" }}>

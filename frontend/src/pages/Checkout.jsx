@@ -10,6 +10,8 @@ import { useAuth }                                from "../context/AuthContext";
 
 import "../styles/checkout.css";
 import { BASE_URL } from "../services/api";
+import api from "../services/api";
+import { useCurrency } from "../context/CurrencyContext";
 
 
 
@@ -28,6 +30,31 @@ const Checkout = () => {
   const navigate          = useNavigate();
   const { loadCartCount } = useCart();
   const { user }          = useAuth();
+  const { formatPrice }   = useCurrency();
+
+  // ── Saved addresses ────────────────────────────────────────
+  const [savedAddresses, setSavedAddresses] = useState([]);
+
+  useEffect(() => {
+    if (!user) return;
+    api.get("/auth/addresses")
+      .then(r => {
+        const addrs = r.data.addresses || [];
+        setSavedAddresses(addrs);
+        // Pre-fill from default address
+        const def = addrs.find(a => a.isDefault) || addrs[0];
+        if (def) {
+          setShipping(s => ({
+            ...s,
+            fullName: def.fullName || s.fullName,
+            phone:    def.phone    || s.phone,
+            address:  def.address  || s.address,
+            city:     def.city     || s.city,
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
   const [cart,          setCart]          = useState({ items: [] });
   const [subtotal,      setSubtotal]      = useState(0);   // itemsPrice + shipping (pre-tax pre-discount)
@@ -211,6 +238,36 @@ const Checkout = () => {
               <span>1</span>
               <div><h2>Delivery Address</h2><p>Where should we deliver your order?</p></div>
             </div>
+
+            {/* ── Saved address picker ── */}
+            {savedAddresses.length > 0 && (
+              <div className="checkout-saved-addrs">
+                <p className="checkout-saved-label">Saved Addresses</p>
+                <div className="checkout-addr-list">
+                  {savedAddresses.map(a => (
+                    <button
+                      key={a._id}
+                      type="button"
+                      className={`checkout-addr-btn ${
+                        shipping.address === a.address && shipping.city === a.city ? "checkout-addr-btn--active" : ""
+                      }`}
+                      onClick={() => setShipping(s => ({
+                        ...s,
+                        fullName: a.fullName,
+                        phone:    a.phone,
+                        address:  a.address,
+                        city:     a.city,
+                      }))}
+                    >
+                      <strong>{a.label}</strong>
+                      {a.isDefault && <span className="checkout-addr-default">Default</span>}
+                      <span>{a.fullName} · {a.city}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="form-grid">
               {[
                 { label: "Full Name",     name: "fullName", type: "text",  placeholder: "Enter your full name" },
@@ -325,7 +382,7 @@ const Checkout = () => {
                     <h3>{item.product.name}</h3>
                     <p>Quantity: {item.quantity}</p>
                   </div>
-                  <strong>ETB {(item.product.price * item.quantity).toLocaleString()}</strong>
+                  <strong>{formatPrice(item.product.price * item.quantity)}</strong>
                 </div>
               ))}
             </div>
@@ -336,12 +393,12 @@ const Checkout = () => {
         <aside className="checkout-summary">
           <h2>Order Summary</h2>
 
-          <div className="summary-row"><span>Products ({totalItems})</span><span>ETB {Number(itemsPrice).toLocaleString()}</span></div>
+          <div className="summary-row"><span>Products ({totalItems})</span><span>{formatPrice(Number(itemsPrice))}</span></div>
           <div className="summary-row">
             <span>Shipping</span>
             <span className={shippingPrice === 0 ? "free" : ""}>{shippingPrice === 0 ? "FREE" : `ETB ${shippingPrice.toLocaleString()}`}</span>
           </div>
-          <div className="summary-row"><span>Tax (15%)</span><span>ETB {Number(tax).toLocaleString()}</span></div>
+          <div className="summary-row"><span>Tax (15%)</span><span>{formatPrice(Number(tax))}</span></div>
 
           {/* First-order discount banner */}
           {firstOrderEligible && !couponApplied && (
@@ -355,7 +412,7 @@ const Checkout = () => {
               </div>
               {useFirstOrder && (
                 <span className="co-first-order-saving">
-                  You save ETB {firstOrderDiscount.toLocaleString()}!
+                  You save {formatPrice(firstOrderDiscount)}!
                 </span>
               )}
             </div>
@@ -386,7 +443,7 @@ const Checkout = () => {
                 <span className="co-coupon-tag">🏷 {couponApplied.code}</span>
                 {couponApplied.type === "percentage"
                   ? <span>{couponApplied.discount}% off</span>
-                  : <span>ETB {couponApplied.discount} off</span>
+                  : <span>{formatPrice(couponApplied.discount)} off</span>
                 }
               </div>
               <button className="co-coupon-remove" onClick={handleRemoveCoupon} aria-label="Remove coupon">✕</button>
@@ -401,7 +458,7 @@ const Checkout = () => {
                 Discount
                 {couponApplied ? ` (${couponApplied.code})` : useFirstOrder ? " (First Order)" : ""}
               </span>
-              <span className="co-discount-val">− ETB {Number(discountAmt).toLocaleString()}</span>
+              <span className="co-discount-val">− {formatPrice(Number(discountAmt).toLocaleString())}</span>
             </div>
           )}
 
@@ -409,7 +466,7 @@ const Checkout = () => {
 
           <div className="summary-total">
             <span>Total</span>
-            <strong>ETB {Number(finalTotal).toLocaleString()}</strong>
+            <strong>{formatPrice(Number(finalTotal))}</strong>
           </div>
 
           <button className="place-order-btn" onClick={handleOrder} disabled={loading}>

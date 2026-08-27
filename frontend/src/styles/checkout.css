@@ -605,3 +605,22 @@
   color: #16A34A;
   font-weight: 800;
 }
+
+/* ── Saved address picker in Checkout ─────────────────────── */
+.checkout-saved-addrs { margin-bottom: 18px; }
+.checkout-saved-label { font-size: 13px; font-weight: 600; color: #6B7280; margin-bottom: 8px; }
+.checkout-addr-list   { display: flex; gap: 10px; flex-wrap: wrap; }
+.checkout-addr-btn {
+  display: flex; flex-direction: column; gap: 3px; align-items: flex-start;
+  padding: 10px 14px; border: 1px solid #E5E7EB; border-radius: 8px;
+  background: #fff; cursor: pointer; text-align: left;
+  transition: border-color 0.15s, background 0.15s; min-width: 160px;
+}
+.checkout-addr-btn:hover  { border-color: #2563EB; background: #EFF6FF; }
+.checkout-addr-btn--active { border-color: #2563EB; background: #EFF6FF; }
+.checkout-addr-btn strong  { font-size: 13px; font-weight: 700; color: #111827; }
+.checkout-addr-btn span    { font-size: 12px; color: #6B7280; }
+.checkout-addr-default {
+  font-size: 11px; font-weight: 700; background: #2563EB;
+  color: #fff; padding: 1px 7px; border-radius: 20px;
+}

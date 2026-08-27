@@ -1,12 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   FaSearch, FaHeart, FaShoppingCart,
-  FaBars, FaChevronDown,
+  FaBars, FaChevronDown, FaCamera,
 } from "react-icons/fa";
 import MegaMenu           from "./MegaMenu";
 import AccountDropdown    from "./AccountDropdown";
 import NotificationBell   from "./NotificationBell";
+import LocaleSelector     from "./LocaleSelector";
 import { useCart }        from "../context/CartContext";
 import oictLogo           from "../assets/OICT logo.jpg";
 import "../styles/navbar.css";
@@ -14,6 +15,7 @@ import "../styles/navbar.css";
 const Navbar = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [keyword,  setKeyword]  = useState("");
+  const imgInputRef = useRef(null);
 
   const { cartCount } = useCart();
   const navigate = useNavigate();
@@ -23,6 +25,14 @@ const Navbar = () => {
     const v = keyword.trim();
     if (!v) return;
     navigate(`/search/${encodeURIComponent(v)}`);
+  };
+
+  const handleImageSearch = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Navigate to image search page with the file via state
+    navigate("/image-search", { state: { file } });
+    e.target.value = ""; // reset so same file can be re-selected
   };
 
   return (
@@ -53,6 +63,23 @@ const Navbar = () => {
               placeholder="Search for smartphones, laptops, accessories..."
               aria-label="Search products"
             />
+            {/* Image search button */}
+            <button
+              type="button"
+              className="search-img-btn"
+              onClick={() => imgInputRef.current?.click()}
+              aria-label="Search by image"
+              title="Search by image"
+            >
+              <FaCamera size={14} />
+            </button>
+            <input
+              ref={imgInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              style={{ display: "none" }}
+              onChange={handleImageSearch}
+            />
             <button type="submit" aria-label="Search">
               <FaSearch />
             </button>
@@ -69,6 +96,9 @@ const Navbar = () => {
 
             {/* Notification bell */}
             <NotificationBell />
+
+            {/* Language + Currency */}
+            <LocaleSelector />
 
             {/* Account — self-contained: owns trigger + panel + open state */}
             <AccountDropdown />

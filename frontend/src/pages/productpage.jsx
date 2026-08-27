@@ -9,12 +9,14 @@ import ReviewSection from "../components/ReviewSection";
 import { addToCart } from "../services/cartService";
 import { addToWishlist } from "../services/wishlistService";
 import { useCart } from "../context/CartContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 import "../styles/productpage.css";
 
 const ProductPage = () => {
   const { id } = useParams();
   const { loadCartCount } = useCart();
+  const { formatPrice }   = useCurrency();
   const [product, setProduct]   = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading]   = useState(true);
@@ -109,8 +111,8 @@ const ProductPage = () => {
 
             {/* Price */}
             <div className="price-box">
-              <span className="new-price">ETB {product.price.toLocaleString()}</span>
-              <span className="old-price">ETB {oldPrice.toLocaleString()}</span>
+              <span className="new-price">{formatPrice(product.price)}</span>
+              <span className="old-price">{formatPrice(oldPrice)}</span>
               <span className="discount">-{discountPct}%</span>
             </div>
 

@@ -17,11 +17,13 @@ import {
 
 import "../styles/cart.css";
 import { BASE_URL } from "../services/api";
+import { useCurrency } from "../context/CurrencyContext";
 
 
 
 const Cart = () => {
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
 
   const [cart, setCart] = useState({
     items: [],
@@ -227,7 +229,7 @@ const Cart = () => {
                     </p>
 
                     <p className="cart-price">
-                      ETB {product.price.toLocaleString()}
+                      {formatPrice(product.price)}
                     </p>
 
                     <div className="cart-actions">
@@ -278,7 +280,7 @@ const Cart = () => {
                   </div>
 
                   <div className="item-total">
-                    ETB {(product.price * item.quantity).toLocaleString()}
+                    {formatPrice(product.price * item.quantity)}
                   </div>
 
                 </div>
@@ -295,7 +297,7 @@ const Cart = () => {
               <span>Subtotal</span>
 
               <strong>
-                ETB {Number(totalPrice).toLocaleString()}
+                {formatPrice(Number(totalPrice))}
               </strong>
             </div>
 
@@ -313,7 +315,7 @@ const Cart = () => {
               <span>Total</span>
 
               <strong>
-                ETB {Number(totalPrice).toLocaleString()}
+                {formatPrice(Number(totalPrice))}
               </strong>
             </div>
 

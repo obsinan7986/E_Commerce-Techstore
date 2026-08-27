@@ -65,6 +65,9 @@ import MeetingsPage      from "./pages/MeetingsPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import SchedulePage      from "./pages/SchedulePage";
 
+// Feature pages
+import ImageSearchPage   from "./pages/ImageSearchPage";
+
 // Informational pages
 import ContactPage from "./pages/ContactPage";
 import FAQPage from "./pages/FAQPage";
@@ -166,6 +169,9 @@ function App() {
           <Route path="/comm/announcements" element={<AnnouncementsPage />} />
           <Route path="/comm/schedule"      element={<SchedulePage />} />
         </Route>
+
+        {/* ── Image search — public ── */}
+        <Route path="/image-search" element={<ImageSearchPage />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

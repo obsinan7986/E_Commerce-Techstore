@@ -3,11 +3,11 @@ import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
 import { addToCart } from "../services/cartService";
 import { addToWishlist } from "../services/wishlistService";
 import { useCart } from "../context/CartContext";
+import { useCurrency } from "../context/CurrencyContext";
+import { BASE_URL } from "../services/api";
 import "../styles/productcard.css";
 
-const BASE =
-  import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
-  "https://e-commerce-techstore-y26d.onrender.com";
+const BASE = BASE_URL;
 /* ── Stock status helper ── */
 const stockStatus = (stock) => {
   if (stock === 0)  return { label: "Out of Stock", cls: "stock-badge--out",  text: "✗ Out of Stock" };
@@ -17,6 +17,7 @@ const stockStatus = (stock) => {
 
 const ProductCard = ({ product }) => {
   const { loadCartCount } = useCart();
+  const { formatPrice }   = useCurrency();
 
   const handleAddCart = async () => {
     try {
@@ -85,8 +86,8 @@ const ProductCard = ({ product }) => {
 
         {/* Price */}
         <div className="price-box">
-          <span className="new-price">ETB {product.price.toLocaleString()}</span>
-          <span className="old-price">ETB {oldPrice.toLocaleString()}</span>
+          <span className="new-price">{formatPrice(product.price)}</span>
+          <span className="old-price">{formatPrice(oldPrice)}</span>
         </div>
 
         {/* Stock status text */}

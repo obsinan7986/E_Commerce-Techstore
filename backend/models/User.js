@@ -100,6 +100,20 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    // ── Address Book (multiple saved delivery addresses) ─────
+    addresses: [
+      {
+        _id:        { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+        label:      { type: String, default: "Home" },   // e.g. Home / Work / Other
+        fullName:   { type: String, required: true },
+        phone:      { type: String, required: true },
+        address:    { type: String, required: true },
+        city:       { type: String, required: true },
+        subCity:    { type: String, default: "" },
+        isDefault:  { type: Boolean, default: false },
+      },
+    ],
+
     firstOrderDiscountUsed: {
       type:    Boolean,
       default: false,

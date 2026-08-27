@@ -8,6 +8,13 @@ import {
   forgotPassword,
   resetPassword,
 } from "../controllers/authController.js";
+import {
+  getAddresses,
+  addAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+} from "../controllers/addressController.js";
 import { protect }       from "../middleware/authMiddleware.js";
 import generateToken     from "../utils/generateToken.js";
 
@@ -20,6 +27,13 @@ router.get( "/profile", protect, getUserProfile);
 router.put( "/profile", protect, updateUserProfile);
 router.post("/forgot-password",  forgotPassword);
 router.post("/reset-password",   resetPassword);
+
+/* ── Address book ──────────────────────────────────────────────── */
+router.get(   "/addresses",              protect, getAddresses);
+router.post(  "/addresses",              protect, addAddress);
+router.put(   "/addresses/:addrId",      protect, updateAddress);
+router.delete("/addresses/:addrId",      protect, deleteAddress);
+router.patch( "/addresses/:addrId/default", protect, setDefaultAddress);
 
 /* ── Google OAuth ──────────────────────────────────────────────── */
 

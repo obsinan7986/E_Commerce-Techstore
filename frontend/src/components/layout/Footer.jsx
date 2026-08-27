@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   FaFacebook, FaTwitter, FaInstagram, FaYoutube,
   FaPhone, FaEnvelope, FaMapMarkerAlt,
@@ -7,7 +8,8 @@ import oictLogo from "../../assets/OICT logo.jpg";
 import "../../styles/footer.css";
 
 const Footer = () => {
-  const year = new Date().getFullYear();
+  const { t }  = useTranslation();
+  const year   = new Date().getFullYear();
 
   return (
     <footer className="footer">
@@ -25,50 +27,25 @@ const Footer = () => {
               Quality products, best prices, exceptional service.
             </p>
             <div className="footer-social">
-              <a
-                href="https://www.facebook.com/oictsolutions"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-              >
-                <FaFacebook />
-              </a>
-              <a
-                href="https://twitter.com/oictsolutions"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Twitter"
-              >
-                <FaTwitter />
-              </a>
-              <a
-                href="https://www.instagram.com/oictsolutions"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-              >
-                <FaInstagram />
-              </a>
-              <a
-                href="https://www.youtube.com/@oictsolutions"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-              >
-                <FaYoutube />
-              </a>
+              <a href="https://www.facebook.com/oictsolutions" target="_blank"
+                rel="noopener noreferrer" aria-label="Facebook"><FaFacebook /></a>
+              <a href="https://twitter.com/oictsolutions" target="_blank"
+                rel="noopener noreferrer" aria-label="Twitter"><FaTwitter /></a>
+              <a href="https://www.instagram.com/oictsolutions" target="_blank"
+                rel="noopener noreferrer" aria-label="Instagram"><FaInstagram /></a>
+              <a href="https://www.youtube.com/@oictsolutions" target="_blank"
+                rel="noopener noreferrer" aria-label="YouTube"><FaYoutube /></a>
             </div>
           </div>
 
           {/* ── Shop ── */}
           <div className="footer-col">
-            <h4>Shop</h4>
+            <h4>{t("nav.products")}</h4>
             <ul>
-              <li><Link to="/products">All Products</Link></li>
-              <li><Link to="/products">Deals</Link></li>
-              <li><Link to="/products">New Arrivals</Link></li>
-              <li><Link to="/products">Best Sellers</Link></li>
-              <li><Link to="/products">Clearance</Link></li>
+              <li><Link to="/products">{t("nav.products")}</Link></li>
+              <li><Link to="/products">{t("nav.deals")}</Link></li>
+              <li><Link to="/products">{t("nav.newArrivals")}</Link></li>
+              <li><Link to="/products">{t("nav.brands")}</Link></li>
             </ul>
           </div>
 
@@ -76,8 +53,8 @@ const Footer = () => {
           <div className="footer-col">
             <h4>Customer Service</h4>
             <ul>
-              <li><Link to="/contact">Contact Us</Link></li>
-              <li><Link to="/shipping-info">Shipping Information</Link></li>
+              <li><Link to="/contact">{t("nav.contact")}</Link></li>
+              <li><Link to="/shipping-info">Shipping Info</Link></li>
               <li><Link to="/returns">Returns &amp; Refunds</Link></li>
               <li><Link to="/orders">Track Order</Link></li>
               <li><Link to="/faq">FAQ</Link></li>
@@ -86,12 +63,12 @@ const Footer = () => {
 
           {/* ── My Account ── */}
           <div className="footer-col">
-            <h4>My Account</h4>
+            <h4>{t("nav.account")}</h4>
             <ul>
-              <li><Link to="/login">Sign In</Link></li>
-              <li><Link to="/orders">My Orders</Link></li>
-              <li><Link to="/wishlist">Wishlist</Link></li>
-              <li><Link to="/profile">Account Settings</Link></li>
+              <li><Link to="/login">{t("auth.signIn")}</Link></li>
+              <li><Link to="/orders">{t("orders.title")}</Link></li>
+              <li><Link to="/wishlist">{t("nav.wishlist")}</Link></li>
+              <li><Link to="/profile">{t("profile.editProfile")}</Link></li>
             </ul>
           </div>
 

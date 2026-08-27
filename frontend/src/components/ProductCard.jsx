@@ -1,21 +1,15 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
-import { addToCart } from "../services/cartService";
+import { addToCart }     from "../services/cartService";
 import { addToWishlist } from "../services/wishlistService";
-import { useCart } from "../context/CartContext";
-import { useCurrency } from "../context/CurrencyContext";
-import { BASE_URL } from "../services/api";
+import { useCart }       from "../context/CartContext";
+import { useCurrency }   from "../context/CurrencyContext";
+import { BASE_URL }      from "../services/api";
 import "../styles/productcard.css";
 
-const BASE = BASE_URL;
-/* ── Stock status helper ── */
-const stockStatus = (stock) => {
-  if (stock === 0)  return { label: "Out of Stock", cls: "stock-badge--out",  text: "✗ Out of Stock" };
-  if (stock <= 9)   return { label: "Low Stock",    cls: "stock-badge--low",  text: `⚠ Only ${stock} left` };
-  return              { label: "In Stock",     cls: "stock-badge--in",   text: "✓ In Stock" };
-};
-
 const ProductCard = ({ product }) => {
+  const { t }             = useTranslation();
   const { loadCartCount } = useCart();
   const { formatPrice }   = useCurrency();
 
@@ -38,28 +32,36 @@ const ProductCard = ({ product }) => {
 
   const oldPrice = Math.round(product.price * 1.2);
   const inStock  = product.stock > 0;
-  const status   = stockStatus(product.stock);
   const imgSrc   = product.image?.startsWith("http")
     ? product.image
-    : `${BASE}${product.image}`;
+    : `${BASE_URL}${product.image}`;
+
+  const stockText = product.stock === 0
+    ? t("product.outOfStock")
+    : product.stock <= 9
+      ? t("product.lowStock", { count: product.stock })
+      : t("product.inStock");
+
+  const stockCls = product.stock === 0
+    ? "stock-badge--out"
+    : "stock-badge--low";
 
   return (
     <div className="product-card">
 
-      {/* Discount badge */}
       <div className="discount-badge">-20%</div>
 
-      {/* Stock badge — Out of Stock or Low Stock on the image */}
       {product.stock <= 9 && (
-        <div className={`stock-badge ${status.cls}`}>{status.label}</div>
+        <div className={`stock-badge ${stockCls}`}>
+          {product.stock === 0 ? t("product.outOfStock") : "Low Stock"}
+        </div>
       )}
 
-      {/* Wishlist */}
-      <button className="wishlist-btn" onClick={handleWishlist} aria-label="Add to wishlist" type="button">
+      <button className="wishlist-btn" onClick={handleWishlist}
+        aria-label={t("product.addToWishlist")} type="button">
         <FaHeart />
       </button>
 
-      {/* Image */}
       <Link to={`/product/${product._id}`} className="product-image">
         <img
           src={imgSrc}
@@ -67,42 +69,34 @@ const ProductCard = ({ product }) => {
           onError={(e) => { e.target.style.opacity = "0.3"; }}
           style={!inStock ? { opacity: 0.45, filter: "grayscale(40%)" } : undefined}
         />
-        <span className="quick-view">Quick View</span>
+        <span className="quick-view">{t("product.quickView")}</span>
       </Link>
 
-      {/* Info */}
       <div className="product-info">
         <span className="brand">{product.brand}</span>
-
         <Link to={`/product/${product._id}`} className="product-name">{product.name}</Link>
 
-        {/* Stars */}
         <div className="rating">
           {[...Array(5)].map((_, i) => (
-            <FaStar key={i} size={12} color={i < Math.round(product.rating) ? "#F59E0B" : "#E2E8F0"} />
+            <FaStar key={i} size={12}
+              color={i < Math.round(product.rating) ? "#F59E0B" : "#E2E8F0"} />
           ))}
           <span>({product.numReviews || 0})</span>
         </div>
 
-        {/* Price */}
         <div className="price-box">
           <span className="new-price">{formatPrice(product.price)}</span>
           <span className="old-price">{formatPrice(oldPrice)}</span>
         </div>
 
-        {/* Stock status text */}
         <div className={`stock ${inStock ? "in-stock" : "out-stock"}`} style={{ fontSize: 12 }}>
-          {status.text}
+          {stockText}
         </div>
 
-        <button
-          className="cart-btn"
-          disabled={!inStock}
-          onClick={handleAddCart}
-          type="button"
-        >
+        <button className="cart-btn" disabled={!inStock}
+          onClick={handleAddCart} type="button">
           <FaShoppingCart size={13} />
-          {inStock ? "Add to Cart" : "Out of Stock"}
+          {inStock ? t("product.addToCart") : t("product.outOfStock")}
         </button>
       </div>
     </div>

@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
-  FaMinus,
-  FaPlus,
-  FaTrash,
-  FaArrowLeft,
-  FaShoppingCart,
+  FaMinus, FaPlus, FaTrash, FaArrowLeft, FaShoppingCart,
 } from "react-icons/fa";
 
 import {
@@ -23,6 +20,7 @@ import { useCurrency } from "../context/CurrencyContext";
 
 const Cart = () => {
   const navigate = useNavigate();
+  const { t }    = useTranslation();
   const { formatPrice } = useCurrency();
 
   const [cart, setCart] = useState({
@@ -119,9 +117,7 @@ const Cart = () => {
   if (loading) {
     return (
       <div className="cart-page">
-        <div className="cart-loading">
-          Loading your cart...
-        </div>
+        <div className="cart-loading">{t("common.loading")}</div>
       </div>
     );
   }
@@ -130,13 +126,9 @@ const Cart = () => {
     return (
       <div className="cart-page">
         <div className="cart-error">
-          <h2>Something went wrong</h2>
-
+          <h2>{t("common.error")}</h2>
           <p>{error}</p>
-
-          <button onClick={loadCart}>
-            Try Again
-          </button>
+          <button onClick={loadCart}>{t("common.retry")}</button>
         </div>
       </div>
     );
@@ -147,16 +139,10 @@ const Cart = () => {
       <div className="cart-page">
         <div className="empty-cart">
           <FaShoppingCart className="empty-cart-icon" />
-
-          <h1>Your Cart is Empty</h1>
-
-          <p>
-            You haven't added any products to your cart yet.
-          </p>
-
+          <h1>{t("cart.empty")}</h1>
+          <p>You haven't added any products to your cart yet.</p>
           <Link to="/" className="continue-shopping">
-            <FaArrowLeft />
-            Continue Shopping
+            <FaArrowLeft />{t("cart.continueShopping")}
           </Link>
         </div>
       </div>
@@ -170,15 +156,8 @@ const Cart = () => {
 
         <div className="cart-header">
           <div>
-            <h1>Shopping Cart</h1>
-
-            <p>
-              {cart.items.length}{" "}
-              {cart.items.length === 1
-                ? "item"
-                : "items"}{" "}
-              in your cart
-            </p>
+            <h1>{t("cart.title")}</h1>
+            <p>{cart.items.length} {cart.items.length === 1 ? "item" : "items"} in your cart</p>
           </div>
 
           <button
@@ -265,14 +244,8 @@ const Cart = () => {
 
                       </div>
 
-                      <button
-                        className="remove-btn"
-                        onClick={() =>
-                          removeItem(product._id)
-                        }
-                      >
-                        <FaTrash />
-                        Remove
+                      <button className="remove-btn" onClick={() => removeItem(product._id)}>
+                        <FaTrash />{t("cart.remove")}
                       </button>
 
                     </div>
@@ -291,47 +264,31 @@ const Cart = () => {
 
           <aside className="cart-summary">
 
-            <h2>Order Summary</h2>
+            <h2>{t("cart.subtotal")}</h2>
 
             <div className="summary-row">
-              <span>Subtotal</span>
-
-              <strong>
-                {formatPrice(Number(totalPrice))}
-              </strong>
+              <span>{t("cart.subtotal")}</span>
+              <strong>{formatPrice(Number(totalPrice))}</strong>
             </div>
 
             <div className="summary-row">
               <span>Shipping</span>
-
-              <strong className="free">
-                FREE
-              </strong>
+              <strong className="free">FREE</strong>
             </div>
 
             <div className="summary-divider"></div>
 
             <div className="summary-total">
-              <span>Total</span>
-
-              <strong>
-                {formatPrice(Number(totalPrice))}
-              </strong>
+              <span>{t("cart.total")}</span>
+              <strong>{formatPrice(Number(totalPrice))}</strong>
             </div>
 
-            <button
-              className="checkout-btn"
-              onClick={() => navigate("/checkout")}
-            >
-              Proceed to Checkout
+            <button className="checkout-btn" onClick={() => navigate("/checkout")}>
+              {t("cart.checkout")}
             </button>
 
-            <Link
-              to="/products"
-              className="continue-link"
-            >
-              <FaArrowLeft />
-              Continue Shopping
+            <Link to="/products" className="continue-link">
+              <FaArrowLeft />{t("cart.continueShopping")}
             </Link>
 
           </aside>

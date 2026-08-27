@@ -1,18 +1,20 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FaSearch, FaHeart, FaShoppingCart,
   FaBars, FaChevronDown, FaCamera,
 } from "react-icons/fa";
-import MegaMenu           from "./MegaMenu";
-import AccountDropdown    from "./AccountDropdown";
-import NotificationBell   from "./NotificationBell";
-import LocaleSelector     from "./LocaleSelector";
-import { useCart }        from "../context/CartContext";
-import oictLogo           from "../assets/OICT logo.jpg";
+import MegaMenu        from "./MegaMenu";
+import AccountDropdown from "./AccountDropdown";
+import NotificationBell from "./NotificationBell";
+import LocaleSelector  from "./LocaleSelector";
+import { useCart }     from "../context/CartContext";
+import oictLogo        from "../assets/OICT logo.jpg";
 import "../styles/navbar.css";
 
 const Navbar = () => {
+  const { t }          = useTranslation();
   const [showMenu, setShowMenu] = useState(false);
   const [keyword,  setKeyword]  = useState("");
   const imgInputRef = useRef(null);
@@ -30,16 +32,15 @@ const Navbar = () => {
   const handleImageSearch = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Navigate to image search page with the file via state
     navigate("/image-search", { state: { file } });
-    e.target.value = ""; // reset so same file can be re-selected
+    e.target.value = "";
   };
 
   return (
     <>
       {/* ── Promo bar ── */}
       <div className="promo-bar">
-        <span>🚚 Free shipping on all orders over ETB 5,000!</span>
+        <span>{t("nav.freeShipping")}</span>
       </div>
 
       {/* ── Main header ── */}
@@ -60,16 +61,15 @@ const Navbar = () => {
               type="text"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Search for smartphones, laptops, accessories..."
-              aria-label="Search products"
+              placeholder={t("nav.search")}
+              aria-label={t("nav.search")}
             />
-            {/* Image search button */}
             <button
               type="button"
               className="search-img-btn"
               onClick={() => imgInputRef.current?.click()}
-              aria-label="Search by image"
-              title="Search by image"
+              aria-label={t("nav.searchByImage")}
+              title={t("nav.searchByImage")}
             >
               <FaCamera size={14} />
             </button>
@@ -80,7 +80,7 @@ const Navbar = () => {
               style={{ display: "none" }}
               onChange={handleImageSearch}
             />
-            <button type="submit" aria-label="Search">
+            <button type="submit" aria-label={t("nav.search")}>
               <FaSearch />
             </button>
           </form>
@@ -88,32 +88,27 @@ const Navbar = () => {
           {/* Right icons */}
           <div className="header-icons">
 
-            {/* Wishlist */}
-            <Link to="/wishlist" className="header-icon-btn" aria-label="Wishlist">
+            <Link to="/wishlist" className="header-icon-btn" aria-label={t("nav.wishlist")}>
               <FaHeart style={{ fontSize: 19 }} />
-              <span className="icon-label">Wishlist</span>
+              <span className="icon-label">{t("nav.wishlist")}</span>
             </Link>
 
-            {/* Notification bell */}
             <NotificationBell />
 
-            {/* Language + Currency */}
             <LocaleSelector />
 
-            {/* Account — self-contained: owns trigger + panel + open state */}
             <AccountDropdown />
 
-            {/* Cart */}
             <Link
               to="/cart"
               className="header-cart-btn cart-badge-wrap"
-              aria-label={`Cart, ${cartCount} items`}
+              aria-label={`${t("nav.cart")}, ${cartCount} items`}
             >
               <FaShoppingCart style={{ fontSize: 20 }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                <span className="cart-label">My Cart</span>
+                <span className="cart-label">{t("nav.cart")}</span>
                 <span className="cart-total">
-                  {cartCount} item{cartCount !== 1 ? "s" : ""}
+                  {cartCount} {cartCount !== 1 ? "items" : "item"}
                 </span>
               </div>
               {cartCount > 0 && (
@@ -131,7 +126,6 @@ const Navbar = () => {
       <nav className="nav" aria-label="Main navigation">
         <div className="nav-inner">
 
-          {/* All Categories */}
           <div
             className="category-wrapper"
             onMouseEnter={() => setShowMenu(true)}
@@ -144,7 +138,7 @@ const Navbar = () => {
               aria-expanded={showMenu}
             >
               <FaBars aria-hidden="true" />
-              <span>All Categories</span>
+              <span>{t("nav.allCategories")}</span>
               <FaChevronDown className="category-arrow" aria-hidden="true" />
             </button>
             {showMenu && (
@@ -154,16 +148,15 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Nav links */}
           <div className="nav-links">
-            <Link to="/">Home</Link>
-            <Link to="/products">Products</Link>
+            <Link to="/">{t("nav.home")}</Link>
+            <Link to="/products">{t("nav.products")}</Link>
             <Link to="/products">
-              Deals <span className="nav-link-badge">HOT</span>
+              {t("nav.deals")} <span className="nav-link-badge">HOT</span>
             </Link>
-            <Link to="/products">New Arrivals</Link>
-            <Link to="/products">Brands</Link>
-            <Link to="/contact">Contact</Link>
+            <Link to="/products">{t("nav.newArrivals")}</Link>
+            <Link to="/products">{t("nav.brands")}</Link>
+            <Link to="/contact">{t("nav.contact")}</Link>
           </div>
 
         </div>

@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import api from "../services/api";
 
-import HeroBanner from "../components/HeroBanner";
+import HeroBanner  from "../components/HeroBanner";
 import ProductCard from "../components/ProductCard";
 
 import "../styles/home.css";
 
 const Home = () => {
-  const location = useLocation();
+  const { t }      = useTranslation();
+  const location   = useLocation();
   const justRegistered = location.state?.registered === true;
 
-  const [products, setProducts] = useState([]);
-  const [loading,  setLoading]  = useState(true);
+  const [products,   setProducts]   = useState([]);
+  const [loading,    setLoading]    = useState(true);
   const [showBanner, setShowBanner] = useState(justRegistered);
 
   useEffect(() => {
@@ -22,47 +24,43 @@ const Home = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Auto-dismiss the success banner after 5 seconds
   useEffect(() => {
     if (!showBanner) return;
-    const t = setTimeout(() => setShowBanner(false), 5000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setShowBanner(false), 5000);
+    return () => clearTimeout(timer);
   }, [showBanner]);
 
   return (
     <div className="home-page">
 
-      {/* ── Registration success banner ── */}
       {showBanner && (
         <div className="home-success-banner" role="status">
-          <span>🎉 Welcome to OICT_TechStore! Your account has been created successfully.</span>
+          <span>🎉 {t("auth.joinUs")}</span>
           <button
             type="button"
             className="home-success-close"
             onClick={() => setShowBanner(false)}
-            aria-label="Dismiss"
+            aria-label={t("common.close")}
           >
             ×
           </button>
         </div>
       )}
 
-      {/* Hero + feature strip */}
       <HeroBanner />
 
-      {/* Featured products */}
       <section className="latest-products">
         <div className="section-title-block">
-          <h2>Featured Products</h2>
-          <Link to="/products">View All Products →</Link>
+          <h2>{t("product.featuredProducts")}</h2>
+          <Link to="/products">{t("product.viewAll")}</Link>
         </div>
 
         {loading ? (
-          <div className="ts-loading">Loading products…</div>
+          <div className="ts-loading">{t("common.loading")}</div>
         ) : products.length === 0 ? (
           <div className="ts-empty">
             <span className="ts-empty-icon">📦</span>
-            <h3>No products yet</h3>
+            <h3>{t("product.noProducts")}</h3>
           </div>
         ) : (
           <div className="featured-grid">

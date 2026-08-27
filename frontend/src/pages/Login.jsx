@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FaEye, FaEyeSlash, FaShoppingBag } from "react-icons/fa";
 
 import { login } from "../services/authservice";
@@ -10,10 +11,11 @@ import "../styles/login.css";
 import "../styles/auth.css";
 
 const Login = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { t }        = useTranslation();
+  const navigate     = useNavigate();
+  const location     = useLocation();
   const { login: loginUser } = useAuth();
-  const { loadCartCount } = useCart();
+  const { loadCartCount }    = useCart();
 
   const redirectTo = location.state?.from || "/";
   const justRegistered = location.state?.registered === true;
@@ -71,7 +73,7 @@ const Login = () => {
           <span>OICT_TechStore</span>
         </div>
 
-        <h1 className="auth-title">Welcome back</h1>
+        <h1 className="auth-title">{t("auth.signIn")}</h1>
         <p className="auth-subtitle">Sign in to your account to continue</p>
 
         {justRegistered && (
@@ -90,7 +92,7 @@ const Login = () => {
 
           {/* Email */}
           <div className="auth-field">
-            <label htmlFor="email">Email address</label>
+            <label htmlFor="email">{t("auth.email")}</label>
             <input
               id="email"
               type="email"
@@ -107,8 +109,8 @@ const Login = () => {
           {/* Password */}
           <div className="auth-field">
             <div className="auth-label-row">
-              <label htmlFor="password">Password</label>
-              <Link to="/forgot-password" className="auth-forgot-link">Forgot password?</Link>
+              <label htmlFor="password">{t("auth.password")}</label>
+              <Link to="/forgot-password" className="auth-forgot-link">{t("auth.forgotPassword")}</Link>
             </div>
             <div className="auth-input-wrap">
               <input
@@ -151,7 +153,7 @@ const Login = () => {
         </form>
 
         <p className="auth-footer">
-          Don&apos;t have an account?{" "}
+          {t("auth.noAccount")}{" "}
           <Link to="/register">Create one</Link>
         </p>
 

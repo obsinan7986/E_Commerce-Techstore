@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FaEye, FaEyeSlash, FaShoppingBag } from "react-icons/fa";
 
 import { register } from "../services/authservice";
@@ -62,6 +63,7 @@ const KycUpload = ({ label, fieldKey, value, onChange, uploading, disabled }) =>
 
 // ── Main component ────────────────────────────────────────────
 const Register = () => {
+  const { t }                = useTranslation();
   const navigate             = useNavigate();
   const { login: loginUser } = useAuth();
   const { loadCartCount }    = useCart();
@@ -163,8 +165,8 @@ const Register = () => {
           <span>OICT_TechStore</span>
         </div>
 
-        <h1 className="auth-title">Create your account</h1>
-        <p className="auth-subtitle">Join OICT_TechStore and start shopping today</p>
+        <h1 className="auth-title">{t("auth.createAccount")}</h1>
+        <p className="auth-subtitle">{t("auth.joinUs")}</p>
 
         {success && <div className="auth-success" role="status">{success}</div>}
         {error   && <div className="auth-error"   role="alert">{error}</div>}
@@ -174,7 +176,7 @@ const Register = () => {
 
             {/* Full Name */}
             <div className="auth-field auth-field-full">
-              <label htmlFor="fullName">Full name <span className="auth-required">*</span></label>
+              <label htmlFor="fullName">{t("auth.fullName")} <span className="auth-required">*</span></label>
               <input id="fullName" type="text" name="fullName" value={formData.fullName}
                 onChange={handleChange} placeholder="John Doe" autoComplete="name"
                 autoFocus disabled={loading} />
@@ -182,7 +184,7 @@ const Register = () => {
 
             {/* Email */}
             <div className="auth-field">
-              <label htmlFor="email">Email address <span className="auth-required">*</span></label>
+              <label htmlFor="email">{t("auth.email")} <span className="auth-required">*</span></label>
               <input id="email" type="email" name="email" value={formData.email}
                 onChange={handleChange} placeholder="you@example.com" autoComplete="email"
                 disabled={loading} />
@@ -190,7 +192,7 @@ const Register = () => {
 
             {/* Phone */}
             <div className="auth-field">
-              <label htmlFor="phone">Phone number <span className="auth-required">*</span></label>
+              <label htmlFor="phone">{t("auth.phone")} <span className="auth-required">*</span></label>
               <input id="phone" type="tel" name="phone" value={formData.phone}
                 onChange={handleChange} placeholder="+251 9..." autoComplete="tel"
                 disabled={loading} />
@@ -198,7 +200,7 @@ const Register = () => {
 
             {/* Address */}
             <div className="auth-field auth-field-full">
-              <label htmlFor="address">Address <span className="auth-optional">(optional)</span></label>
+              <label htmlFor="address">{t("auth.address")} <span className="auth-optional">(optional)</span></label>
               <input id="address" type="text" name="address" value={formData.address}
                 onChange={handleChange} placeholder="Addis Ababa, Bole..."
                 autoComplete="street-address" disabled={loading} />
@@ -206,11 +208,11 @@ const Register = () => {
 
             {/* Role dropdown — Customer or Seller only */}
             <div className="auth-field auth-field-full">
-              <label htmlFor="role">Account type <span className="auth-required">*</span></label>
+              <label htmlFor="role">{t("auth.accountType")} <span className="auth-required">*</span></label>
               <select id="role" name="role" value={formData.role}
                 onChange={handleChange} className="auth-select" disabled={loading}>
-                <option value="customer">Customer</option>
-                <option value="seller">Seller</option>
+                <option value="customer">{t("auth.customer")}</option>
+                <option value="seller">{t("auth.seller")}</option>
               </select>
               {isSeller && (
                 <p className="auth-hint">
@@ -221,7 +223,7 @@ const Register = () => {
 
             {/* Password */}
             <div className="auth-field">
-              <label htmlFor="password">Password <span className="auth-required">*</span></label>
+              <label htmlFor="password">{t("auth.password")} <span className="auth-required">*</span></label>
               <div className="auth-input-wrap">
                 <input id="password" type={showPassword ? "text" : "password"}
                   name="password" value={formData.password}
@@ -287,7 +289,7 @@ const Register = () => {
         </form>
 
         <p className="auth-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
+          {t("auth.alreadyHaveAccount")} <Link to="/login">Sign in</Link>
         </p>
 
         <div className="auth-divider">or</div>

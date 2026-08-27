@@ -6,10 +6,12 @@
  *
  * Behaviour:
  *  - Auto-advances every 5 seconds (pauses on hover)
+ *  - Smooth fade + directional slide-in animation (forward/backward aware)
  *  - Prev / Next arrow buttons
  *  - Dot indicators (click to jump)
+ *  - Pause on hover, resume on mouse leave
  *  - Falls back to the original static banner if no promos are live
- *  - Smooth CSS fade transition between slides
+ *  - No flicker, no layout shift, no image distortion
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -38,11 +40,14 @@ const STATIC_SLIDE = {
 
 /* ── Component ────────────────────────────────────────────── */
 const PromoBannerSlider = () => {
-  const [slides,   setSlides]   = useState([]);
-  const [current,  setCurrent]  = useState(0);
-  const [paused,   setPaused]   = useState(false);
-  const [loaded,   setLoaded]   = useState(false);
-  const timerRef = useRef(null);
+  const [slides,    setSlides]    = useState([]);
+  const [current,   setCurrent]   = useState(0);
+  const [direction, setDirection] = useState("next"); // "next" | "prev"
+  const [animating, setAnimating] = useState(false);
+  const [paused,    setPaused]    = useState(false);
+  const [loaded,    setLoaded]    = useState(false);
+  const timerRef   = useRef(null);
+  const animRef    = useRef(null);
 
   /* fetch active banners once on mount */
   useEffect(() => {
@@ -56,30 +61,82 @@ const PromoBannerSlider = () => {
       .finally(() => setLoaded(true));
   }, []);
 
-  /* auto-advance */
+  /* ── Navigate with direction awareness ─────────────────── */
+  const goTo = useCallback((idx, dir) => {
+    if (animating) return;
+    setDirection(dir);
+    setAnimating(true);
+    setCurrent(idx);
+    // Clear the animating flag after the transition completes
+    clearTimeout(animRef.current);
+    animRef.current = setTimeout(() => setAnimating(false), 600);
+  }, [animating]);
+
   const next = useCallback(() => {
-    setCurrent((c) => (c + 1) % slides.length);
-  }, [slides.length]);
+    setSlides(s => {
+      const nextIdx = (s.indexOf(s[0]) + 1) % s.length; // placeholder; real logic below
+      return s;
+    });
+    setCurrent(c => {
+      const n = (c + 1) % slides.length;
+      if (!animating) {
+        setDirection("next");
+        setAnimating(true);
+        clearTimeout(animRef.current);
+        animRef.current = setTimeout(() => setAnimating(false), 600);
+      }
+      return n;
+    });
+  }, [slides.length, animating]);
 
   const prev = useCallback(() => {
-    setCurrent((c) => (c - 1 + slides.length) % slides.length);
-  }, [slides.length]);
+    setCurrent(c => {
+      const n = (c - 1 + slides.length) % slides.length;
+      if (!animating) {
+        setDirection("prev");
+        setAnimating(true);
+        clearTimeout(animRef.current);
+        animRef.current = setTimeout(() => setAnimating(false), 600);
+      }
+      return n;
+    });
+  }, [slides.length, animating]);
 
+  const goToSlide = useCallback((idx) => {
+    if (idx === current || animating) return;
+    const dir = idx > current ? "next" : "prev";
+    setDirection(dir);
+    setAnimating(true);
+    setCurrent(idx);
+    clearTimeout(animRef.current);
+    animRef.current = setTimeout(() => setAnimating(false), 600);
+  }, [current, animating]);
+
+  /* auto-advance */
   useEffect(() => {
     if (slides.length <= 1 || paused) return;
-    timerRef.current = setInterval(next, 5000);
+    timerRef.current = setInterval(() => {
+      setDirection("next");
+      setAnimating(true);
+      setCurrent(c => (c + 1) % slides.length);
+      clearTimeout(animRef.current);
+      animRef.current = setTimeout(() => setAnimating(false), 600);
+    }, 5000);
     return () => clearInterval(timerRef.current);
-  }, [slides.length, paused, next]);
+  }, [slides.length, paused]);
 
-  /* pause timer while user hovers */
+  /* cleanup on unmount */
+  useEffect(() => () => {
+    clearInterval(timerRef.current);
+    clearTimeout(animRef.current);
+  }, []);
+
+  /* pause on hover */
   const handleMouseEnter = () => setPaused(true);
   const handleMouseLeave = () => setPaused(false);
 
-  /* not ready yet — render nothing so layout doesn't jump */
+  /* skeleton while loading */
   if (!loaded) return <div className="pbs-skeleton" aria-hidden="true" />;
-
-  const slide = slides[current];
-  const isStatic = slide._id === "__static__";
 
   return (
     <div
@@ -89,15 +146,24 @@ const PromoBannerSlider = () => {
     >
       {/* Slides */}
       {slides.map((s, i) => {
-        const active = i === current;
+        const isActive = i === current;
         const isS = s._id === "__static__";
+
+        // Assign animation class:
+        // entering: active slide coming in
+        // exiting: was active, now inactive (but only the one we just left)
+        let slideClass = "pbs-slide";
+        if (isActive) {
+          slideClass += ` pbs-slide--active pbs-slide--enter-${direction}`;
+        }
+
         return (
           <div
             key={s._id}
-            className={`pbs-slide ${active ? "pbs-slide--active" : ""}`}
-            aria-hidden={!active}
+            className={slideClass}
+            aria-hidden={!isActive}
           >
-            {/* background image layer */}
+            {/* Background image layer (promo slides) */}
             {!isS && s.image && (
               <div
                 className="pbs-bg"
@@ -105,7 +171,7 @@ const PromoBannerSlider = () => {
               />
             )}
 
-            {/* content overlay */}
+            {/* Content */}
             <div className="pbs-content">
               {/* Discount badge — static slide only */}
               {isS && (
@@ -153,7 +219,7 @@ const PromoBannerSlider = () => {
         );
       })}
 
-      {/* Prev / Next arrows — only shown when >1 slide */}
+      {/* Prev / Next arrows */}
       {slides.length > 1 && (
         <>
           <button
@@ -182,10 +248,17 @@ const PromoBannerSlider = () => {
             aria-selected={i === current}
             aria-label={`Slide ${i + 1}`}
             className={`hero-dot ${i === current ? "active" : ""}`}
-            onClick={() => setCurrent(i)}
+            onClick={() => goToSlide(i)}
           />
         ))}
       </div>
+
+      {/* Progress bar — shows time remaining on current slide */}
+      {slides.length > 1 && !paused && (
+        <div className="pbs-progress" key={`${current}-${paused}`}>
+          <div className="pbs-progress-bar" />
+        </div>
+      )}
     </div>
   );
 };

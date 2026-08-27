@@ -18,29 +18,77 @@
   width: 100%;
   min-height: 360px;
   background: linear-gradient(115deg, #eff6ff 0%, #e5efff 48%, #dbeafe 100%);
+  animation: pbs-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pbs-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
 }
 
 /* ── Individual slide ────────────────────────────────────── */
+/*
+  All slides sit stacked on top of each other via position:absolute.
+  Inactive slides are opacity:0 and pointer-events:none.
+  The active slide animates in from the correct direction.
+*/
 .pbs-slide {
   position: absolute;
   inset: 0;
-
   display: flex;
   align-items: center;
-
-  /* default slide background — same as original hero gradient */
   background: linear-gradient(115deg, #eff6ff 0%, #e5efff 48%, #dbeafe 100%);
 
+  /* Hidden by default */
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.55s ease;
+  z-index: 0;
+  /* No transition here — animation is handled by keyframes */
+  will-change: opacity, transform;
 }
 
+/* Active slide — runs the enter animation */
 .pbs-slide--active {
   opacity: 1;
   pointer-events: auto;
-  /* make sure active slide stacks above others */
-  z-index: 1;
+  z-index: 2;
+}
+
+/* ── Enter animations ─────────────────────────────────────
+   forward (next):  slides in from the right
+   backward (prev): slides in from the left
+   Both combine a fade (opacity 0→1) with a slight horizontal shift.
+   The shift is subtle (30px) so it feels smooth, not jarring.
+*/
+
+.pbs-slide--active.pbs-slide--enter-next {
+  animation: pbs-enter-from-right 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.pbs-slide--active.pbs-slide--enter-prev {
+  animation: pbs-enter-from-left 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes pbs-enter-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pbs-enter-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* ── Background image layer (promo slides with full images) ── */
@@ -49,35 +97,32 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  /* dark scrim so text is always readable over any photo */
   filter: brightness(0.55);
   z-index: 0;
 }
 
-/* when there's a bg image, adjust text colours */
+/* Adjust text colours when bg image is present */
 .pbs-slide:has(.pbs-bg) .pbs-text h1,
 .pbs-slide:has(.pbs-bg) .pbs-text p {
   color: #ffffff;
 }
 .pbs-slide:has(.pbs-bg) .hero-accent {
-  color: #93C5FD;   /* lighter blue that reads on dark backgrounds */
+  color: #93C5FD;
 }
 
 /* ── Content row (text + product image) ─────────────────── */
 .pbs-content {
   position: relative;
   z-index: 2;
-
   width: 100%;
   height: 100%;
-
   display: flex;
   align-items: center;
   padding: 40px 48px;
   gap: 24px;
 }
 
-/* ── Text block — reuse hero-text sizing from herobanner.css */
+/* ── Text block ──────────────────────────────────────────── */
 .pbs-text {
   flex: 1;
   min-width: 240px;
@@ -124,17 +169,20 @@
   max-height: 290px;
   object-fit: contain;
   filter: drop-shadow(0 18px 28px rgba(15, 23, 42, 0.18));
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
-/* On photo-background slides, don't double-drop-shadow */
+/* No double drop-shadow on photo-background slides */
 .pbs-slide:has(.pbs-bg) .pbs-image-wrap img {
   filter: none;
   max-height: 270px;
   opacity: 0.92;
 }
 
-.pbs-image-wrap img:hover { transform: scale(1.025); }
+/* Image hover scale — only on the active slide */
+.pbs-slide--active .pbs-image-wrap img:hover {
+  transform: scale(1.03);
+}
 
 /* ── Prev / Next arrows ──────────────────────────────────── */
 .pbs-arrow {
@@ -143,8 +191,8 @@
   transform: translateY(-50%);
   z-index: 10;
 
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
 
   display: flex;
   align-items: center;
@@ -155,42 +203,108 @@
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: background 0.18s, transform 0.15s;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+
+  /* Fade in on hover of the root container */
+  opacity: 0;
+  transition: opacity 0.22s ease, background 0.18s ease, transform 0.15s ease;
+}
+
+/* Show arrows when hovering the slider */
+.pbs-root:hover .pbs-arrow {
+  opacity: 1;
 }
 
 .pbs-arrow:hover {
   background: #ffffff;
-  transform: translateY(-50%) scale(1.08);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.pbs-arrow:active {
+  transform: translateY(-50%) scale(0.96);
 }
 
 .pbs-arrow--prev { left: 14px; }
 .pbs-arrow--next { right: 14px; }
 
-/* ── Dot indicators — override hero-dots button reset ────── */
+/* ── Dot indicators ──────────────────────────────────────── */
+.hero-dots {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .hero-dots .hero-dot {
-  border: none;
-  cursor: pointer;
+  width: 7px;
+  height: 7px;
   padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.28);
+  cursor: pointer;
+  transition: width 0.25s ease, background-color 0.25s ease, transform 0.15s ease;
+}
+
+.hero-dots .hero-dot:hover {
+  background: rgba(37, 99, 235, 0.55);
+  transform: scale(1.2);
+}
+
+.hero-dots .hero-dot.active {
+  width: 22px;
+  border-radius: 5px;
+  background: var(--primary, #2563EB);
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+/*
+  A thin bar at the bottom that fills over 5 seconds to signal
+  when the next auto-transition will occur.
+  Hidden on single-slide mode (not rendered by JS).
+*/
+.pbs-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 9;
+  background: rgba(37, 99, 235, 0.1);
+  overflow: hidden;
+}
+
+.pbs-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--primary, #2563EB);
+  animation: pbs-fill 5s linear forwards;
+}
+
+@keyframes pbs-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
 }
 
 /* ── Responsive ──────────────────────────────────────────── */
 
-/* ≤ 1100px — tighten padding */
 @media (max-width: 1100px) {
-  .pbs-content { padding: 32px 32px; }
+  .pbs-content { padding: 32px 36px; }
   .pbs-text h1 { font-size: 32px; }
 }
 
-/* ≤ 900px — reduce image size */
 @media (max-width: 900px) {
   .pbs-text h1 { font-size: 26px; }
   .pbs-image-wrap img { max-height: 220px; }
 }
 
-/* ≤ 768px — stack vertically, hide image */
 @media (max-width: 768px) {
-  .pbs-root { min-height: 240px; }
+  .pbs-root    { min-height: 240px; }
   .pbs-skeleton { min-height: 240px; }
 
   .pbs-content {
@@ -208,14 +322,42 @@
   .pbs-text h1 { font-size: 22px; }
   .pbs-text p  { font-size: 13.5px; }
 
+  /* Hide product image on small screens to avoid layout shift */
   .pbs-image-wrap { display: none; }
 
-  .pbs-arrow { width: 28px; height: 28px; }
+  /* Always show arrows on mobile (no hover state) */
+  .pbs-arrow { opacity: 1; width: 30px; height: 30px; }
   .pbs-arrow--prev { left: 8px; }
   .pbs-arrow--next { right: 8px; }
+
+  /* Reduce animation shift on mobile */
+  @keyframes pbs-enter-from-right {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pbs-enter-from-left {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
 }
 
-/* ≤ 480px */
 @media (max-width: 480px) {
   .pbs-text h1 { font-size: 19px; }
+  .hero-dots { bottom: 10px; }
+}
+
+/* ── Reduced motion — respect user preference ────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .pbs-slide--active.pbs-slide--enter-next,
+  .pbs-slide--active.pbs-slide--enter-prev {
+    animation: pbs-fade-only 0.4s ease forwards;
+  }
+  .pbs-progress-bar {
+    animation: pbs-fill 5s linear forwards;
+  }
+
+  @keyframes pbs-fade-only {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
 }

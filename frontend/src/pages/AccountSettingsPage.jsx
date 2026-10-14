@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import {
   FiUser,
   FiLock,
@@ -11,6 +11,8 @@ import {
   FiPlus,
   FiEdit2,
   FiTrash2,
+  FiShoppingBag,
+  FiArrowRight,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
@@ -284,13 +286,71 @@ const AccountSettingsPage = () => {
     }
   };
 
+  // ── Tab: Recent Customer Orders ─────────────────────────────
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  const loadRecentOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const { data } = await api.get("/orders/my-orders");
+      setRecentOrders(data.orders || []);
+    } catch {
+      /* ignore */
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "orders") {
+      loadRecentOrders();
+    }
+  }, [activeTab]);
+
   const fmt = (n) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 
   return (
     <div className="acc-page">
-      <div className="acc-header">
-        <h1>Account & Settings</h1>
-        <p>Manage your personal profile, credentials, addresses, and financial rules</p>
+      {/* ── Modern Gradient Profile Hero Banner ── */}
+      <div className="acc-hero-banner">
+        <div className="acc-hero-left">
+          <div className="acc-hero-avatar">
+            {user?.fullName?.charAt(0).toUpperCase() || "U"}
+          </div>
+          <div className="acc-hero-details">
+            <h1>{user?.fullName || "User Account"}</h1>
+            <div className="acc-hero-sub">
+              <span>{user?.email}</span>
+              {user?.phone && <span>· {user?.phone}</span>}
+              <span className={`acc-hero-role-pill acc-role--${user?.role || "customer"}`}>
+                {user?.role === "owner"
+                  ? "CEO / Owner"
+                  : user?.role === "admin"
+                  ? "Administrator"
+                  : user?.role === "finance"
+                  ? "Finance Officer"
+                  : user?.role === "seller"
+                  ? "Verified Seller"
+                  : "Customer"}
+              </span>
+              {user?.role === "seller" && (
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: 10,
+                    background: user?.kycStatus === "verified" ? "#DCFCE7" : "#FEF3C7",
+                    color: user?.kycStatus === "verified" ? "#166534" : "#92400E",
+                  }}
+                >
+                  KYC: {user?.kycStatus || "pending"}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Global Alerts */}
@@ -316,6 +376,15 @@ const AccountSettingsPage = () => {
         >
           <FiUser className="acc-tab-icon" />
           <span>Profile Info</span>
+        </button>
+
+        <button
+          className={`acc-tab-btn ${activeTab === "orders" ? "active" : ""}`}
+          onClick={() => handleTabChange("orders")}
+          type="button"
+        >
+          <FiShoppingBag className="acc-tab-icon" />
+          <span>Recent Orders</span>
         </button>
 
         <button
@@ -412,6 +481,95 @@ const AccountSettingsPage = () => {
               {loading ? "Saving Changes..." : "Save Profile"}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* ── TAB: RECENT ORDERS ── */}
+      {activeTab === "orders" && (
+        <div className="acc-card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+            <div>
+              <h2 className="acc-card-title">Recent Order Status</h2>
+              <p className="acc-card-subtitle" style={{ margin: 0 }}>
+                Track active deliveries, fulfillment states and payment receipts
+              </p>
+            </div>
+            <Link to="/orders" className="acc-btn-primary" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span>All Orders</span>
+              <FiArrowRight />
+            </Link>
+          </div>
+
+          {ordersLoading ? (
+            <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>Loading your orders…</div>
+          ) : recentOrders.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "#64748B" }}>
+              <FiShoppingBag size={40} color="#CBD5E1" style={{ marginBottom: 12 }} />
+              <p style={{ margin: "0 0 16px" }}>You have not placed any orders yet.</p>
+              <Link to="/products" className="acc-btn-primary" style={{ textDecoration: "none", display: "inline-block" }}>
+                Browse Catalog
+              </Link>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #F1F5F9", textAlign: "left", color: "#64748B", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                    <th style={{ padding: "10px 12px" }}>Order ID</th>
+                    <th style={{ padding: "10px 12px" }}>Date</th>
+                    <th style={{ padding: "10px 12px" }}>Total</th>
+                    <th style={{ padding: "10px 12px" }}>Payment</th>
+                    <th style={{ padding: "10px 12px" }}>Fulfillment</th>
+                    <th style={{ padding: "10px 12px" }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentOrders.slice(0, 5).map((ord) => (
+                    <tr key={ord._id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "12px", fontWeight: 700, color: "#2563EB" }}>
+                        #{ord._id.slice(-8).toUpperCase()}
+                      </td>
+                      <td style={{ padding: "12px", color: "#64748B", whiteSpace: "nowrap" }}>
+                        {new Date(ord.createdAt).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: "12px", fontWeight: 700 }}>
+                        ETB {Number(ord.totalPrice).toFixed(2)}
+                      </td>
+                      <td style={{ padding: "12px" }}>
+                        <span style={{
+                          padding: "3px 8px",
+                          borderRadius: 12,
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          background: ord.paymentStatus === "Paid" ? "#DCFCE7" : "#FEF3C7",
+                          color: ord.paymentStatus === "Paid" ? "#166534" : "#92400E",
+                        }}>
+                          {ord.paymentStatus}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px" }}>
+                        <span style={{
+                          padding: "3px 8px",
+                          borderRadius: 12,
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          background: ord.orderStatus === "Delivered" ? "#DCFCE7" : "#EFF6FF",
+                          color: ord.orderStatus === "Delivered" ? "#166534" : "#1D4ED8",
+                        }}>
+                          {ord.orderStatus}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px" }}>
+                        <Link to={`/orders/${ord._id}`} style={{ color: "#2563EB", fontWeight: 600, textDecoration: "none", fontSize: "0.85rem" }}>
+                          View →
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

@@ -182,11 +182,10 @@ const SellerDashboard = () => {
 
   return (
     <div className="sd-page">
-      <div className="sd-header">
+      <div className="sd-header" style={{ marginBottom: 20 }}>
         <div>
-          <h1>Seller Dashboard</h1>
-          <p>
-            Welcome, <strong>{user?.fullName}</strong> · CEO Commission Agreement:{" "}
+          <p style={{ margin: 0, color: "#64748B", fontSize: "0.95rem" }}>
+            Welcome, <strong>{user?.fullName}</strong> · Active CEO Commission Agreement:{" "}
             <span style={{ color: "#2563EB", fontWeight: 700 }}>
               {agreedRate}% ({commissionType})
             </span>

@@ -52,6 +52,7 @@ import AdminReviews from "./pages/AdminReviews";
 import OwnerRoute from "./components/OwnerRoute";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import OwnerUserManagement from "./pages/OwnerUserManagement";
+import OwnerKYCReview from "./pages/OwnerKYCReview";
 
 // Seller pages
 import SellerRoute from "./components/SellerRoute";
@@ -159,7 +160,8 @@ function App() {
           <Route path="/owner" element={<OwnerDashboard />} />
           <Route path="/owner/dashboard" element={<OwnerDashboard />} />
           <Route path="/owner/users" element={<OwnerUserManagement />} />
-          <Route path="/owner/kyc" element={<OwnerUserManagement />} />
+          <Route path="/owner/kyc" element={<OwnerKYCReview />} />
+          <Route path="/owner/kyc-review" element={<OwnerKYCReview />} />
         </Route>
 
         {/* Verified Seller Center */}

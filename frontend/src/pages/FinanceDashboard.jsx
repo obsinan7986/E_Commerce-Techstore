@@ -61,11 +61,12 @@ const FinanceDashboard = () => {
   return (
     <div className="fd-page">
 
-      {/* Header */}
-      <div className="fd-header">
+      {/* Header Toolbar */}
+      <div className="fd-header" style={{ marginBottom: 20 }}>
         <div>
-          <h1>Finance Dashboard</h1>
-          <p>Welcome, <strong>{user?.fullName}</strong> · Financial overview</p>
+          <p style={{ margin: 0, color: "#64748B", fontSize: "0.95rem" }}>
+            Welcome, <strong>{user?.fullName}</strong> · Gross revenue, debited CEO commission margin & seller liabilities
+          </p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button className="fd-refresh-btn" onClick={load}>↻ Refresh</button>

@@ -82,12 +82,12 @@ const OwnerDashboard = () => {
 
   return (
     <div className="od-page">
-      <div className="od-header">
+      <div className="od-header" style={{ marginBottom: 20 }}>
         <div>
-          <h1>Owner Dashboard</h1>
-          <p>Welcome back, <strong>{user?.fullName}</strong></p>
+          <p style={{ margin: 0, color: "#64748B", fontSize: "0.95rem" }}>
+            Welcome back, <strong>{user?.fullName}</strong> · Strategic governance, KYC verification & store oversight
+          </p>
         </div>
-        <span className="od-badge">Owner</span>
       </div>
 
       {/* Stats */}

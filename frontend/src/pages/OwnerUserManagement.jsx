@@ -146,8 +146,12 @@ const OwnerUserManagement = () => {
 
   return (
     <div className="od-page">
-      <div className="od-header">
-        <div><h1>User Management</h1><p>Create and manage all accounts</p></div>
+      <div className="od-header" style={{ marginBottom: 20 }}>
+        <div>
+          <p style={{ margin: 0, color: "#64748B", fontSize: "0.95rem" }}>
+            Manage platform user accounts, promote or change roles, and handle account suspensions
+          </p>
+        </div>
         <button className="od-btn od-btn--primary" onClick={() => setShowCreate(true)}>+ Create User</button>
       </div>
 

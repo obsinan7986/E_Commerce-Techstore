@@ -1,6 +1,7 @@
 import Order           from "../models/Order.js";
 import User            from "../models/User.js";
 import PaymentSettings from "../models/PaymentSettings.js";
+import { settleOrderCommission } from "../utils/commissionEngine.js";
 import createNotification      from "../utils/createNotification.js";
 import createAdminNotification from "../utils/createAdminNotification.js";
 import { sendTemplate }   from "../utils/emailService.js";
@@ -34,8 +35,14 @@ export const updatePaymentSettings = async (req, res) => {
     let settings = await PaymentSettings.findOne();
     if (!settings) settings = new PaymentSettings();
 
-    const { instructions, bankAccounts } = req.body;
+    const { instructions, bankAccounts, defaultCommissionType, defaultCommissionRate } = req.body;
     if (instructions !== undefined) settings.instructions = instructions.trim();
+    if (defaultCommissionType !== undefined && ["percentage", "fixed"].includes(defaultCommissionType)) {
+      settings.defaultCommissionType = defaultCommissionType;
+    }
+    if (defaultCommissionRate !== undefined && !isNaN(Number(defaultCommissionRate))) {
+      settings.defaultCommissionRate = Math.max(Number(defaultCommissionRate), 0);
+    }
 
     // bankAccounts comes as JSON string when sent with FormData
     if (bankAccounts !== undefined) {
@@ -165,6 +172,19 @@ export const verifyManualPayment = async (req, res) => {
     order.manualPayment.reviewedBy = req.user._id;
 
     await order.save();
+
+    // Settle commission and credit Finance upon verification
+    if (action === "verify" && !order.isCommissionSettled) {
+      await settleOrderCommission(order._id);
+    } else if (action === "reject" && !order.isCommissionSettled) {
+      for (const item of order.orderItems) {
+        if (item.seller && item.sellerNetEarning > 0) {
+          await User.findByIdAndUpdate(item.seller, {
+            $inc: { pendingSellerCredits: -item.sellerNetEarning },
+          });
+        }
+      }
+    }
 
     const label = action === "verify" ? "verified" : "rejected";
     console.log(`[verifyManualPayment] Order ${order._id} payment ${label} by admin ${req.user._id}`);

@@ -1,11 +1,9 @@
 import axios from "axios";
 
 // Single source of truth for the API URL.
-// Vercel must have VITE_API_URL set as an Environment Variable
-// (e.g. https://e-commerce-techstore-y26d.onrender.com/api).
-// The fallback is the deployed Render URL so the app still works if the
-// Vercel env var is accidentally missing.
-const API_URL = import.meta.env.VITE_API_URL || "https://e-commerce-techstore-y26d.onrender.com/api";
+// Vercel should have VITE_API_URL set as an Environment Variable.
+// Fallback defaults to local dev server http://localhost:5000/api.
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // Base URL for images served from the backend (/uploads/*)
 // Strip the trailing "/api" from the API URL.

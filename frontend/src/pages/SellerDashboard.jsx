@@ -171,31 +171,71 @@ const SellerDashboard = () => {
 
   const fmt = (n) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
+  const agreedRate = sales?.summary?.agreedRate ?? user?.commissionAgreement?.agreedRate ?? 10;
+  const commissionType = sales?.summary?.commissionType ?? user?.commissionAgreement?.commissionType ?? "percentage";
+
+  const priceNum = Number(form.price) || 0;
+  const commDebited = commissionType === "percentage"
+    ? Number((priceNum * (agreedRate / 100)).toFixed(2))
+    : Number(Math.min(priceNum, agreedRate).toFixed(2));
+  const netEarnings = Number((priceNum - commDebited).toFixed(2));
+
   return (
     <div className="sd-page">
       <div className="sd-header">
-        <div><h1>Seller Dashboard</h1><p>Welcome, <strong>{user?.fullName}</strong></p></div>
+        <div>
+          <h1>Seller Dashboard</h1>
+          <p>
+            Welcome, <strong>{user?.fullName}</strong> · CEO Commission Agreement:{" "}
+            <span style={{ color: "#2563EB", fontWeight: 700 }}>
+              {agreedRate}% ({commissionType})
+            </span>
+          </p>
+        </div>
         <button className="sd-btn sd-btn--primary" onClick={openCreate}>+ Add Product</button>
       </div>
 
-      {/* Sales summary */}
+      {/* Sales & Commission Summary */}
       {sales && (
-        <div className="sd-sales">
-          <div className="sd-sale-card">
+        <div className="sd-sales" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
+          <div className="sd-sale-card" style={{ borderLeft: "4px solid #16A34A" }}>
+            <span>💵</span>
+            <div>
+              <strong>ETB {fmt(sales.summary?.sellerCredits)}</strong>
+              <span>Available Net Credits</span>
+            </div>
+          </div>
+          <div className="sd-sale-card" style={{ borderLeft: "4px solid #2563EB" }}>
             <span>💰</span>
-            <div><strong>ETB {fmt(sales.summary?.totalRevenue)}</strong><span>Total Revenue</span></div>
+            <div>
+              <strong>ETB {fmt(sales.summary?.grossSales || sales.summary?.totalRevenue)}</strong>
+              <span>Total Gross Sales</span>
+            </div>
+          </div>
+          <div className="sd-sale-card" style={{ borderLeft: "4px solid #DC2626" }}>
+            <span>📉</span>
+            <div>
+              <strong style={{ color: "#DC2626" }}>-ETB {fmt(sales.summary?.totalCommissionDebited)}</strong>
+              <span>Commission Paid to Platform</span>
+            </div>
+          </div>
+          <div className="sd-sale-card" style={{ borderLeft: "4px solid #F59E0B" }}>
+            <span>⏳</span>
+            <div>
+              <strong>ETB {fmt(sales.summary?.pendingSellerCredits)}</strong>
+              <span>Pending Order Credits</span>
+            </div>
           </div>
           <div className="sd-sale-card">
             <span>📦</span>
-            <div><strong>{sales.summary?.totalUnitsSold || 0}</strong><span>Units Sold</span></div>
-          </div>
-          <div className="sd-sale-card">
-            <span>🛒</span>
-            <div><strong>{sales.summary?.totalOrders || 0}</strong><span>Orders</span></div>
+            <div>
+              <strong>{sales.summary?.totalUnitsSold || 0}</strong>
+              <span>Units Sold ({sales.summary?.totalOrders || 0} orders)</span>
+            </div>
           </div>
           <Link to="/seller/reviews" className="sd-sale-card" style={{ textDecoration: "none", cursor: "pointer" }}>
             <span>⭐</span>
-            <div><strong>My Reviews</strong><span>View customer feedback</span></div>
+            <div><strong>My Reviews</strong><span>Customer feedback</span></div>
           </Link>
         </div>
       )}
@@ -316,6 +356,33 @@ const SellerDashboard = () => {
                     onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))} />
                 </div>
               </div>
+
+              {/* Real-Time CEO Commission & Net Price Calculator Card */}
+              <div className="sd-calc-card">
+                <div className="sd-calc-title">
+                  <span>💡</span>
+                  <span>CEO Commission & Net Price Calculator ({commissionType === "percentage" ? `${agreedRate}%` : `ETB ${agreedRate} fixed`})</span>
+                </div>
+                <div className="sd-calc-grid">
+                  <div className="sd-calc-item">
+                    <span className="sd-calc-label">Product Listing Price</span>
+                    <span className="sd-calc-val">ETB {priceNum.toLocaleString()}</span>
+                  </div>
+                  <div className="sd-calc-item">
+                    <span className="sd-calc-label">
+                      CEO Agreed Commission ({commissionType === "percentage" ? `-${agreedRate}%` : `-ETB ${agreedRate}`})
+                    </span>
+                    <span className="sd-calc-val sd-calc-val--comm">
+                      -ETB {commDebited.toLocaleString()} (Debited to Platform Finance)
+                    </span>
+                  </div>
+                  <div className="sd-calc-item">
+                    <span className="sd-calc-label">Your Net Earnings per Sale</span>
+                    <span className="sd-calc-val sd-calc-val--net">ETB {netEarnings.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="sd-modal-footer">
                 <button type="button" className="sd-btn sd-btn--ghost" onClick={closeModal} disabled={saving || uploading}>Cancel</button>
                 <button type="submit" className="sd-btn sd-btn--primary" disabled={saving || uploading}>

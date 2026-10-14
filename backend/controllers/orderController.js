@@ -3,6 +3,8 @@ import Cart    from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Coupon  from "../models/Coupon.js";
 import User    from "../models/User.js";
+import PaymentSettings from "../models/PaymentSettings.js";
+import { calculateItemCommission, settleOrderCommission } from "../utils/commissionEngine.js";
 import createNotification      from "../utils/createNotification.js";
 import createAdminNotification from "../utils/createAdminNotification.js";
 import { sendTemplate }   from "../utils/emailService.js";
@@ -82,7 +84,10 @@ export const createOrder = async (req, res) => {
     // Find user's cart
     const cart = await Cart.findOne({
       user: req.user._id,
-    }).populate("items.product");
+    }).populate({
+      path: "items.product",
+      populate: { path: "seller", select: "commissionAgreement role" },
+    });
 
     // Check cart
     if (!cart || cart.items.length === 0) {
@@ -109,17 +114,45 @@ export const createOrder = async (req, res) => {
       }
     }
 
-    // Build order items
-    const orderItems = cart.items.map((item) => ({
-      product: item.product._id,
-      name: item.product.name,
-      image: item.product.image,
-      quantity: item.quantity,
-      price: item.product.price,
-    }));
+    // Global payment settings for commission fallback
+    const paymentSettings = await PaymentSettings.findOne();
+
+    // Build order items with immutable financial snapshots
+    const orderItems = cart.items.map((item) => {
+      const p = item.product;
+      const seller = p?.seller;
+      const calc = calculateItemCommission(item, p, seller, paymentSettings);
+
+      return {
+        product: p._id,
+        name: p.name,
+        image: p.image,
+        quantity: item.quantity,
+        price: p.price,
+        seller: seller?._id || seller || null,
+        grossItemTotal: calc.grossItemTotal,
+        commissionRateApplied: calc.rate,
+        commissionDebited: calc.commissionDebited,
+        sellerNetEarning: calc.sellerNetEarning,
+      };
+    });
+
+    // ── Financial Totals ─────────────────────────────────────────
+    const totalGrossItemsPrice = orderItems.reduce(
+      (acc, i) => acc + (i.grossItemTotal || i.price * i.quantity),
+      0
+    );
+    const totalCommissionDebited = orderItems.reduce(
+      (acc, i) => acc + (i.commissionDebited || 0),
+      0
+    );
+    const totalSellerNetPayout = orderItems.reduce(
+      (acc, i) => acc + (i.sellerNetEarning || 0),
+      0
+    );
 
     // ── Pricing ──────────────────────────────────────────────────
-    const itemsPrice    = orderItems.reduce((t, i) => t + i.price * i.quantity, 0);
+    const itemsPrice    = totalGrossItemsPrice;
     const shippingPrice = itemsPrice >= 5000 ? 0 : 200;
     const taxPrice      = itemsPrice * 0.15;
     const preTaxSubtotal = itemsPrice + shippingPrice;
@@ -192,6 +225,10 @@ export const createOrder = async (req, res) => {
       taxPrice,
       totalPrice,
       coupon: couponSnapshot,
+      totalGrossItemsPrice,
+      totalCommissionDebited,
+      totalSellerNetPayout,
+      isCommissionSettled: false,
     });
 
     // ── Commit coupon usage ───────────────────────────────────────
@@ -202,6 +239,15 @@ export const createOrder = async (req, res) => {
     }
     if (useFirstOrderDiscount && couponSnapshot.code === "FIRST10") {
       await User.findByIdAndUpdate(req.user._id, { firstOrderDiscountUsed: true });
+    }
+
+    // ── Add pending earnings to sellers ───────────────────────────
+    for (const item of orderItems) {
+      if (item.seller && item.sellerNetEarning > 0) {
+        await User.findByIdAndUpdate(item.seller, {
+          $inc: { pendingSellerCredits: item.sellerNetEarning },
+        });
+      }
     }
 
   // Reduce stock only when the order is created.
@@ -432,14 +478,23 @@ export const updateOrderStatus = async (
 
     order.orderStatus = orderStatus;
 
-    if (
-      orderStatus === "Delivered" &&
-      !order.deliveredAt
-    ) {
-      order.deliveredAt = new Date();
+    if (orderStatus === "Delivered") {
+      if (!order.deliveredAt) {
+        order.deliveredAt = new Date();
+      }
+      if (order.paymentMethod === "Cash On Delivery" && order.paymentStatus !== "Paid") {
+        order.paymentStatus = "Paid";
+        order.isPaid = true;
+        order.paidAt = new Date();
+      }
     }
 
     await order.save();
+
+    // Settle commission automatically upon delivery/payment confirmation
+    if (order.paymentStatus === "Paid" && !order.isCommissionSettled) {
+      await settleOrderCommission(order._id);
+    }
 
     // Send notification to user based on new status
     const notifMap = {
@@ -563,6 +618,17 @@ export const cancelOrder = async (
     }
 
     order.orderStatus = "Cancelled";
+
+    // Deduct pending seller credits if order is cancelled before settlement
+    if (!order.isCommissionSettled) {
+      for (const item of order.orderItems) {
+        if (item.seller && item.sellerNetEarning > 0) {
+          await User.findByIdAndUpdate(item.seller, {
+            $inc: { pendingSellerCredits: -item.sellerNetEarning },
+          });
+        }
+      }
+    }
 
     // Do not mark a cancelled unpaid COD order
     // as "Failed" unless an actual payment failed.

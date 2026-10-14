@@ -73,14 +73,30 @@ const FinanceDashboard = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards — Automated Commission & Ledger Engine */}
       <div className="fd-kpis">
         <div className="fd-kpi fd-kpi--revenue">
           <span className="fd-kpi-icon">💰</span>
           <div>
-            <strong>ETB {fmtK(d.totalRevenue)}</strong>
-            <span>Total Revenue</span>
-            <small>{d.paidCount || 0} paid orders</small>
+            <strong>ETB {fmt(d.platformTotalRevenue || d.totalGrossSales || d.totalRevenue)}</strong>
+            <span>Total Gross Revenue</span>
+            <small>{d.paidCount || 0} settled orders</small>
+          </div>
+        </div>
+        <div className="fd-kpi fd-kpi--commission">
+          <span className="fd-kpi-icon">🏦</span>
+          <div>
+            <strong style={{ color: "#059669" }}>ETB {fmt(d.platformTotalCommission)}</strong>
+            <span>Platform Commission Revenue</span>
+            <small>Debited from seller earnings</small>
+          </div>
+        </div>
+        <div className="fd-kpi fd-kpi--liability">
+          <span className="fd-kpi-icon">👥</span>
+          <div>
+            <strong style={{ color: "#7C3AED" }}>ETB {fmt(d.totalSellerNetCredits)}</strong>
+            <span>Net Seller Payout Liability</span>
+            <small>Pending escrow: ETB {fmt(d.pendingSellerCredits)}</small>
           </div>
         </div>
         <div className="fd-kpi fd-kpi--pending">
@@ -88,23 +104,7 @@ const FinanceDashboard = () => {
           <div>
             <strong>{d.pendingCount || 0}</strong>
             <span>Pending Payments</span>
-            <small>Awaiting completion</small>
-          </div>
-        </div>
-        <div className="fd-kpi fd-kpi--failed">
-          <span className="fd-kpi-icon">❌</span>
-          <div>
-            <strong>{d.failedCount || 0}</strong>
-            <span>Failed Payments</span>
-            <small>Requires attention</small>
-          </div>
-        </div>
-        <div className="fd-kpi fd-kpi--refunded">
-          <span className="fd-kpi-icon">↩</span>
-          <div>
-            <strong>{d.refundedCount || 0}</strong>
-            <span>Refunded</span>
-            <small>Marked refunded</small>
+            <small>{d.manualPending || 0} manual receipts in queue</small>
           </div>
         </div>
       </div>
@@ -180,14 +180,19 @@ const FinanceDashboard = () => {
 
       </div>
 
-      {/* Recent transactions */}
+      {/* Automated Commission & Revenue Split Ledger */}
       <div className="fd-card fd-card--recent">
         <div className="fd-card-header">
-          <h2>Recent Transactions</h2>
-          <Link to="/finance/payments" className="fd-view-all">View all →</Link>
+          <div>
+            <h2>Automated Commission & Revenue Split Ledger</h2>
+            <span style={{ fontSize: "0.82rem", color: "#6B7280" }}>
+              Live split: debits CEO commission from product price and credits platform finance ledger
+            </span>
+          </div>
+          <Link to="/finance/payments" className="fd-view-all">View all payments →</Link>
         </div>
-        {!(d.recentTransactions?.length) ? (
-          <div className="fd-empty">No transactions yet</div>
+        {!(d.ledgerTransactions?.length) ? (
+          <div className="fd-empty">No transaction splits recorded yet</div>
         ) : (
           <div className="fd-table-wrap">
             <table className="fd-table">
@@ -195,35 +200,69 @@ const FinanceDashboard = () => {
                 <tr>
                   <th>Order</th>
                   <th>Customer</th>
-                  <th>Method</th>
-                  <th>Amount</th>
-                  <th>Status</th>
+                  <th>Gross Price</th>
+                  <th>Seller(s)</th>
+                  <th style={{ color: "#059669" }}>Platform Commission</th>
+                  <th style={{ color: "#7C3AED" }}>Seller Net Credit</th>
+                  <th>Split Settlement</th>
+                  <th>Payment Status</th>
                   <th>Date</th>
                 </tr>
               </thead>
               <tbody>
-                {(d.recentTransactions || []).map((t) => (
-                  <tr key={t._id}>
-                    <td>
-                      <Link to={`/finance/payments?orderId=${t._id}`}
-                        className="fd-order-link">
-                        #{t._id.toString().slice(-8).toUpperCase()}
-                      </Link>
-                    </td>
-                    <td>
-                      <div className="fd-customer-cell">
-                        <strong>{t.user?.fullName || "—"}</strong>
-                        <small>{t.user?.email || ""}</small>
-                      </div>
-                    </td>
-                    <td><span className="fd-method-tag">{t.paymentMethod}</span></td>
-                    <td>ETB {fmt(t.totalPrice)}</td>
-                    <td><span className={payStatusCls(t.paymentStatus)}>{t.paymentStatus}</span></td>
-                    <td style={{ fontSize: 12, color: "#9CA3AF" }}>
-                      {new Date(t.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
+                {(d.ledgerTransactions || []).map((t) => {
+                  const sellers = (t.orderItems || [])
+                    .map((item) => item.seller?.fullName)
+                    .filter(Boolean);
+                  const uniqueSellers = [...new Set(sellers)];
+                  const sellerDisplay = uniqueSellers.length > 0 ? uniqueSellers.join(", ") : "Platform Store";
+                  const grossVal = t.totalGrossItemsPrice || t.totalPrice || 0;
+                  const commVal = t.totalCommissionDebited || 0;
+                  const netVal = t.totalSellerNetPayout || (grossVal - commVal);
+
+                  return (
+                    <tr key={t._id}>
+                      <td>
+                        <Link to={`/finance/payments?orderId=${t._id}`} className="fd-order-link">
+                          #{t._id.toString().slice(-8).toUpperCase()}
+                        </Link>
+                      </td>
+                      <td>
+                        <div className="fd-customer-cell">
+                          <strong>{t.user?.fullName || "—"}</strong>
+                          <small>{t.user?.email || ""}</small>
+                        </div>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>ETB {fmt(grossVal)}</td>
+                      <td>
+                        <span style={{ fontSize: "0.85rem", color: "#374151" }}>{sellerDisplay}</span>
+                      </td>
+                      <td style={{ fontWeight: 700, color: "#059669" }}>
+                        + ETB {fmt(commVal)}
+                      </td>
+                      <td style={{ fontWeight: 700, color: "#7C3AED" }}>
+                        ETB {fmt(netVal)}
+                      </td>
+                      <td>
+                        {t.isCommissionSettled ? (
+                          <span className="fd-badge fd-badge--paid" title="Commission debited to Finance & net credited to Seller">
+                            ✓ Settled
+                          </span>
+                        ) : (
+                          <span className="fd-badge fd-badge--pending" title="Awaiting payment confirmation">
+                            ⏳ Pending
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={payStatusCls(t.paymentStatus)}>{t.paymentStatus}</span>
+                      </td>
+                      <td style={{ fontSize: 12, color: "#9CA3AF", whiteSpace: "nowrap" }}>
+                        {new Date(t.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

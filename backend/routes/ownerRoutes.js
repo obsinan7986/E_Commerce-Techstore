@@ -11,6 +11,7 @@ import {
   ownerApproveKYC,
   ownerRejectKYC,
   ownerGetUser,
+  ownerUpdateSellerCommission,
 } from "../controllers/ownerController.js";
 
 const router   = express.Router();
@@ -25,8 +26,9 @@ router.patch( "/users/:id/suspend",  ...ownerOnly, ownerSuspendUser);
 router.patch( "/users/:id/activate", ...ownerOnly, ownerActivateUser);
 
 // KYC management
-router.get(   "/kyc",               ...ownerOnly, ownerGetPendingKYC);
-router.patch( "/kyc/:id/approve",   ...ownerOnly, ownerApproveKYC);
-router.patch( "/kyc/:id/reject",    ...ownerOnly, ownerRejectKYC);
+router.get(   "/kyc",                    ...ownerOnly, ownerGetPendingKYC);
+router.patch( "/kyc/:id/approve",        ...ownerOnly, ownerApproveKYC);
+router.patch( "/kyc/:id/reject",         ...ownerOnly, ownerRejectKYC);
+router.patch( "/sellers/:id/commission", ...ownerOnly, ownerUpdateSellerCommission);
 
 export default router;

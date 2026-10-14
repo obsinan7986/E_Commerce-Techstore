@@ -205,13 +205,56 @@ export const ownerApproveKYC = async (req, res) => {
       return res.status(400).json({ success: false, message: "KYC is only applicable to sellers." });
     }
 
+    const { agreedRate, commissionType } = req.body;
+    if (agreedRate !== undefined && !isNaN(Number(agreedRate))) {
+      user.commissionAgreement.agreedRate = Number(agreedRate);
+    }
+    if (commissionType && ["percentage", "fixed"].includes(commissionType)) {
+      user.commissionAgreement.commissionType = commissionType;
+    }
+
     user.kycStatus           = "verified";
     user.kycRejectionReason  = "";
     user.kycReviewedBy       = req.user._id;
     user.kycReviewedAt       = new Date();
     await user.save();
 
-    res.status(200).json({ success: true, message: "KYC approved. Seller can now add products." });
+    res.status(200).json({
+      success: true,
+      message: "KYC approved. Seller can now add products.",
+      commissionAgreement: user.commissionAgreement,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================
+// UPDATE SELLER COMMISSION  –  PATCH /api/owner/sellers/:id/commission
+// Body: { agreedRate, commissionType }
+// ============================================================
+export const ownerUpdateSellerCommission = async (req, res) => {
+  try {
+    const { agreedRate, commissionType } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: "Seller not found." });
+    if (user.role !== "seller") {
+      return res.status(400).json({ success: false, message: "User is not a seller." });
+    }
+
+    if (agreedRate !== undefined && !isNaN(Number(agreedRate))) {
+      user.commissionAgreement.agreedRate = Number(agreedRate);
+    }
+    if (commissionType && ["percentage", "fixed"].includes(commissionType)) {
+      user.commissionAgreement.commissionType = commissionType;
+    }
+
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Seller commission agreement updated successfully.",
+      commissionAgreement: user.commissionAgreement,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

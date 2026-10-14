@@ -118,6 +118,42 @@ const userSchema = new mongoose.Schema(
       type:    Boolean,
       default: false,
     },
+
+    // ── Seller & CEO Commission Agreement ────────────────────
+    commissionAgreement: {
+      commissionType: {
+        type: String,
+        enum: ["percentage", "fixed"],
+        default: "percentage",
+      },
+      agreedRate: {
+        type: Number,
+        default: 10, // Set by Owner/CEO during KYC approval or management
+      },
+    },
+
+    // ── Seller Financial Balances ────────────────────────────
+    sellerCredits: {
+      type: Number,
+      default: 0, // Net available earnings after commission debit
+    },
+
+    pendingSellerCredits: {
+      type: Number,
+      default: 0, // Earnings from unpaid / unverified orders
+    },
+
+    totalCommissionDebited: {
+      type: Number,
+      default: 0, // Total commission paid by this seller to platform
+    },
+
+    payoutAccount: {
+      bankName:      { type: String, default: "" },
+      accountHolder: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      telebirrPhone: { type: String, default: "" },
+    },
   },
   {
     timestamps: true,

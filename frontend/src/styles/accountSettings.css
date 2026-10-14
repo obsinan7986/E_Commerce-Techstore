@@ -1,0 +1,267 @@
+/* ============================================================
+   ACCOUNT & SETTINGS CENTER — accountSettings.css
+   ============================================================ */
+
+.acc-page {
+  padding: 28px 24px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.acc-header {
+  margin-bottom: 24px;
+}
+
+.acc-header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.acc-header p {
+  margin: 0;
+  color: #64748B;
+  font-size: 14px;
+}
+
+/* Tab Navigation */
+.acc-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #E2E8F0;
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.acc-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.acc-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+}
+
+.acc-tab-btn:hover {
+  color: #1E293B;
+  background: #F8FAFC;
+  border-radius: 6px 6px 0 0;
+}
+
+.acc-tab-btn.active {
+  color: #2563EB;
+  border-bottom-color: #2563EB;
+}
+
+.acc-tab-icon {
+  font-size: 17px;
+}
+
+/* Card Container */
+.acc-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.acc-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 4px;
+}
+
+.acc-card-subtitle {
+  font-size: 13.5px;
+  color: #64748B;
+  margin: 0 0 22px;
+}
+
+/* Alerts */
+.acc-alert-success {
+  padding: 12px 16px;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.acc-alert-error {
+  padding: 12px 16px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+/* Forms */
+.acc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 680px;
+}
+
+.acc-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .acc-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.acc-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.acc-field-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.acc-field-group small {
+  font-size: 12px;
+  color: #94A3B8;
+}
+
+.acc-input {
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1E293B;
+  background: #FFFFFF;
+  transition: border-color 0.15s;
+}
+
+.acc-input:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.acc-input[readonly],
+.acc-input:disabled {
+  background: #F1F5F9;
+  color: #64748B;
+  cursor: not-allowed;
+}
+
+.acc-btn-primary {
+  padding: 10px 22px;
+  background: #2563EB;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  align-self: flex-start;
+}
+
+.acc-btn-primary:hover:not(:disabled) {
+  background: #1D4ED8;
+}
+
+.acc-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Seller Commission Agreement Card */
+.acc-agreement-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 1px solid #BFDBFE;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.acc-agreement-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #2563EB;
+  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.acc-rate-display {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1E3A8A;
+  margin: 0;
+}
+
+.acc-balances-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .acc-balances-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.acc-bal-card {
+  padding: 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+}
+
+.acc-bal-card strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 4px;
+}
+
+.acc-bal-card span {
+  font-size: 12.5px;
+  color: #64748B;
+}

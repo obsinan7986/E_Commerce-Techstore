@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
+import DashboardLayout from "./layouts/DashboardLayout";
 import AdminRoute from "./components/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -14,21 +15,23 @@ import CategoryPage from "./pages/categorypage";
 import SearchPage from "./pages/searchpage";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword  from "./pages/ResetPassword";
+import ResetPassword from "./pages/ResetPassword";
 import GoogleAuthSuccess from "./pages/GoogleAuthSuccess";
 
-// Protected customer pages
+// Protected customer checkout & shopping pages (Storefront layout)
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
-import Orders from "./pages/Orders";
-import OrderDetails from "./pages/OrderDetails";
-import Profile from "./pages/Profile";
-import PaymentHistory from "./pages/PaymentHistory";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
+
+// Protected operational & account pages (Dashboard layout)
+import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
+import PaymentHistory from "./pages/PaymentHistory";
 import NotificationsPage from "./pages/NotificationsPage";
-import MessageCenter     from "./pages/MessageCenter";
+import MessageCenter from "./pages/MessageCenter";
+import AccountSettingsPage from "./pages/AccountSettingsPage";
 
 // Admin pages
 import AdminDashboard from "./pages/AdminDashboard";
@@ -61,12 +64,12 @@ import FinanceDashboard from "./pages/FinanceDashboard";
 import FinancePayments from "./pages/FinancePayments";
 
 // Communication module pages
-import MeetingsPage      from "./pages/MeetingsPage";
+import MeetingsPage from "./pages/MeetingsPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
-import SchedulePage      from "./pages/SchedulePage";
+import SchedulePage from "./pages/SchedulePage";
 
 // Feature pages
-import ImageSearchPage   from "./pages/ImageSearchPage";
+import ImageSearchPage from "./pages/ImageSearchPage";
 
 // Informational pages
 import ContactPage from "./pages/ContactPage";
@@ -75,105 +78,106 @@ import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import ReturnsPage from "./pages/ReturnsPage";
 import ShippingInfoPage from "./pages/ShippingInfoPage";
-import AccountPage from "./pages/AccountPage";
 
 function App() {
   return (
     <Routes>
+      {/* ── 1. Storefront Public & Consumer Layout ── */}
       <Route element={<MainLayout />}>
-        {/* ── Public ── */}
+        {/* Public Browsing */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/products" element={<Products />} />
         <Route path="/category/:category" element={<CategoryPage />} />
-        <Route path="/search/:keyword"   element={<SearchPage />} />
-        <Route path="/forgot-password"   element={<ForgotPassword />} />
-        <Route path="/reset-password"    element={<ResetPassword />} />
+        <Route path="/search/:keyword" element={<SearchPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
 
-        {/* ── Informational ── */}
+        {/* Informational */}
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/returns" element={<ReturnsPage />} />
         <Route path="/shipping-info" element={<ShippingInfoPage />} />
-        {/* Account sub-pages — protected: require login */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/account" element={<AccountPage />} />
-        </Route>
 
-        {/* ── Protected customer ── */}
+        {/* Feature */}
+        <Route path="/image-search" element={<ImageSearchPage />} />
+
+        {/* Cart & Checkout */}
         <Route element={<ProtectedRoute />}>
           <Route path="/cart" element={<Cart />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/orders/:id" element={<OrderDetails />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/payment-history" element={<PaymentHistory />} />
-          <Route path="/notifications"   element={<NotificationsPage />} />
-          <Route path="/messages"        element={<MessageCenter />} />
-          {/* Both path formats: App.jsx + Chapa return_url */}
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-failed" element={<PaymentFailed />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/failed" element={<PaymentFailed />} />
         </Route>
-
-        {/* ── Admin only ── */}
-        <Route element={<AdminRoute />}>
-          <Route path="/admin"                   element={<AdminDashboard />} />
-          <Route path="/admin/dashboard"         element={<AdminDashboard />} />
-          <Route path="/admin/analytics"         element={<AdminAnalytics />} />
-          <Route path="/admin/orders"            element={<AdminOrders />} />
-          <Route path="/admin/products"          element={<AdminProducts />} />
-          <Route path="/admin/users"             element={<AdminUsers />} />
-          <Route path="/admin/manual-payments"   element={<AdminManualPayments />} />
-          <Route path="/admin/payment-settings"  element={<AdminPaymentSettings />} />
-          <Route path="/admin/coupons"           element={<AdminCoupons />} />
-          <Route path="/admin/messages"          element={<AdminMessages />} />
-          <Route path="/admin/notifications"     element={<AdminNotificationsPage />} />
-          <Route path="/admin/banners"           element={<AdminBanners />} />
-          <Route path="/admin/product-approvals" element={<AdminProductApproval />} />
-          <Route path="/admin/reviews"           element={<AdminReviews />} />
-        </Route>
-
-        {/* ── Owner only ── */}
-        <Route element={<OwnerRoute />}>
-          <Route path="/owner"           element={<OwnerDashboard />} />
-          <Route path="/owner/dashboard" element={<OwnerDashboard />} />
-          <Route path="/owner/users"     element={<OwnerUserManagement />} />
-          <Route path="/owner/kyc"       element={<OwnerUserManagement />} />
-        </Route>
-
-        {/* ── Seller only ── */}
-        <Route element={<SellerRoute />}>
-          <Route path="/seller"           element={<SellerDashboard />} />
-          <Route path="/seller/dashboard" element={<SellerDashboard />} />
-          <Route path="/seller/reviews"   element={<SellerReviews />} />
-        </Route>
-
-        {/* ── Finance only ── */}
-        <Route element={<FinanceRoute />}>
-          <Route path="/finance"            element={<FinanceDashboard />} />
-          <Route path="/finance/dashboard"  element={<FinanceDashboard />} />
-          <Route path="/finance/payments"   element={<FinancePayments />} />
-        </Route>
-
-        {/* ── Communication module (all staff) ── */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/comm/meetings"      element={<MeetingsPage />} />
-          <Route path="/comm/announcements" element={<AnnouncementsPage />} />
-          <Route path="/comm/schedule"      element={<SchedulePage />} />
-        </Route>
-
-        {/* ── Image search — public ── */}
-        <Route path="/image-search" element={<ImageSearchPage />} />
       </Route>
 
+      {/* ── 2. Enterprise SaaS Dashboard & Operational Layout ── */}
+      <Route element={<DashboardLayout />}>
+        {/* Unified Account & Customer Management */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/account" element={<AccountSettingsPage />} />
+          <Route path="/account/settings" element={<AccountSettingsPage />} />
+          <Route path="/profile" element={<AccountSettingsPage />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<OrderDetails />} />
+          <Route path="/payment-history" element={<PaymentHistory />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/messages" element={<MessageCenter />} />
+          <Route path="/comm/meetings" element={<MeetingsPage />} />
+          <Route path="/comm/announcements" element={<AnnouncementsPage />} />
+          <Route path="/comm/schedule" element={<SchedulePage />} />
+        </Route>
+
+        {/* Admin Operations */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/manual-payments" element={<AdminManualPayments />} />
+          <Route path="/admin/payment-settings" element={<AdminPaymentSettings />} />
+          <Route path="/admin/coupons" element={<AdminCoupons />} />
+          <Route path="/admin/messages" element={<AdminMessages />} />
+          <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+          <Route path="/admin/banners" element={<AdminBanners />} />
+          <Route path="/admin/product-approvals" element={<AdminProductApproval />} />
+          <Route path="/admin/reviews" element={<AdminReviews />} />
+        </Route>
+
+        {/* CEO / Owner Governance */}
+        <Route element={<OwnerRoute />}>
+          <Route path="/owner" element={<OwnerDashboard />} />
+          <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+          <Route path="/owner/users" element={<OwnerUserManagement />} />
+          <Route path="/owner/kyc" element={<OwnerUserManagement />} />
+        </Route>
+
+        {/* Verified Seller Center */}
+        <Route element={<SellerRoute />}>
+          <Route path="/seller" element={<SellerDashboard />} />
+          <Route path="/seller/dashboard" element={<SellerDashboard />} />
+          <Route path="/seller/reviews" element={<SellerReviews />} />
+        </Route>
+
+        {/* Finance & Split Ledger */}
+        <Route element={<FinanceRoute />}>
+          <Route path="/finance" element={<FinanceDashboard />} />
+          <Route path="/finance/dashboard" element={<FinanceDashboard />} />
+          <Route path="/finance/payments" element={<FinancePayments />} />
+        </Route>
+      </Route>
+
+      {/* 404 Catch-All */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

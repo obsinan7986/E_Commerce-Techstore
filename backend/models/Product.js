@@ -83,11 +83,31 @@ const productSchema = new mongoose.Schema(
       ref:     "User",
       default: null,
     },
+
+    // ── Commission Override (Owner/Admin agreed rate) ────────
+    commissionOverride: {
+      type:    Number,
+      default: null, // If set, overrides seller's default rate
+    },
   },
   {
     timestamps: true,
+    toJSON:     { virtuals: true },
+    toObject:   { virtuals: true },
   }
 );
+
+// Virtual calculation previews
+productSchema.virtual("estimatedCommission").get(function () {
+  const rate = this.commissionOverride !== null && this.commissionOverride !== undefined ? this.commissionOverride : 10;
+  return Number(((this.price || 0) * (rate / 100)).toFixed(2));
+});
+
+productSchema.virtual("estimatedSellerNet").get(function () {
+  const rate = this.commissionOverride !== null && this.commissionOverride !== undefined ? this.commissionOverride : 10;
+  const comm = Number(((this.price || 0) * (rate / 100)).toFixed(2));
+  return Number(((this.price || 0) - comm).toFixed(2));
+});
 
 // Index for fast "show approved products" queries
 productSchema.index({ approvalStatus: 1 });

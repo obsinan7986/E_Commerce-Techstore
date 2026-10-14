@@ -27,6 +27,33 @@ const orderItemSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+
+    // ── Immutable Financial Snapshot per Item ───────────────
+    seller: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    grossItemTotal: {
+      type: Number,
+      default: 0, // price * quantity
+    },
+
+    commissionRateApplied: {
+      type: Number,
+      default: 0,
+    },
+
+    commissionDebited: {
+      type: Number,
+      default: 0, // Amount deducted from seller's price
+    },
+
+    sellerNetEarning: {
+      type: Number,
+      default: 0, // grossItemTotal - commissionDebited
+    },
   },
   {
     _id: false,
@@ -157,6 +184,28 @@ const orderSchema = new mongoose.Schema(
       type:           { type: String, default: "" },   // "percentage" | "fixed" | "first_order"
       discount:       { type: Number, default: 0  },   // % or ETB value
       discountAmount: { type: Number, default: 0  },   // actual ETB saved
+    },
+
+    // ── Automated CEO-Seller Commission & Revenue Split ────────
+    totalGrossItemsPrice: {
+      type: Number,
+      default: 0,
+    },
+
+    totalCommissionDebited: {
+      type: Number,
+      default: 0, // Sum of all item commissions added to Finance
+    },
+
+    totalSellerNetPayout: {
+      type: Number,
+      default: 0, // Sum of all seller net earnings
+    },
+
+    isCommissionSettled: {
+      type: Boolean,
+      default: false, // Prevents double-settlement
+      index: true,
     },
   },
   {

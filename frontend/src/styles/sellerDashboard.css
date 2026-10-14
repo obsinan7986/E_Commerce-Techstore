@@ -177,4 +177,65 @@
   .sd-sales { grid-template-columns: 1fr; }
   .sd-form-row { grid-template-columns: 1fr; }
   .sd-product-card { flex-direction: column; align-items: flex-start; }
+  .sd-calc-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Real-Time CEO Commission & Net Price Calculator Card ─── */
+.sd-calc-card {
+  margin: 14px 0 8px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sd-calc-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sd-calc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.sd-calc-item {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(22, 101, 52, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.sd-calc-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.sd-calc-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.sd-calc-val--comm {
+  color: #dc2626;
+}
+
+.sd-calc-val--net {
+  color: #16a34a;
+}
+

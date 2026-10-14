@@ -21,6 +21,7 @@ const AdminProductApproval = () => {
   // Review modal
   const [reviewing, setReviewing]  = useState(null); // product being reviewed
   const [reason,    setReason]     = useState("");
+  const [commOverride, setCommOverride] = useState("");
   const [busy,      setBusy]       = useState(false);
 
   const load = async () => {
@@ -45,7 +46,9 @@ const AdminProductApproval = () => {
   const handleApprove = async (id) => {
     try {
       setBusy(true);
-      await api.patch(`/admin/product-approvals/${id}/approve`);
+      await api.patch(`/admin/product-approvals/${id}/approve`, {
+        commissionOverride: commOverride.trim() !== "" ? Number(commOverride) : null,
+      });
       setReviewing(null);
       await load();
     } catch (err) {
@@ -130,7 +133,11 @@ const AdminProductApproval = () => {
                   <p className="apa-desc">{p.description?.slice(0, 100)}{p.description?.length > 100 ? "…" : ""}</p>
                 </div>
                 <div className="apa-actions">
-                  <button className="apa-btn apa-btn--review" onClick={() => { setReviewing(p); setReason(""); }}>
+                  <button className="apa-btn apa-btn--review" onClick={() => { 
+                    setReviewing(p); 
+                    setReason(""); 
+                    setCommOverride(p.commissionOverride !== null && p.commissionOverride !== undefined ? String(p.commissionOverride) : "");
+                  }}>
                     {filterSt === "pending" ? "Review" : "Re-review"}
                   </button>
                 </div>
@@ -175,6 +182,35 @@ const AdminProductApproval = () => {
                 {reviewing.seller && <p><strong>Seller:</strong> {reviewing.seller.fullName} ({reviewing.seller.email})</p>}
                 <p style={{ marginTop: 8 }}>{reviewing.description}</p>
               </div>
+            </div>
+
+            {/* CEO Commission Override Input */}
+            <div className="apa-review-form" style={{ marginBottom: 14 }}>
+              <label className="apa-review-label" style={{ fontWeight: 600, color: "#1E293B", display: "flex", justifyContent: "space-between" }}>
+                <span>CEO Commission Override (%)</span>
+                <span style={{ color: "#64748B", fontWeight: 400, fontSize: "0.82rem" }}>
+                  Leave empty to inherit seller default ({reviewing.seller?.commissionAgreement?.agreedRate ?? 10}%)
+                </span>
+              </label>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  className="apa-textarea"
+                  style={{ height: "40px", padding: "8px 12px", width: "100%", borderRadius: "8px", border: "1px solid #CBD5E1", fontSize: "0.95rem" }}
+                  placeholder={`Inherited default: ${reviewing.seller?.commissionAgreement?.agreedRate ?? 10}%`}
+                  value={commOverride}
+                  onChange={(e) => setCommOverride(e.target.value)}
+                />
+                <span style={{ fontWeight: 700, color: "#475569" }}>%</span>
+              </div>
+              {commOverride !== "" && !isNaN(Number(commOverride)) && (
+                <div style={{ fontSize: "0.82rem", color: "#059669", marginTop: "4px", fontWeight: 500 }}>
+                  Est. Net Seller Payout: ETB {fmt(reviewing.price * (1 - Number(commOverride) / 100))} · Platform Finance Fee: ETB {fmt(reviewing.price * (Number(commOverride) / 100))}
+                </div>
+              )}
             </div>
 
             {/* Rejection reason */}

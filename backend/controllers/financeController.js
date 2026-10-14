@@ -11,6 +11,8 @@
  */
 import Order              from "../models/Order.js";
 import User               from "../models/User.js";
+import PaymentSettings    from "../models/PaymentSettings.js";
+import { settleOrderCommission } from "../utils/commissionEngine.js";
 import createNotification from "../utils/createNotification.js";
 
 const MANUAL_METHODS = ["CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
@@ -33,6 +35,9 @@ export const getFinanceDashboard = async (req, res) => {
       manualRejected,
       recentTransactions,
       monthlyRevenue,
+      pSettings,
+      sellerAgg,
+      ledgerTransactions,
     ] = await Promise.all([
       // Total revenue (all paid)
       Order.aggregate([
@@ -93,9 +98,35 @@ export const getFinanceDashboard = async (req, res) => {
         },
         { $sort: { "_id.year": 1, "_id.month": 1 } },
       ]),
+
+      // Payment settings singleton for platform ledger
+      PaymentSettings.findOne(),
+
+      // Aggregated seller credit liability
+      User.aggregate([
+        { $match: { role: "seller" } },
+        {
+          $group: {
+            _id: null,
+            totalSellerNetCredits: { $sum: "$sellerCredits" },
+            totalPendingCredits:   { $sum: "$pendingSellerCredits" },
+            totalCommissionPaid:   { $sum: "$totalCommissionDebited" },
+          },
+        },
+      ]),
+
+      // Comprehensive ledger split transactions (last 25 orders)
+      Order.find()
+        .populate("user", "fullName email")
+        .populate("orderItems.seller", "fullName email")
+        .sort({ createdAt: -1 })
+        .limit(25)
+        .select("orderItems totalPrice totalGrossItemsPrice totalCommissionDebited totalSellerNetPayout isCommissionSettled paymentStatus paymentMethod orderStatus paidAt createdAt"),
     ]);
 
     const revenue = totalRevenue[0]?.total || 0;
+    const paymentSettings = pSettings || {};
+    const sellerTotals = sellerAgg[0] || { totalSellerNetCredits: 0, totalPendingCredits: 0 };
 
     // Payment method breakdown
     const methodBreakdown = await Order.aggregate([
@@ -107,18 +138,24 @@ export const getFinanceDashboard = async (req, res) => {
     res.status(200).json({
       success: true,
       dashboard: {
-        totalRevenue:    revenue,
+        totalRevenue:            revenue,
+        platformTotalRevenue:    paymentSettings.platformTotalRevenue || revenue,
+        platformTotalCommission: paymentSettings.platformTotalCommission || 0,
+        totalGrossSales:         revenue,
+        totalSellerNetCredits:   sellerTotals.totalSellerNetCredits || 0,
+        pendingSellerCredits:    sellerTotals.totalPendingCredits || 0,
         totalOrders,
-        paidCount:       totalPaid,
-        pendingCount:    totalPending,
-        failedCount:     totalFailed,
-        refundedCount:   totalRefunded,
+        paidCount:               totalPaid,
+        pendingCount:            totalPending,
+        failedCount:             totalFailed,
+        refundedCount:           totalRefunded,
         manualPending,
         manualVerified,
         manualRejected,
         methodBreakdown,
         monthlyRevenue,
         recentTransactions,
+        ledgerTransactions,
       },
     });
   } catch (err) {
@@ -161,26 +198,32 @@ export const getFinancePayments = async (req, res) => {
       Order.countDocuments(filter),
       Order.find(filter)
         .populate("user", "fullName email phone")
+        .populate("orderItems.seller", "fullName email")
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
-        .select("user totalPrice paymentStatus paymentMethod orderStatus paymentResult manualPayment paidAt createdAt"),
+        .select("user orderItems totalPrice totalGrossItemsPrice totalCommissionDebited totalSellerNetPayout isCommissionSettled paymentStatus paymentMethod orderStatus paymentResult manualPayment paidAt createdAt"),
     ]);
 
     const payments = orders.map((o) => ({
-      orderId:             o._id,
-      customer:            o.user,
-      amount:              o.totalPrice,
-      paymentStatus:       o.paymentStatus,
-      paymentMethod:       o.paymentMethod,
-      orderStatus:         o.orderStatus,
-      txRef:               o.paymentResult?.txRef         || "",
-      transactionId:       o.paymentResult?.transactionId || "",
-      manualStatus:        o.manualPayment?.verificationStatus || "None",
-      manualScreenshot:    o.manualPayment?.screenshotUrl  || "",
-      manualNote:          o.manualPayment?.adminNote      || "",
-      paidAt:              o.paidAt,
-      createdAt:           o.createdAt,
+      orderId:                o._id,
+      customer:               o.user,
+      amount:                 o.totalPrice,
+      totalGrossItemsPrice:   o.totalGrossItemsPrice || o.totalPrice,
+      totalCommissionDebited: o.totalCommissionDebited || 0,
+      totalSellerNetPayout:   o.totalSellerNetPayout || 0,
+      isCommissionSettled:    !!o.isCommissionSettled,
+      orderItems:             o.orderItems || [],
+      paymentStatus:          o.paymentStatus,
+      paymentMethod:          o.paymentMethod,
+      orderStatus:            o.orderStatus,
+      txRef:                  o.paymentResult?.txRef         || "",
+      transactionId:          o.paymentResult?.transactionId || "",
+      manualStatus:           o.manualPayment?.verificationStatus || "None",
+      manualScreenshot:       o.manualPayment?.screenshotUrl  || "",
+      manualNote:             o.manualPayment?.adminNote      || "",
+      paidAt:                 o.paidAt,
+      createdAt:              o.createdAt,
     }));
 
     res.status(200).json({ success: true, total, page, pages: Math.ceil(total / limit), payments });
@@ -255,6 +298,19 @@ export const financeVerifyPayment = async (req, res) => {
     order.manualPayment.reviewedBy = req.user._id;
 
     await order.save();
+
+    // Settle commission and credit Finance upon verification
+    if (action === "verify" && !order.isCommissionSettled) {
+      await settleOrderCommission(order._id);
+    } else if (action === "reject" && !order.isCommissionSettled) {
+      for (const item of order.orderItems) {
+        if (item.seller && item.sellerNetEarning > 0) {
+          await User.findByIdAndUpdate(item.seller, {
+            $inc: { pendingSellerCredits: -item.sellerNetEarning },
+          });
+        }
+      }
+    }
 
     // Notify customer
     if (action === "verify") {

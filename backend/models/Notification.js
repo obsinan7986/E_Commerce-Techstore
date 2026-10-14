@@ -23,10 +23,10 @@ const notificationSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Differentiates customer vs admin bucket
+    // Differentiates customer vs staff bucket
     targetRole: {
       type:    String,
-      enum:    ["user", "admin"],
+      enum:    ["user", "admin", "seller", "finance", "owner"],
       default: "user",
       index:   true,
     },
@@ -55,6 +55,10 @@ const notificationSchema = new mongoose.Schema(
         "meeting_updated",
         "meeting_cancelled",
         "announcement_published",
+        // ── Commission & Revenue notifications ───────────────
+        "commission_settled",
+        "seller_credit_added",
+        "finance_revenue_credit",
       ],
       required: true,
     },

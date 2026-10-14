@@ -687,6 +687,14 @@ export const approveProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ success: false, message: "Product not found." });
 
+    const { commissionOverride } = req.body;
+    if (commissionOverride !== undefined) {
+      product.commissionOverride =
+        commissionOverride !== null && commissionOverride !== "" && !isNaN(Number(commissionOverride))
+          ? Number(commissionOverride)
+          : null;
+    }
+
     product.approvalStatus  = "approved";
     product.rejectionReason = "";
     product.reviewedBy      = req.user._id;

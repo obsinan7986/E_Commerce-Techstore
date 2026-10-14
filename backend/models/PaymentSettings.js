@@ -28,6 +28,25 @@ const paymentSettingsSchema = new mongoose.Schema(
       ],
     },
 
+    // ── Global CEO Commission & Platform Revenue Ledger ─────────
+    defaultCommissionType: {
+      type: String,
+      enum: ["percentage", "fixed"],
+      default: "percentage",
+    },
+    defaultCommissionRate: {
+      type: Number,
+      default: 10, // Default 10% CEO commission
+    },
+    platformTotalRevenue: {
+      type: Number,
+      default: 0, // Cumulative gross volume
+    },
+    platformTotalCommission: {
+      type: Number,
+      default: 0, // Cumulative commission debited and credited to Finance
+    },
+
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }

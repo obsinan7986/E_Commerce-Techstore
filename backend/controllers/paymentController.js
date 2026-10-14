@@ -2,6 +2,7 @@ import axios from "axios";
 
 import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
+import { settleOrderCommission } from "../utils/commissionEngine.js";
 
 const CHAPA_URL =
   "https://api.chapa.co/v1/transaction";
@@ -63,6 +64,11 @@ const markOrderAsPaid = async (order, payment) => {
     payment.currency || "ETB";
 
   await order.save();
+
+  // Automatically settle CEO-Seller commission and credit Finance ledger
+  if (!order.isCommissionSettled) {
+    await settleOrderCommission(order._id);
+  }
 
   // Clear cart after successful payment.
   // Only clear the cart belonging to this customer.

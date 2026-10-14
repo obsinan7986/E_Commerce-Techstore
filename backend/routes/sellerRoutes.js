@@ -10,6 +10,7 @@ import {
   sellerSubmitKYC,
   sellerGetKYCStatus,
   sellerGetReviews,
+  sellerUpdatePayoutAccount,
 } from "../controllers/sellerController.js";
 
 const router    = express.Router();
@@ -24,9 +25,11 @@ router.delete( "/products/:id",  ...sellerOnly, sellerDeleteProduct);
 // Sales
 router.get( "/sales", ...sellerOnly, sellerGetSales);
 
-// KYC
-router.get(  "/kyc", ...sellerOnly, sellerGetKYCStatus);
-router.post( "/kyc", ...sellerOnly, sellerSubmitKYC);
+// KYC & Payout Account
+router.get(  "/kyc",            ...sellerOnly, sellerGetKYCStatus);
+router.post( "/kyc",            ...sellerOnly, sellerSubmitKYC);
+router.get(  "/payout-account", ...sellerOnly, sellerGetKYCStatus);
+router.put(  "/payout-account", ...sellerOnly, sellerUpdatePayoutAccount);
 
 // Reviews (read-only)
 router.get( "/reviews", ...sellerOnly, sellerGetReviews);

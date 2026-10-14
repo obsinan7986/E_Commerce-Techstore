@@ -43,10 +43,12 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   border-left: 4px solid #E5E7EB;
 }
-.fd-kpi--revenue  { border-left-color: #2563EB; }
-.fd-kpi--pending  { border-left-color: #D97706; }
-.fd-kpi--failed   { border-left-color: #DC2626; }
-.fd-kpi--refunded { border-left-color: #7C3AED; }
+.fd-kpi--revenue    { border-left-color: #2563EB; }
+.fd-kpi--commission { border-left-color: #059669; }
+.fd-kpi--liability  { border-left-color: #7C3AED; }
+.fd-kpi--pending    { border-left-color: #D97706; }
+.fd-kpi--failed     { border-left-color: #DC2626; }
+.fd-kpi--refunded   { border-left-color: #6B7280; }
 
 .fd-kpi-icon { font-size: 28px; }
 .fd-kpi strong { display: block; font-size: 22px; font-weight: 800; color: #111827; line-height: 1.1; }

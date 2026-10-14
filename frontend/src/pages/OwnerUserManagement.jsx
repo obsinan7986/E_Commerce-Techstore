@@ -39,9 +39,11 @@ const OwnerUserManagement = () => {
   const [roleBusy,   setRoleBusy]   = useState(false);
 
   // KYC modal
-  const [kycUser,    setKycUser]    = useState(null);
-  const [kycReason,  setKycReason]  = useState("");
-  const [kycBusy,    setKycBusy]    = useState(false);
+  const [kycUser,           setKycUser]           = useState(null);
+  const [kycReason,         setKycReason]         = useState("");
+  const [kycCommissionRate, setKycCommissionRate] = useState(10);
+  const [kycCommissionType, setKycCommissionType] = useState("percentage");
+  const [kycBusy,           setKycBusy]           = useState(false);
 
   const load = async () => {
     try {
@@ -109,7 +111,10 @@ const OwnerUserManagement = () => {
   const handleKycApprove = async () => {
     try {
       setKycBusy(true);
-      await api.patch(`/owner/kyc/${kycUser._id}/approve`);
+      await api.patch(`/owner/kyc/${kycUser._id}/approve`, {
+        agreedRate: Number(kycCommissionRate) || 10,
+        commissionType: kycCommissionType || "percentage",
+      });
       setKycUser(null);
       await load();
     } catch (err) {
@@ -213,7 +218,13 @@ const OwnerUserManagement = () => {
                       {u.role === "seller" ? (
                         <span className={`kyc-badge ${KYC_CLS[u.kycStatus]}`}
                           style={{ cursor: u.kycStatus === "pending" ? "pointer" : "default" }}
-                          onClick={() => u.kycStatus === "pending" && setKycUser(u)}>
+                          onClick={() => {
+                            if (u.kycStatus === "pending") {
+                              setKycUser(u);
+                              setKycCommissionRate(u.commissionAgreement?.agreedRate ?? 10);
+                              setKycCommissionType(u.commissionAgreement?.commissionType ?? "percentage");
+                            }
+                          }}>
                           {KYC_LABEL[u.kycStatus]}
                           {u.kycStatus === "pending" && " (review)"}
                         </span>
@@ -324,6 +335,37 @@ const OwnerUserManagement = () => {
                 </div>
               ))}
             </div>
+            <div className="od-field" style={{ padding: "0 0 14px", background: "#F0FDF4", padding: 12, borderRadius: 8, border: "1px solid #BBF7D0", marginBottom: 12 }}>
+              <label style={{ fontWeight: 700, color: "#166534", marginBottom: 6, display: "block" }}>
+                CEO Agreed Commission Rate (Negotiated Split)
+              </label>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <input
+                  className="od-input"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={kycCommissionRate}
+                  onChange={(e) => setKycCommissionRate(e.target.value)}
+                  style={{ width: 120, fontWeight: 700 }}
+                  placeholder="Rate"
+                />
+                <select
+                  className="od-select"
+                  value={kycCommissionType}
+                  onChange={(e) => setKycCommissionType(e.target.value)}
+                  style={{ width: 160 }}
+                >
+                  <option value="percentage">% Percentage of Price</option>
+                  <option value="fixed">Fixed ETB per Item</option>
+                </select>
+                <span style={{ fontSize: 12, color: "#166534" }}>
+                  Debited automatically from seller sales upon payment verification.
+                </span>
+              </div>
+            </div>
+
             <div className="od-field" style={{ padding: "0 0 12px" }}>
               <label>Rejection reason (required to reject)</label>
               <textarea className="od-input od-textarea" rows={2} placeholder="Enter reason…"

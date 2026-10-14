@@ -132,45 +132,84 @@ export const sellerDeleteProduct = async (req, res) => {
 // ============================================================
 export const sellerGetSales = async (req, res) => {
   try {
+    const seller = await User.findById(req.user._id);
+
     // Find all orders that contain at least one item from this seller's products
     const sellerProductIds = await Product.find({ seller: req.user._id }).distinct("_id");
+    const sellerProductIdsStr = sellerProductIds.map(String);
 
     const orders = await Order.find({
       "orderItems.product": { $in: sellerProductIds },
       orderStatus: { $nin: ["Cancelled"] },
     })
-      .select("orderItems totalPrice paymentStatus orderStatus createdAt")
+      .select("orderItems totalPrice paymentStatus orderStatus isCommissionSettled createdAt")
       .sort({ createdAt: -1 })
       .limit(100);
 
-    // Aggregate only the seller's items within each order
-    let totalRevenue  = 0;
+    let grossSales = 0;
     let totalUnitsSold = 0;
+    let totalCommissionDebited = 0;
+    let totalSellerNetEarning = 0;
     const productSales = {};
+    const itemizedSales = [];
 
     for (const order of orders) {
       for (const item of order.orderItems) {
         const pid = item.product?.toString();
-        if (!sellerProductIds.map(String).includes(pid)) continue;
-        const revenue = item.price * item.quantity;
-        totalRevenue  += order.paymentStatus === "Paid" ? revenue : 0;
+        if (!sellerProductIdsStr.includes(pid)) continue;
+
+        const gross = item.grossItemTotal || (item.price * item.quantity);
+        const commission = item.commissionDebited || 0;
+        const net = item.sellerNetEarning || (gross - commission);
+
+        if (order.paymentStatus === "Paid") {
+          grossSales += gross;
+          totalCommissionDebited += commission;
+          totalSellerNetEarning += net;
+        }
+
         totalUnitsSold += item.quantity;
+
         if (!productSales[pid]) {
           productSales[pid] = { name: item.name, image: item.image, units: 0, revenue: 0 };
         }
-        productSales[pid].units   += item.quantity;
-        productSales[pid].revenue += order.paymentStatus === "Paid" ? revenue : 0;
+        productSales[pid].units += item.quantity;
+        productSales[pid].revenue += order.paymentStatus === "Paid" ? gross : 0;
+
+        itemizedSales.push({
+          orderId: order._id,
+          productName: item.name,
+          image: item.image,
+          quantity: item.quantity,
+          price: item.price,
+          grossItemTotal: gross,
+          commissionRateApplied: item.commissionRateApplied || seller?.commissionAgreement?.agreedRate || 10,
+          commissionDebited: commission,
+          sellerNetEarning: net,
+          paymentStatus: order.paymentStatus,
+          orderStatus: order.orderStatus,
+          isCommissionSettled: !!order.isCommissionSettled,
+          createdAt: order.createdAt,
+        });
       }
     }
 
     res.status(200).json({
       success: true,
       summary: {
-        totalRevenue,
+        agreedRate:             seller?.commissionAgreement?.agreedRate ?? 10,
+        commissionType:         seller?.commissionAgreement?.commissionType || "percentage",
+        grossSales,
+        totalRevenue:           grossSales,
         totalUnitsSold,
-        totalOrders: orders.length,
+        totalOrders:            orders.length,
+        totalCommissionDebited: seller?.totalCommissionDebited ?? totalCommissionDebited,
+        sellerCredits:          seller?.sellerCredits ?? totalSellerNetEarning,
+        pendingSellerCredits:   seller?.pendingSellerCredits ?? 0,
+        payoutAccount:          seller?.payoutAccount || {},
       },
       topProducts: Object.values(productSales).sort((a, b) => b.units - a.units).slice(0, 10),
+      itemizedSales,
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -205,12 +244,42 @@ export const sellerSubmitKYC = async (req, res) => {
 };
 
 // ============================================================
-// GET OWN KYC STATUS  –  GET /api/seller/kyc
+// GET OWN KYC & FINANCIAL STATUS  –  GET /api/seller/kyc
 // ============================================================
 export const sellerGetKYCStatus = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("kycStatus kycDocs kycRejectionReason kycReviewedAt");
+    const user = await User.findById(req.user._id).select(
+      "kycStatus kycDocs kycRejectionReason kycReviewedAt commissionAgreement sellerCredits pendingSellerCredits totalCommissionDebited payoutAccount"
+    );
     res.status(200).json({ success: true, kyc: user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================
+// UPDATE PAYOUT ACCOUNT  –  PUT /api/seller/payout-account
+// Body: { bankName, accountHolder, accountNumber, telebirrPhone }
+// ============================================================
+export const sellerUpdatePayoutAccount = async (req, res) => {
+  try {
+    const { bankName, accountHolder, accountNumber, telebirrPhone } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+
+    user.payoutAccount = {
+      bankName:      bankName      !== undefined ? bankName.trim()      : user.payoutAccount?.bankName || "",
+      accountHolder: accountHolder !== undefined ? accountHolder.trim() : user.payoutAccount?.accountHolder || "",
+      accountNumber: accountNumber !== undefined ? accountNumber.trim() : user.payoutAccount?.accountNumber || "",
+      telebirrPhone: telebirrPhone !== undefined ? telebirrPhone.trim() : user.payoutAccount?.telebirrPhone || "",
+    };
+
+    await user.save();
+    res.status(200).json({
+      success: true,
+      message: "Payout account details updated successfully.",
+      payoutAccount: user.payoutAccount,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

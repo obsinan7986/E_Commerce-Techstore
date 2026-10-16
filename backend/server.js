@@ -2,11 +2,18 @@ import express          from "express";
 import cors             from "cors";
 import dotenv           from "dotenv";
 import path             from "path";
+import fs               from "fs";
 import { fileURLToPath } from "url";
 
 // ── ESM-safe path resolution ──────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // ── Load .env FIRST ───────────────────────────────────────────────
 dotenv.config({ path: path.join(__dirname, ".env") });

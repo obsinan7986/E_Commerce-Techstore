@@ -20,6 +20,15 @@ api.interceptors.request.use((config) => {
   } catch {
     // malformed localStorage — ignore
   }
+
+  // Allow browser to automatically set multipart/form-data boundary for file uploads
+  if (config.data instanceof FormData) {
+    if (config.headers) {
+      delete config.headers["Content-Type"];
+      delete config.headers["content-type"];
+    }
+  }
+
   return config;
 });
 

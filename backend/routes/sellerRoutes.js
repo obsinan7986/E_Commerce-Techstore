@@ -43,4 +43,19 @@ router.post( "/payout-request", ...sellerOnly, sellerRequestPayout);
 // Reviews (read-only)
 router.get( "/reviews", ...sellerOnly, sellerGetReviews);
 
+// Upload alias for seller
+router.post( "/upload", ...sellerOnly, upload.single("image"), (req, res) => {
+  if (req.file) {
+    return res.status(200).json({
+      success: true,
+      message: "Image uploaded successfully",
+      image: `/uploads/${req.file.filename}`,
+    });
+  }
+  if (req.body?.image) {
+    return res.status(200).json({ success: true, image: req.body.image });
+  }
+  return res.status(400).json({ success: false, message: "No image file provided." });
+});
+
 export default router;

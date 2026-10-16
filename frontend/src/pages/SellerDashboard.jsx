@@ -226,6 +226,7 @@ const SellerDashboard = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setFormErr("");
     const reader = new FileReader();
     reader.onload = (ev) => setPreview(ev.target.result);
     reader.readAsDataURL(file);
@@ -234,12 +235,17 @@ const SellerDashboard = () => {
       setUploading(true);
       const fd = new FormData();
       fd.append("image", file);
-      const { data } = await api.post("/upload", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setForm((f) => ({ ...f, image: data.image }));
-    } catch {
-      setFormErr("Image upload failed. Please try a valid image file.");
+      // Browser automatically provides multipart/form-data with proper boundary
+      const { data } = await api.post("/upload", fd);
+      if (data?.image) {
+        setForm((f) => ({ ...f, image: data.image }));
+        setFormErr("");
+      } else {
+        setFormErr("Image uploaded, but no path returned.");
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      setFormErr(err.response?.data?.message || "Image upload failed. Please try a valid image file.");
     } finally {
       setUploading(false);
     }
@@ -940,13 +946,20 @@ const SellerDashboard = () => {
             {/* Product Image */}
             <div className="sd-field">
               <label>Product Image</label>
-              <div className="sd-upload" onClick={() => fileRef.current?.click()}>
+              <div
+                className="sd-upload"
+                onClick={() => {
+                  if (fileRef.current) fileRef.current.value = "";
+                  fileRef.current?.click();
+                }}
+              >
                 {preview ? (
                   <img src={preview} alt="preview" className="sd-upload-preview" />
                 ) : (
                   <div className="sd-upload-ph">
                     <span>📤</span>
-                    <span>Click to upload product image</span>
+                    <span>Click or drop to upload product photo</span>
+                    <span style={{ fontSize: "11px", color: "#94A3B8" }}>Supports JPG, PNG, WEBP, GIF, AVIF (up to 15MB)</span>
                   </div>
                 )}
                 {uploading && <div className="sd-upload-overlay">Uploading image…</div>}
@@ -954,7 +967,7 @@ const SellerDashboard = () => {
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.svg,.avif,.jfif,.bmp"
                 style={{ display: "none" }}
                 onChange={handleFile}
               />
@@ -1098,30 +1111,50 @@ const SellerDashboard = () => {
       {activeTab === "earnings" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Top Wallet Summary Cards */}
-          <div className="sd-kpi-grid" style={{ marginBottom: 0 }}>
+          <div className="sd-kpi-grid" style={{ marginBottom: 0, paddingTop: 12 }}>
             <div className="sd-kpi-card" style={{ borderTop: "4px solid #10B981" }}>
-              <span className="sd-kpi-label">Available Wallet Balance</span>
+              <div className="sd-kpi-top">
+                <span className="sd-kpi-label">Available Wallet Balance</span>
+                <div className="sd-kpi-icon-wrap" style={{ background: "#ECFDF5", color: "#10B981" }}>
+                  <FiCreditCard />
+                </div>
+              </div>
               <div className="sd-kpi-value" style={{ color: "#059669" }}>
                 ETB {fmt(availableCredits)}
               </div>
               <span className="sd-kpi-sub">Ready to withdraw to bank</span>
             </div>
             <div className="sd-kpi-card" style={{ borderTop: "4px solid #F59E0B" }}>
-              <span className="sd-kpi-label">Pending / Processing Payouts</span>
+              <div className="sd-kpi-top">
+                <span className="sd-kpi-label">Pending / Processing Payouts</span>
+                <div className="sd-kpi-icon-wrap" style={{ background: "#FFFBEB", color: "#F59E0B" }}>
+                  <FiClock />
+                </div>
+              </div>
               <div className="sd-kpi-value" style={{ color: "#D97706" }}>
                 ETB {fmt(statsData?.kpis?.pendingSellerCredits ?? salesData?.summary?.pendingSellerCredits ?? 0)}
               </div>
               <span className="sd-kpi-sub">Under review by Finance team</span>
             </div>
             <div className="sd-kpi-card" style={{ borderTop: "4px solid #DC2626" }}>
-              <span className="sd-kpi-label">Total Commission Contributed</span>
+              <div className="sd-kpi-top">
+                <span className="sd-kpi-label">Total Commission Contributed</span>
+                <div className="sd-kpi-icon-wrap" style={{ background: "#FEF2F2", color: "#DC2626" }}>
+                  <FiShield />
+                </div>
+              </div>
               <div className="sd-kpi-value" style={{ color: "#DC2626" }}>
                 ETB {fmt(platformCommissionDebited)}
               </div>
               <span className="sd-kpi-sub">Debited to Platform Revenue</span>
             </div>
             <div className="sd-kpi-card" style={{ borderTop: "4px solid #2563EB" }}>
-              <span className="sd-kpi-label">Lifetime Gross Sales</span>
+              <div className="sd-kpi-top">
+                <span className="sd-kpi-label">Lifetime Gross Sales</span>
+                <div className="sd-kpi-icon-wrap" style={{ background: "#EFF6FF", color: "#2563EB" }}>
+                  <FiDollarSign />
+                </div>
+              </div>
               <div className="sd-kpi-value" style={{ color: "#2563EB" }}>
                 ETB {fmt(grossSales)}
               </div>
@@ -1341,13 +1374,20 @@ const SellerDashboard = () => {
               {/* Image */}
               <div className="sd-field">
                 <label>Product Image</label>
-                <div className="sd-upload" onClick={() => fileRef.current?.click()}>
+                <div
+                  className="sd-upload"
+                  onClick={() => {
+                    if (fileRef.current) fileRef.current.value = "";
+                    fileRef.current?.click();
+                  }}
+                >
                   {preview ? (
                     <img src={preview} alt="preview" className="sd-upload-preview" />
                   ) : (
                     <div className="sd-upload-ph">
                       <span>📤</span>
                       <span>Click to upload image</span>
+                      <span style={{ fontSize: "11px", color: "#94A3B8" }}>Supports JPG, PNG, WEBP, GIF, AVIF (up to 15MB)</span>
                     </div>
                   )}
                   {uploading && <div className="sd-upload-overlay">Uploading…</div>}
@@ -1355,7 +1395,7 @@ const SellerDashboard = () => {
                 <input
                   ref={fileRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.svg,.avif,.jfif,.bmp"
                   style={{ display: "none" }}
                   onChange={handleFile}
                 />

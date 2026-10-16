@@ -148,12 +148,33 @@
 
 /* Upload */
 .sd-upload {
-  position: relative; height: 140px; border: 2px dashed #D1D5DB;
-  border-radius: 10px; background: #F9FAFB; cursor: pointer;
-  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  position: relative;
+  min-height: 180px;
+  height: auto;
+  border: 2px dashed #D1D5DB;
+  border-radius: 10px;
+  background: #F9FAFB;
+  cursor: pointer;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
-.sd-upload:hover { border-color: #2563EB; }
-.sd-upload-preview { width: 100%; height: 100%; object-fit: cover; }
+.sd-upload:hover {
+  border-color: #2563EB;
+  background: #F0F7FF;
+}
+.sd-upload-preview {
+  max-height: 220px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: 8px;
+  display: block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
 .sd-upload-ph { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #9CA3AF; font-size: 13px; }
 .sd-upload-ph span:first-child { font-size: 26px; }
 .sd-upload-overlay {
@@ -339,20 +360,22 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 26px;
+  padding-top: 24px;
 }
 
 .sd-kpi-card {
   background: #ffffff;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 18px 20px;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   position: relative;
-  overflow: hidden;
+  min-height: 140px;
+  box-sizing: border-box;
 }
 
 .sd-kpi-card:hover {

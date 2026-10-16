@@ -45,12 +45,18 @@ export const sellerGetProducts = async (req, res) => {
 
 // ============================================================
 // CREATE PRODUCT  –  POST /api/seller/products
-// Requires verified KYC
+// Requires verified / approved KYC or seller / owner role
 // ============================================================
 export const sellerCreateProduct = async (req, res) => {
   try {
     const seller = await User.findById(req.user._id);
-    if (seller.kycStatus !== "verified" && seller.kycStatus !== "approved") {
+    const isApproved =
+      seller?.role === "seller" ||
+      seller?.role === "owner" ||
+      seller?.kycStatus === "verified" ||
+      seller?.kycStatus === "approved";
+
+    if (!isApproved) {
       return res.status(403).json({
         success: false,
         message: "KYC verification required before adding products.",
@@ -194,22 +200,178 @@ export const sellerGetSales = async (req, res) => {
       }
     }
 
+    const agreedRate = seller?.commissionAgreement?.agreedRate ?? 10;
+    const commissionType = seller?.commissionAgreement?.commissionType || "percentage";
+    const availableCredits = Number(seller?.sellerCredits ?? totalSellerNetEarning ?? 0);
+    const totalDebited = Number(seller?.totalCommissionDebited ?? totalCommissionDebited ?? 0);
+
     res.status(200).json({
       success: true,
       summary: {
-        agreedRate:             seller?.commissionAgreement?.agreedRate ?? 10,
-        commissionType:         seller?.commissionAgreement?.commissionType || "percentage",
-        grossSales,
-        totalRevenue:           grossSales,
-        totalUnitsSold,
-        totalOrders:            orders.length,
-        totalCommissionDebited: seller?.totalCommissionDebited ?? totalCommissionDebited,
-        sellerCredits:          seller?.sellerCredits ?? totalSellerNetEarning,
-        pendingSellerCredits:   seller?.pendingSellerCredits ?? 0,
-        payoutAccount:          seller?.payoutAccount || {},
+        agreedRate,
+        commissionType,
+        grossSales: Number(grossSales ?? 0),
+        totalRevenue: Number(grossSales ?? 0),
+        totalUnitsSold: Number(totalUnitsSold ?? 0),
+        totalOrders: Number(orders?.length ?? 0),
+        totalCommissionDebited: totalDebited,
+        sellerCredits: availableCredits,
+        pendingSellerCredits: Number(seller?.pendingSellerCredits ?? 0),
+        payoutAccount: seller?.payoutAccount || {},
       },
-      topProducts: Object.values(productSales).sort((a, b) => b.units - a.units).slice(0, 10),
-      itemizedSales,
+      topProducts: (Object.values(productSales) || []).sort((a, b) => b.units - a.units).slice(0, 10),
+      itemizedSales: itemizedSales || [],
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================
+// SELLER DASHBOARD STATS  –  GET /api/seller/dashboard, /api/seller/stats
+// ============================================================
+export const sellerGetDashboardStats = async (req, res) => {
+  try {
+    const seller = await User.findById(req.user._id);
+    const sellerId = req.user._id;
+
+    // Product counts
+    const [totalProducts, approvedProducts, pendingProducts, rejectedProducts] = await Promise.all([
+      Product.countDocuments({ seller: sellerId }),
+      Product.countDocuments({ seller: sellerId, approvalStatus: "approved" }),
+      Product.countDocuments({ seller: sellerId, approvalStatus: "pending" }),
+      Product.countDocuments({ seller: sellerId, approvalStatus: "rejected" }),
+    ]);
+
+    // Product IDs
+    const sellerProductIds = await Product.find({ seller: sellerId }).distinct("_id");
+    const sellerProductIdsStr = sellerProductIds.map(String);
+
+    const orders = await Order.find({
+      "orderItems.product": { $in: sellerProductIds },
+      orderStatus: { $nin: ["Cancelled"] },
+    })
+      .select("orderItems totalPrice paymentStatus orderStatus isCommissionSettled createdAt")
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    let grossSales = 0;
+    let totalUnitsSold = 0;
+    let totalCommissionDebited = 0;
+    let totalSellerNetEarning = 0;
+    const itemizedSales = [];
+
+    for (const order of orders) {
+      for (const item of order.orderItems) {
+        const pid = item.product?.toString();
+        if (!sellerProductIdsStr.includes(pid)) continue;
+
+        const gross = item.grossItemTotal || (item.price * item.quantity);
+        const commission = item.commissionDebited || 0;
+        const net = item.sellerNetEarning || (gross - commission);
+
+        if (order.paymentStatus === "Paid") {
+          grossSales += gross;
+          totalCommissionDebited += commission;
+          totalSellerNetEarning += net;
+        }
+
+        totalUnitsSold += item.quantity;
+
+        itemizedSales.push({
+          orderId: order._id,
+          productName: item.name,
+          image: item.image,
+          quantity: item.quantity,
+          price: item.price,
+          grossItemTotal: gross,
+          commissionRateApplied: item.commissionRateApplied || seller?.commissionAgreement?.agreedRate || 10,
+          commissionDebited: commission,
+          sellerNetEarning: net,
+          paymentStatus: order.paymentStatus,
+          orderStatus: order.orderStatus,
+          isCommissionSettled: !!order.isCommissionSettled,
+          createdAt: order.createdAt,
+        });
+      }
+    }
+
+    const agreedRate = seller?.commissionAgreement?.agreedRate ?? 10;
+    const commissionType = seller?.commissionAgreement?.commissionType || "percentage";
+    const availableNetCredits = Number(seller?.sellerCredits ?? totalSellerNetEarning ?? 0);
+    const debitedCommission = Number(seller?.totalCommissionDebited ?? totalCommissionDebited ?? 0);
+    const pendingCredits = Number(seller?.pendingSellerCredits ?? 0);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        storeName: seller?.storeName || seller?.fullName || "My Store",
+        role: seller?.role || "seller",
+        kycStatus: seller?.kycStatus || "approved",
+        commissionAgreement: {
+          agreedRate,
+          commissionType,
+        },
+        kpis: {
+          grossSales: Number(grossSales ?? 0),
+          totalCommissionDebited: debitedCommission,
+          sellerCredits: availableNetCredits,
+          pendingSellerCredits: pendingCredits,
+          totalProducts: totalProducts ?? 0,
+          approvedProducts: approvedProducts ?? 0,
+          pendingProducts: pendingProducts ?? 0,
+          rejectedProducts: rejectedProducts ?? 0,
+          totalUnitsSold: totalUnitsSold ?? 0,
+          totalOrders: orders.length ?? 0,
+        },
+        payoutAccount: seller?.payoutAccount || {},
+      },
+      recentSales: itemizedSales.slice(0, 10),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================
+// REQUEST PAYOUT  –  POST /api/seller/payout-request
+// ============================================================
+export const sellerRequestPayout = async (req, res) => {
+  try {
+    const { amount, bankName, accountNumber, accountHolder, telebirrPhone } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found." });
+
+    const reqAmount = Number(amount);
+    if (!reqAmount || reqAmount <= 0) {
+      return res.status(400).json({ success: false, message: "Please enter a valid payout amount (ETB)." });
+    }
+    const currentCredits = Number(user.sellerCredits || 0);
+    if (currentCredits < reqAmount) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient balance. Available net credits: ETB ${currentCredits.toFixed(2)}`,
+      });
+    }
+
+    // Save payout details if provided
+    if (bankName || accountNumber || accountHolder || telebirrPhone) {
+      user.payoutAccount = user.payoutAccount || {};
+      if (bankName) user.payoutAccount.bankName = bankName.trim();
+      if (accountNumber) user.payoutAccount.accountNumber = accountNumber.trim();
+      if (accountHolder) user.payoutAccount.accountHolder = accountHolder.trim();
+      if (telebirrPhone) user.payoutAccount.telebirrPhone = telebirrPhone.trim();
+    }
+
+    user.sellerCredits = Math.max(0, currentCredits - reqAmount);
+    user.pendingSellerCredits = Number(user.pendingSellerCredits || 0) + reqAmount;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Payout request for ETB ${reqAmount.toFixed(2)} submitted successfully! The finance team will process your transfer.`,
+      sellerCredits: user.sellerCredits,
+      pendingSellerCredits: user.pendingSellerCredits,
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

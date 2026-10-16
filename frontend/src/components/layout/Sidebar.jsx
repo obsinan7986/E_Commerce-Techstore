@@ -1,4 +1,4 @@
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import {
   FiGrid,
   FiShoppingBag,
@@ -137,7 +137,10 @@ export const getNavSections = (role, user) => {
       {
         heading: "Seller Center",
         items: [
-          { label: "Seller Dashboard", path: "/seller/dashboard", icon: FiGrid },
+          { label: "Seller Overview", path: "/seller?tab=overview", icon: FiGrid },
+          { label: "My Products", path: "/seller?tab=products", icon: FiPackage },
+          { label: "Add New Product", path: "/seller?tab=add-product", icon: FiShoppingCart },
+          { label: "Sales & Commission Ledger", path: "/seller?tab=earnings", icon: FiDollarSign },
           { label: "Product Reviews", path: "/seller/reviews", icon: FiStar },
         ],
       },
@@ -152,7 +155,7 @@ export const getNavSections = (role, user) => {
       {
         heading: "Finances & Settings",
         items: [
-          { label: "Payout Bank & Settings", path: "/account/settings?tab=payout", icon: FiDollarSign },
+          { label: "Payout Bank & Settings", path: "/account/settings?tab=payout", icon: FiCreditCard },
           { label: "Account Profile", path: "/account/settings", icon: FiUser },
         ],
       },
@@ -189,9 +192,29 @@ const ROLE_BADGE_MAP = {
 
 const Sidebar = ({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) => {
   const { user } = useAuth();
+  const location = useLocation();
   const role = user?.role || "customer";
   const badge = ROLE_BADGE_MAP[role] || ROLE_BADGE_MAP.customer;
   const sections = getNavSections(role, user);
+
+  const isItemActive = (itemPath, defaultActive) => {
+    if (itemPath.includes("?")) {
+      const [path, query] = itemPath.split("?");
+      if (location.pathname === path || (path === "/seller" && location.pathname === "/seller/dashboard")) {
+        if (location.search === `?${query}`) return true;
+        if (query === "tab=overview" && (!location.search || location.search === "" || location.search === "?")) {
+          return true;
+        }
+      }
+      return false;
+    }
+    if ((location.pathname === "/seller" || location.pathname === "/seller/dashboard") && location.search && location.search.includes("tab=")) {
+      if (itemPath === "/seller" || itemPath === "/seller/dashboard") {
+        return false;
+      }
+    }
+    return defaultActive;
+  };
 
   return (
     <aside className={`dash-sidebar ${collapsed ? "collapsed" : ""} ${mobileOpen ? "mobile-open" : ""}`}>
@@ -236,7 +259,7 @@ const Sidebar = ({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) => 
                   to={item.path}
                   end={item.path === "/admin/dashboard" || item.path === "/owner/dashboard" || item.path === "/seller/dashboard"}
                   className={({ isActive }) =>
-                    `dash-nav-item ${isActive ? "active" : ""}`
+                    `dash-nav-item ${isItemActive(item.path, isActive) ? "active" : ""}`
                   }
                   onClick={onCloseMobile}
                   title={collapsed ? item.label : undefined}

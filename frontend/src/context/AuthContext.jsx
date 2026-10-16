@@ -28,36 +28,39 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Refreshes user profile and permissions directly from MongoDB
+   */
+  const refreshProfile = async () => {
+    try {
+      const saved = localStorage.getItem("user");
+      if (!saved) return null;
+
+      const cached = JSON.parse(saved);
+      if (!cached?.token) return null;
+
+      const { data } = await api.get("/auth/profile");
+      const updated = { ...cached, ...data, token: cached.token };
+      setUser(updated);
+      localStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setUser(null);
+        localStorage.removeItem("user");
+      }
+      return null;
+    }
+  };
+
+  /**
    * On every app boot: silently re-validate the stored token by hitting
    * GET /api/auth/profile.  This keeps isAdmin (and role) fresh from DB.
    * If the token is expired/invalid we clear the stale session.
    */
   useEffect(() => {
-    const refresh = async () => {
-      try {
-        const saved = localStorage.getItem("user");
-        if (!saved) { setLoading(false); return; }
-
-        const cached = JSON.parse(saved);
-        if (!cached?.token) { setLoading(false); return; }
-
-        const { data } = await api.get("/auth/profile");
-
-        const updated = { ...data, token: cached.token };
-        setUser(updated);
-        localStorage.setItem("user", JSON.stringify(updated));
-      } catch (err) {
-        if (err.response?.status === 401) {
-          setUser(null);
-          localStorage.removeItem("user");
-        }
-        // Network errors → keep cached state, still clear loading
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    refresh();
+    refreshProfile().finally(() => {
+      setLoading(false);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -68,6 +71,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         loading,
+        refreshProfile,
         isAuthenticated: !!user,
         isAdmin:   !!(user?.isAdmin),
         isOwner:   user?.role === "owner",

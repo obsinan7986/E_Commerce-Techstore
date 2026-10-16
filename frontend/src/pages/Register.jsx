@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaEye, FaEyeSlash, FaShoppingBag } from "react-icons/fa";
@@ -6,60 +6,9 @@ import { FaEye, FaEyeSlash, FaShoppingBag } from "react-icons/fa";
 import { register } from "../services/authservice";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-import api from "../services/api";
 
 import "../styles/register.css";
 import "../styles/auth.css";
-
-// ── KYC upload field component ────────────────────────────────
-const KycUpload = ({ label, fieldKey, value, onChange, uploading, disabled }) => {
-  const ref = useRef(null);
-  const [preview, setPreview] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setPreview(ev.target.result);
-    reader.readAsDataURL(file);
-
-    try {
-      setBusy(true);
-      const fd = new FormData();
-      fd.append("image", file);
-      const { data } = await api.post("/upload", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      onChange(fieldKey, data.image);
-    } catch {
-      onChange(fieldKey, "");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="kyc-field">
-      <label className="kyc-label">{label} <span className="auth-required">*</span></label>
-      <div
-        className={`kyc-upload ${value ? "kyc-upload--done" : ""}`}
-        onClick={() => !disabled && !busy && ref.current?.click()}
-      >
-        {preview ? (
-          <img src={preview} alt={label} className="kyc-preview" />
-        ) : (
-          <div className="kyc-placeholder">
-            <span className="kyc-icon">📤</span>
-            <span>{busy ? "Uploading…" : "Click to upload"}</span>
-          </div>
-        )}
-        {value && !busy && <span className="kyc-check">✓</span>}
-      </div>
-      <input ref={ref} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} disabled={disabled || busy} />
-    </div>
-  );
-};
 
 // ── Main component ────────────────────────────────────────────
 const Register = () => {
@@ -75,9 +24,7 @@ const Register = () => {
     address: "",
     password: "",
     confirmPassword: "",
-    role: "customer",
   });
-  const [kyc, setKyc] = useState({ idFront: "", idBack: "", selfie: "" });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm,  setShowConfirm]  = useState(false);
@@ -85,17 +32,10 @@ const Register = () => {
   const [error,    setError]    = useState("");
   const [success,  setSuccess]  = useState("");
 
-  const isSeller = formData.role === "seller";
-
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     if (error)   setError("");
     if (success) setSuccess("");
-  };
-
-  const handleKyc = (field, value) => {
-    setKyc((prev) => ({ ...prev, [field]: value }));
-    if (error) setError("");
   };
 
   const validate = () => {
@@ -106,11 +46,6 @@ const Register = () => {
       return "Password must be at least 6 characters.";
     if (formData.password !== formData.confirmPassword)
       return "Passwords do not match.";
-    if (isSeller) {
-      if (!kyc.idFront) return "Please upload your National ID (front).";
-      if (!kyc.idBack)  return "Please upload your National ID (back).";
-      if (!kyc.selfie)  return "Please upload your selfie photo.";
-    }
     return "";
   };
 
@@ -130,14 +65,7 @@ const Register = () => {
         phone:    formData.phone,
         address:  formData.address,
         password: formData.password,
-        role:     formData.role,
       };
-
-      if (isSeller) {
-        payload.kycIdFront = kyc.idFront;
-        payload.kycIdBack  = kyc.idBack;
-        payload.kycSelfie  = kyc.selfie;
-      }
 
       const data = await register(payload);
       loginUser(data);
@@ -206,21 +134,6 @@ const Register = () => {
                 autoComplete="street-address" disabled={loading} />
             </div>
 
-            {/* Role dropdown — Customer or Seller only */}
-            <div className="auth-field auth-field-full">
-              <label htmlFor="role">{t("auth.accountType")} <span className="auth-required">*</span></label>
-              <select id="role" name="role" value={formData.role}
-                onChange={handleChange} className="auth-select" disabled={loading}>
-                <option value="customer">{t("auth.customer")}</option>
-                <option value="seller">{t("auth.seller")}</option>
-              </select>
-              {isSeller && (
-                <p className="auth-hint">
-                  Seller accounts require KYC verification before you can list products.
-                </p>
-              )}
-            </div>
-
             {/* Password */}
             <div className="auth-field">
               <label htmlFor="password">{t("auth.password")} <span className="auth-required">*</span></label>
@@ -257,24 +170,6 @@ const Register = () => {
           {/* Password strength */}
           {formData.password.length > 0 && (
             <PasswordStrength password={formData.password} />
-          )}
-
-          {/* ── Seller KYC section ── */}
-          {isSeller && (
-            <div className="kyc-section">
-              <h3 className="kyc-heading">KYC Verification</h3>
-              <p className="kyc-desc">
-                Upload clear photos of your documents. Your account will be reviewed before you can list products.
-              </p>
-              <div className="kyc-grid">
-                <KycUpload label="National ID – Front" fieldKey="idFront"
-                  value={kyc.idFront} onChange={handleKyc} disabled={loading} />
-                <KycUpload label="National ID – Back" fieldKey="idBack"
-                  value={kyc.idBack}  onChange={handleKyc} disabled={loading} />
-                <KycUpload label="Selfie Photo" fieldKey="selfie"
-                  value={kyc.selfie}  onChange={handleKyc} disabled={loading} />
-              </div>
-            </div>
           )}
 
           <button type="submit"

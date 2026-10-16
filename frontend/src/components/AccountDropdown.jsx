@@ -15,12 +15,13 @@ import "../styles/account-dropdown.css";
    CUSTOMER menu — every item has a real, working route
    ───────────────────────────────────────────────────────────── */
 const CUSTOMER_ITEMS = [
-  { icon: <FiUser />,         label: "My Profile",       to: "/profile"          },
-  { icon: <FiShoppingBag />,  label: "My Orders",        to: "/orders"           },
-  { icon: <FiCreditCard />,   label: "Payment History",  to: "/payment-history"  },
-  { icon: <FiHeart />,        label: "Wishlist",         to: "/wishlist"         },
-  { icon: <FiMessageSquare />,label: "Message Center",   to: "/messages"         },
-  { icon: <FiBell />,         label: "Notifications",    to: "/notifications"    },
+  { icon: <FiUser />,         label: "My Profile",       to: "/profile"                  },
+  { icon: <FiShoppingBag />,  label: "My Orders",        to: "/orders"                   },
+  { icon: <FiCreditCard />,   label: "Payment History",  to: "/payment-history"          },
+  { icon: <FiHeart />,        label: "Wishlist",         to: "/wishlist"                 },
+  { icon: <FiMessageSquare />,label: "Message Center",   to: "/messages"                 },
+  { icon: <FiBell />,         label: "Notifications",    to: "/notifications"            },
+  { icon: <FiShoppingCart />, label: "Become a Seller",   to: "/profile?tab=become-seller" },
 ];
 
 /* ─────────────────────────────────────────────────────────────

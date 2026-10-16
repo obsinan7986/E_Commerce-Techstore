@@ -24,19 +24,13 @@ const storage = multer.diskStorage({
 
 });
 
-// Allow only images
+// Allow images and PDFs (for identity / trade license documents)
 const fileFilter = (req, file, cb) => {
-
-    if (file.mimetype.startsWith("image")) {
-
+    if (file.mimetype.startsWith("image") || file.mimetype === "application/pdf") {
         cb(null, true);
-
     } else {
-
-        cb(new Error("Only image files are allowed"), false);
-
+        cb(new Error("Only image files and PDFs are allowed"), false);
     }
-
 };
 
 const upload = multer({

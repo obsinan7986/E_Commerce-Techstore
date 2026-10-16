@@ -63,8 +63,25 @@ const userSchema = new mongoose.Schema(
     // ── KYC (required for sellers) ───────────────────────────
     kycStatus: {
       type:    String,
-      enum:    ["not_submitted", "pending", "verified", "rejected"],
+      enum:    ["not_submitted", "pending", "verified", "approved", "rejected"],
       default: "not_submitted",
+    },
+
+    storeName: {
+      type:    String,
+      default: "",
+      trim:    true,
+    },
+
+    nationalIdNumber: {
+      type:    String,
+      default: "",
+      trim:    true,
+    },
+
+    idDocumentImage: {
+      type:    String,
+      default: "",
     },
 
     kycDocs: {

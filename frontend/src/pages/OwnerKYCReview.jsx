@@ -247,8 +247,9 @@ const OwnerKYCReview = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           {sellers.map((seller) => {
             const docs = seller.kycDocs || {};
-            const hasDocs = docs.idFront || docs.idBack || docs.selfie;
-            const isVerified = seller.kycStatus === "verified";
+            const idImg = seller.idDocumentImage || docs.idFront;
+            const hasDocs = idImg || docs.idBack || docs.selfie;
+            const isVerified = seller.kycStatus === "verified" || seller.kycStatus === "approved";
             const isRejected = seller.kycStatus === "rejected";
 
             return (
@@ -303,20 +304,32 @@ const OwnerKYCReview = () => {
                             fontWeight: 700,
                             textTransform: "uppercase",
                             background:
-                              seller.kycStatus === "verified"
+                              isVerified
                                 ? "#DCFCE7"
-                                : seller.kycStatus === "rejected"
+                                : isRejected
                                 ? "#FEE2E2"
                                 : "#FEF3C7",
                             color:
-                              seller.kycStatus === "verified"
+                              isVerified
                                 ? "#166534"
-                                : seller.kycStatus === "rejected"
+                                : isRejected
                                 ? "#991B1B"
                                 : "#92400E",
                           }}
                         >
-                          {seller.kycStatus || "pending"}
+                          {seller.kycStatus === "approved" || seller.kycStatus === "verified" ? "APPROVED" : seller.kycStatus || "pending"}
+                        </span>
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            fontSize: "0.72rem",
+                            fontWeight: 600,
+                            background: "#F1F5F9",
+                            color: "#475569",
+                          }}
+                        >
+                          {seller.role === "customer" ? "Customer (Applying)" : seller.role?.toUpperCase()}
                         </span>
                       </div>
                       <div style={{ display: "flex", gap: 16, marginTop: 4, color: "#64748B", fontSize: "0.85rem", flexWrap: "wrap" }}>
@@ -355,6 +368,38 @@ const OwnerKYCReview = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Business / KYC Meta Information */}
+                {(seller.storeName || seller.nationalIdNumber) && (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                      gap: 12,
+                      background: "#F8FAFC",
+                      border: "1px solid #E2E8F0",
+                      borderRadius: 8,
+                      padding: "12px 16px",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
+                        Business / Store Name
+                      </div>
+                      <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#0F172A", marginTop: 2 }}>
+                        {seller.storeName || "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
+                        National ID / Trade License Number
+                      </div>
+                      <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#0F172A", marginTop: 2 }}>
+                        {seller.nationalIdNumber || "—"}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Rejection Note if Rejected */}
                 {isRejected && seller.kycRejectionReason && (
@@ -400,11 +445,11 @@ const OwnerKYCReview = () => {
                         }}
                       >
                         <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#334155", marginBottom: 6 }}>
-                          National ID / Passport (Front)
+                          National ID / Trade License (Document)
                         </div>
-                        {docs.idFront ? (
+                        {idImg ? (
                           <div
-                            onClick={() => setDocPreview({ url: resolveImgUrl(docs.idFront), title: "National ID (Front)" })}
+                            onClick={() => setDocPreview({ url: resolveImgUrl(idImg), title: "National ID / Trade License" })}
                             style={{
                               cursor: "pointer",
                               height: 120,
@@ -418,8 +463,8 @@ const OwnerKYCReview = () => {
                             }}
                           >
                             <img
-                              src={resolveImgUrl(docs.idFront)}
-                              alt="ID Front"
+                              src={resolveImgUrl(idImg)}
+                              alt="ID Document"
                               style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
                             <div
@@ -660,9 +705,25 @@ const OwnerKYCReview = () => {
               </button>
             </div>
 
-            <p style={{ margin: "0 0 18px", color: "#64748B", fontSize: "0.9rem" }}>
+            <p style={{ margin: "0 0 14px", color: "#64748B", fontSize: "0.9rem" }}>
               Approve identity documents and set the official CEO-agreed platform commission rate debited from this seller's product sales.
             </p>
+
+            {(approvingUser.storeName || approvingUser.nationalIdNumber) && (
+              <div
+                style={{
+                  background: "#F8FAFC",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  marginBottom: 16,
+                  fontSize: "0.85rem",
+                }}
+              >
+                <div><strong>Store Name:</strong> {approvingUser.storeName || "N/A"}</div>
+                <div style={{ marginTop: 4 }}><strong>National ID / License:</strong> {approvingUser.nationalIdNumber || "N/A"}</div>
+              </div>
+            )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
               <div>

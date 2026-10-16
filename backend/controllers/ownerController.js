@@ -175,13 +175,29 @@ export const ownerActivateUser = async (req, res) => {
 };
 
 // ============================================================
+// ============================================================
 // LIST PENDING KYC  –  GET /api/owner/kyc
 // ============================================================
 export const ownerGetPendingKYC = async (req, res) => {
   try {
     const { status = "pending" } = req.query;
-    const validStatuses = ["not_submitted", "pending", "verified", "rejected"];
-    const filter = { kycStatus: validStatuses.includes(status) ? status : "pending" };
+    let filter = {};
+
+    if (status === "all") {
+      filter = {
+        $or: [
+          { role: "seller" },
+          { kycStatus: { $in: ["pending", "verified", "approved", "rejected"] } },
+        ],
+      };
+    } else if (status === "verified" || status === "approved") {
+      filter = { kycStatus: { $in: ["verified", "approved"] } };
+    } else if (status === "rejected" || status === "not_submitted") {
+      filter = { kycStatus: status };
+    } else {
+      // Default to "pending"
+      filter = { kycStatus: "pending" };
+    }
 
     const users = await User.find(filter)
       .select("-password")
@@ -196,14 +212,13 @@ export const ownerGetPendingKYC = async (req, res) => {
 
 // ============================================================
 // APPROVE KYC  –  PATCH /api/owner/kyc/:id/approve
+// Body: { agreedRate, commissionType }
+// Automatically upgrades user role to 'seller' and kycStatus to 'approved'
 // ============================================================
 export const ownerApproveKYC = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: "User not found." });
-    if (user.role !== "seller") {
-      return res.status(400).json({ success: false, message: "KYC is only applicable to sellers." });
-    }
 
     const { agreedRate, commissionType } = req.body;
     if (agreedRate !== undefined && !isNaN(Number(agreedRate))) {
@@ -213,7 +228,9 @@ export const ownerApproveKYC = async (req, res) => {
       user.commissionAgreement.commissionType = commissionType;
     }
 
-    user.kycStatus           = "verified";
+    // Automatically update role to 'seller' and kycStatus to 'approved'
+    user.role                = "seller";
+    user.kycStatus           = "approved";
     user.kycRejectionReason  = "";
     user.kycReviewedBy       = req.user._id;
     user.kycReviewedAt       = new Date();
@@ -221,7 +238,14 @@ export const ownerApproveKYC = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "KYC approved. Seller can now add products.",
+      message: "KYC approved. User upgraded to Seller and can now access Seller Dashboard.",
+      user: {
+        _id:      user._id,
+        fullName: user.fullName,
+        email:    user.email,
+        role:     user.role,
+        kycStatus: user.kycStatus,
+      },
       commissionAgreement: user.commissionAgreement,
     });
   } catch (err) {
@@ -273,9 +297,6 @@ export const ownerRejectKYC = async (req, res) => {
 
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: "User not found." });
-    if (user.role !== "seller") {
-      return res.status(400).json({ success: false, message: "KYC is only applicable to sellers." });
-    }
 
     user.kycStatus           = "rejected";
     user.kycRejectionReason  = reason.trim();
@@ -283,7 +304,16 @@ export const ownerRejectKYC = async (req, res) => {
     user.kycReviewedAt       = new Date();
     await user.save();
 
-    res.status(200).json({ success: true, message: "KYC rejected.", reason: user.kycRejectionReason });
+    res.status(200).json({
+      success: true,
+      message: "KYC rejected.",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        kycStatus: user.kycStatus,
+      },
+      reason: user.kycRejectionReason,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

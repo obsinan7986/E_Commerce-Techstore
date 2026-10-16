@@ -13,6 +13,8 @@ import {
   sellerUpdatePayoutAccount,
 } from "../controllers/sellerController.js";
 
+import upload from "../middleware/uploadMiddleware.js";
+
 const router    = express.Router();
 const sellerOnly = [protect, requireRole("seller", "owner")];
 
@@ -25,9 +27,9 @@ router.delete( "/products/:id",  ...sellerOnly, sellerDeleteProduct);
 // Sales
 router.get( "/sales", ...sellerOnly, sellerGetSales);
 
-// KYC & Payout Account
-router.get(  "/kyc",            ...sellerOnly, sellerGetKYCStatus);
-router.post( "/kyc",            ...sellerOnly, sellerSubmitKYC);
+// KYC & Payout Account (KYC submission and status open to any authenticated user)
+router.get(  "/kyc",            protect, sellerGetKYCStatus);
+router.post( "/kyc",            protect, upload.single("idDocumentImage"), sellerSubmitKYC);
 router.get(  "/payout-account", ...sellerOnly, sellerGetKYCStatus);
 router.put(  "/payout-account", ...sellerOnly, sellerUpdatePayoutAccount);
 

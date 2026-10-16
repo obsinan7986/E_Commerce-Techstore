@@ -24,6 +24,7 @@ import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
+import Profile from "./pages/Profile";
 
 // Protected operational & account pages (Dashboard layout)
 import Orders from "./pages/Orders";
@@ -108,7 +109,7 @@ function App() {
         {/* Feature */}
         <Route path="/image-search" element={<ImageSearchPage />} />
 
-        {/* Cart & Checkout */}
+        {/* Cart & Checkout & Customer Profile */}
         <Route element={<ProtectedRoute />}>
           <Route path="/cart" element={<Cart />} />
           <Route path="/wishlist" element={<Wishlist />} />
@@ -117,6 +118,8 @@ function App() {
           <Route path="/payment-failed" element={<PaymentFailed />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/failed" element={<PaymentFailed />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/account" element={<Profile />} />
         </Route>
       </Route>
 
@@ -124,9 +127,7 @@ function App() {
       <Route element={<DashboardLayout />}>
         {/* Unified Account & Customer Management */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/account" element={<AccountSettingsPage />} />
           <Route path="/account/settings" element={<AccountSettingsPage />} />
-          <Route path="/profile" element={<AccountSettingsPage />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:id" element={<OrderDetails />} />
           <Route path="/payment-history" element={<PaymentHistory />} />

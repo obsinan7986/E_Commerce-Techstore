@@ -44,19 +44,8 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // ── Role validation — only customer/seller allowed via registration ──
-    const allowedRoles = ["customer", "seller"];
-    const chosenRole   = role && allowedRoles.includes(role) ? role : "customer";
-
-    // ── Seller KYC docs required at registration ────────────
-    if (chosenRole === "seller") {
-      if (!kycIdFront || !kycIdBack || !kycSelfie) {
-        return res.status(400).json({
-          success: false,
-          message: "Sellers must upload National ID (front & back) and a selfie for KYC verification.",
-        });
-      }
-    }
+    // ── Every newly registered user automatically defaults to role: 'customer' ──
+    const chosenRole = "customer";
 
     // ── Duplicate email (409) ───────────────────────────────
     const userExists = await User.findOne({
@@ -76,18 +65,14 @@ export const registerUser = async (req, res) => {
 
     // ── Create user (201) ───────────────────────────────────
     const userData = {
-      fullName: fullName.trim(),
-      email:    email.trim().toLowerCase(),
-      password: hashedPassword,
-      phone:    phone.trim(),
-      address:  address?.trim() || "",
-      role:     chosenRole,
+      fullName:  fullName.trim(),
+      email:     email.trim().toLowerCase(),
+      password:  hashedPassword,
+      phone:     phone.trim(),
+      address:   address?.trim() || "",
+      role:      chosenRole,
+      kycStatus: "not_submitted",
     };
-
-    if (chosenRole === "seller") {
-      userData.kycDocs   = { idFront: kycIdFront, idBack: kycIdBack, selfie: kycSelfie };
-      userData.kycStatus = "pending";
-    }
 
     const user = await User.create(userData);
 
@@ -113,15 +98,18 @@ export const registerUser = async (req, res) => {
     }).catch(() => {});
 
     return res.status(201).json({
-      success:    true,
-      _id:        user._id,
-      fullName:   user.fullName,
-      email:      user.email,
-      phone:      user.phone,
-      address:    user.address,
-      role:       user.role,
-      isAdmin:    user.isAdmin,
-      kycStatus:  user.kycStatus,
+      success:          true,
+      _id:              user._id,
+      fullName:         user.fullName,
+      email:            user.email,
+      phone:            user.phone,
+      address:          user.address,
+      role:             user.role,
+      isAdmin:          user.isAdmin,
+      kycStatus:        user.kycStatus,
+      storeName:        user.storeName || "",
+      nationalIdNumber: user.nationalIdNumber || "",
+      idDocumentImage:  user.idDocumentImage || "",
       token,
     });
 
@@ -199,15 +187,18 @@ export const loginUser = async (req, res) => {
     console.log(`[login] User authenticated: ${user.email}`);
 
     return res.status(200).json({
-      success:   true,
-      _id:       user._id,
-      fullName:  user.fullName,
-      email:     user.email,
-      phone:     user.phone,
-      address:   user.address,
-      role:      user.role,
-      isAdmin:   user.isAdmin,
-      kycStatus: user.kycStatus,
+      success:          true,
+      _id:              user._id,
+      fullName:         user.fullName,
+      email:            user.email,
+      phone:            user.phone,
+      address:          user.address,
+      role:             user.role,
+      isAdmin:          user.isAdmin,
+      kycStatus:        user.kycStatus,
+      storeName:        user.storeName || "",
+      nationalIdNumber: user.nationalIdNumber || "",
+      idDocumentImage:  user.idDocumentImage || "",
       token,
     });
 

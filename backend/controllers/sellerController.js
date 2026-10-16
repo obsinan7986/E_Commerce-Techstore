@@ -50,7 +50,7 @@ export const sellerGetProducts = async (req, res) => {
 export const sellerCreateProduct = async (req, res) => {
   try {
     const seller = await User.findById(req.user._id);
-    if (seller.kycStatus !== "verified") {
+    if (seller.kycStatus !== "verified" && seller.kycStatus !== "approved") {
       return res.status(403).json({
         success: false,
         message: "KYC verification required before adding products.",
@@ -217,27 +217,68 @@ export const sellerGetSales = async (req, res) => {
 };
 
 // ============================================================
-// SUBMIT / UPDATE KYC  –  POST /api/seller/kyc
-// Body: { idFront, idBack, selfie }  (upload paths from /api/upload)
+// SUBMIT / UPDATE KYC  –  POST /api/seller/kyc (or /api/auth/become-seller)
+// Body: multipart/form-data or JSON:
+//  - storeName (string)
+//  - nationalIdNumber (string)
+//  - idDocumentImage (file or URL string)
+//  - legacy support: idFront, idBack, selfie
 // ============================================================
 export const sellerSubmitKYC = async (req, res) => {
   try {
-    const { idFront, idBack, selfie } = req.body;
-    if (!idFront || !idBack || !selfie) {
-      return res.status(400).json({ success: false, message: "idFront, idBack and selfie image paths are required." });
-    }
-
     const user = await User.findById(req.user._id);
-    if (user.kycStatus === "verified") {
-      return res.status(400).json({ success: false, message: "KYC already verified." });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    user.kycDocs   = { idFront, idBack, selfie };
-    user.kycStatus = "pending";
+    if (user.kycStatus === "verified" || user.kycStatus === "approved") {
+      return res.status(400).json({ success: false, message: "KYC already verified and approved." });
+    }
+
+    const storeName = req.body.storeName?.trim() || user.storeName;
+    const nationalIdNumber = req.body.nationalIdNumber?.trim() || user.nationalIdNumber;
+    const idDocumentImage = req.file
+      ? `/uploads/${req.file.filename}`
+      : (req.body.idDocumentImage || req.body.idFront || user.idDocumentImage);
+
+    if (!storeName) {
+      return res.status(400).json({ success: false, message: "Business / Store Name is required." });
+    }
+    if (!nationalIdNumber) {
+      return res.status(400).json({ success: false, message: "National ID / Trade License Number is required." });
+    }
+    if (!idDocumentImage) {
+      return res.status(400).json({ success: false, message: "Identity document image or PDF is required." });
+    }
+
+    user.storeName        = storeName;
+    user.nationalIdNumber = nationalIdNumber;
+    user.idDocumentImage  = idDocumentImage;
+
+    user.kycDocs = user.kycDocs || {};
+    user.kycDocs.idFront = idDocumentImage;
+    if (req.body.idBack) user.kycDocs.idBack = req.body.idBack;
+    if (req.body.selfie) user.kycDocs.selfie = req.body.selfie;
+
+    user.kycStatus          = "pending";
     user.kycRejectionReason = "";
     await user.save();
 
-    res.status(200).json({ success: true, message: "KYC documents submitted. Awaiting review." });
+    res.status(200).json({
+      success: true,
+      message: "Seller application submitted successfully. Awaiting Owner review.",
+      kycStatus: user.kycStatus,
+      user: {
+        _id:              user._id,
+        fullName:         user.fullName,
+        email:            user.email,
+        role:             user.role,
+        storeName:        user.storeName,
+        nationalIdNumber: user.nationalIdNumber,
+        idDocumentImage:  user.idDocumentImage,
+        kycStatus:        user.kycStatus,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -249,7 +290,7 @@ export const sellerSubmitKYC = async (req, res) => {
 export const sellerGetKYCStatus = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select(
-      "kycStatus kycDocs kycRejectionReason kycReviewedAt commissionAgreement sellerCredits pendingSellerCredits totalCommissionDebited payoutAccount"
+      "kycStatus storeName nationalIdNumber idDocumentImage kycDocs kycRejectionReason kycReviewedAt commissionAgreement sellerCredits pendingSellerCredits totalCommissionDebited payoutAccount"
     );
     res.status(200).json({ success: true, kyc: user });
   } catch (err) {

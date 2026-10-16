@@ -16,7 +16,8 @@ import {
   setDefaultAddress,
 } from "../controllers/addressController.js";
 import { protect }       from "../middleware/authMiddleware.js";
-import generateToken     from "../utils/generateToken.js";
+import { sellerSubmitKYC } from "../controllers/sellerController.js";
+import upload           from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -27,6 +28,7 @@ router.get( "/profile", protect, getUserProfile);
 router.put( "/profile", protect, updateUserProfile);
 router.post("/forgot-password",  forgotPassword);
 router.post("/reset-password",   resetPassword);
+router.post("/become-seller", protect, upload.single("idDocumentImage"), sellerSubmitKYC);
 
 /* ── Address book ──────────────────────────────────────────────── */
 router.get(   "/addresses",              protect, getAddresses);

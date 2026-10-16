@@ -23,10 +23,11 @@ import {
   FiBriefcase,
   FiUser,
   FiClock,
+  FiShoppingCart,
 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
-export const getNavSections = (role) => {
+export const getNavSections = (role, user) => {
   if (role === "owner") {
     return [
       {
@@ -159,16 +160,20 @@ export const getNavSections = (role) => {
   }
 
   // Customer default
+  const isSellerApproved = user?.role === "seller" || user?.kycStatus === "verified" || user?.kycStatus === "approved";
   return [
     {
       heading: "Customer Account",
       items: [
+        { label: "My Profile", path: "/profile", icon: FiUser },
         { label: "My Orders", path: "/orders", icon: FiShoppingBag },
         { label: "Payment History", path: "/payment-history", icon: FiCreditCard },
         { label: "Wishlist", path: "/wishlist", icon: FiStar },
         { label: "Notifications", path: "/notifications", icon: FiBell },
-        { label: "Messages", path: "/messages", icon: FiMessageSquare },
-        { label: "Account & Addresses", path: "/account/settings", icon: FiSettings },
+        { label: "Message Center", path: "/messages", icon: FiMessageSquare },
+        isSellerApproved
+          ? { label: "Go to Seller Dashboard", path: "/seller/dashboard", icon: FiGrid }
+          : { label: "Become a Seller", path: "/profile?tab=become-seller", icon: FiShoppingCart },
       ],
     },
   ];
@@ -186,7 +191,7 @@ const Sidebar = ({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) => 
   const { user } = useAuth();
   const role = user?.role || "customer";
   const badge = ROLE_BADGE_MAP[role] || ROLE_BADGE_MAP.customer;
-  const sections = getNavSections(role);
+  const sections = getNavSections(role, user);
 
   return (
     <aside className={`dash-sidebar ${collapsed ? "collapsed" : ""} ${mobileOpen ? "mobile-open" : ""}`}>

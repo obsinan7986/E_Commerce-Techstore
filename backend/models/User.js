@@ -60,6 +60,12 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    status: {
+      type:    String,
+      enum:    ["active", "suspended", "inactive"],
+      default: "active",
+    },
+
     // ── KYC (required for sellers) ───────────────────────────
     kycStatus: {
       type:    String,

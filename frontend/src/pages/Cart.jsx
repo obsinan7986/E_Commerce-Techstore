@@ -17,6 +17,7 @@ import {
   removeCartItem,
   clearCart,
 } from "../services/cartService";
+import { toast } from "react-toastify";
 
 import "../styles/cart.css";
 import { BASE_URL } from "../services/api";
@@ -58,7 +59,7 @@ const Cart = () => {
       await loadCart();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to update quantity.");
+      toast.error(err.response?.data?.message || "Failed to update quantity.");
     }
   };
 
@@ -69,7 +70,7 @@ const Cart = () => {
       await loadCart();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to update quantity.");
+      toast.error(err.response?.data?.message || "Failed to update quantity.");
     }
   };
 
@@ -77,9 +78,10 @@ const Cart = () => {
     try {
       await removeCartItem(productId);
       await loadCart();
+      toast.info("Item removed from cart.");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to remove product.");
+      toast.error(err.response?.data?.message || "Failed to remove product.");
     }
   };
 
@@ -88,9 +90,10 @@ const Cart = () => {
     try {
       await clearCart();
       await loadCart();
+      toast.info("Cart cleared.");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to clear cart.");
+      toast.error(err.response?.data?.message || "Failed to clear cart.");
     }
   };
 

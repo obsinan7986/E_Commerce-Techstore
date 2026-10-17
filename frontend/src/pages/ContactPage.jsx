@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import "../styles/infopage.css";
 
 const ContactPage = () => (
@@ -29,7 +30,7 @@ const ContactPage = () => (
 
       <div className="info-section">
         <h2>Send a Message</h2>
-        <form className="contact-form" onSubmit={(e) => { e.preventDefault(); alert("Thank you! We will get back to you soon."); }}>
+        <form className="contact-form" onSubmit={(e) => { e.preventDefault(); e.target.reset(); toast.success("Thank you! We will get back to you soon."); }}>
           <div className="form-row">
             <div className="form-group"><label>Your Name</label><input type="text" placeholder="Abebe Merga" required /></div>
             <div className="form-group"><label>Email</label><input type="email" placeholder="abebe@example.com" required /></div>

@@ -18,6 +18,7 @@ import {
   deleteAdminBanner,
   toggleAdminBanner,
 } from "../services/adminservice";
+import { toast } from "react-toastify";
 import api, { BASE_URL } from "../services/api";
 import "../styles/adminBanners.css";
 
@@ -182,9 +183,10 @@ const AdminBanners = () => {
   const handleToggle = async (id) => {
     try {
       await toggleAdminBanner(id);
+      toast.success("Banner updated.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Toggle failed.");
+      toast.error(err.response?.data?.message || "Toggle failed.");
     }
   };
 
@@ -193,9 +195,10 @@ const AdminBanners = () => {
     try {
       await deleteAdminBanner(id);
       setConfirmId(null);
+      toast.success("Banner deleted successfully.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed.");
+      toast.error(err.response?.data?.message || "Delete failed.");
     }
   };
 

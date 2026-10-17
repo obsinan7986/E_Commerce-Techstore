@@ -9,6 +9,7 @@ import {
   getAnnouncements, createAnnouncement, updateAnnouncement,
   deleteAnnouncement, markAnnouncementRead, getStaffUsers,
 } from "../services/adminservice";
+import { toast } from "react-toastify";
 import "../styles/commModule.css";
 
 const PRIORITY_CLS = {
@@ -133,9 +134,10 @@ const AnnouncementsPage = () => {
     try {
       await deleteAnnouncement(deleteTarget);
       setDeleteTarget(null);
+      toast.success("Announcement deleted successfully.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed.");
+      toast.error(err.response?.data?.message || "Delete failed.");
     }
   };
 

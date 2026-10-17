@@ -10,6 +10,7 @@ import { addToCart } from "../services/cartService";
 import { addToWishlist } from "../services/wishlistService";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
+import { toast } from "react-toastify";
 
 import "../styles/productpage.css";
 
@@ -32,22 +33,24 @@ const ProductPage = () => {
 
   const handleAddToCart = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) { alert("Please login first."); return; }
+    if (!user) { toast.warning("Please login first."); return; }
     try {
       await addToCart(product._id, quantity);
       await loadCartCount();
+      toast.success("Added to cart!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add to cart.");
+      toast.error(err.response?.data?.message || "Failed to add to cart.");
     }
   };
 
   const handleWishlist = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) { alert("Please login first."); return; }
+    if (!user) { toast.warning("Please login first."); return; }
     try {
       await addToWishlist(product._id);
+      toast.success("Added to wishlist!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add to wishlist.");
+      toast.error(err.response?.data?.message || "Failed to add to wishlist.");
     }
   };
 

@@ -6,8 +6,10 @@
  */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { getFinanceDashboard } from "../services/adminservice";
+import api from "../services/api";
 import "../styles/financeDashboard.css";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -32,6 +34,20 @@ const FinanceDashboard = () => {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
+  const [approvingId, setApprovingId] = useState(null);
+
+  const handleApprovePayout = async (payoutId, amount) => {
+    try {
+      setApprovingId(payoutId);
+      const res = await api.patch(`/finance/payouts/${payoutId}/approve`, { action: "approve" });
+      toast.success(res.data?.message || `Payout of ETB ${fmt(amount)} approved and marked paid!`);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to approve payout request.");
+    } finally {
+      setApprovingId(null);
+    }
+  };
 
   const load = async () => {
     try {
@@ -179,6 +195,132 @@ const FinanceDashboard = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* ── Seller Payout Requests Section ── */}
+      <div className="fd-card fd-card--payouts" style={{ marginBottom: 20 }}>
+        <div className="fd-card-header">
+          <div>
+            <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span>💸 Seller Payout Requests</span>
+              {(d.pendingPayouts?.length || 0) > 0 && (
+                <span className="fd-badge fd-badge--pending" style={{ fontSize: 12 }}>
+                  {d.pendingPayouts.length} Pending
+                </span>
+              )}
+            </h2>
+            <span style={{ fontSize: "0.82rem", color: "#6B7280" }}>
+              Disburse seller net earnings (after platform CEO commission debit) directly to verified bank accounts or Telebirr
+            </span>
+          </div>
+          <button className="fd-refresh-btn" onClick={load} style={{ fontSize: 12 }}>
+            ↻ Refresh Requests
+          </button>
+        </div>
+
+        {!(d.pendingPayouts?.length) ? (
+          <div className="fd-empty" style={{ padding: "30px 20px" }}>
+            <span style={{ fontSize: 28, display: "block", marginBottom: 6 }}>✅</span>
+            All seller payout requests are processed. No pending requests.
+          </div>
+        ) : (
+          <div className="fd-table-wrap">
+            <table className="fd-table">
+              <thead>
+                <tr>
+                  <th>Seller / Store</th>
+                  <th>Contact Info</th>
+                  <th style={{ color: "#7C3AED" }}>Requested Net Payout</th>
+                  <th>Payout Destination</th>
+                  <th>Requested Date</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: "right" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {d.pendingPayouts.map((p) => {
+                  const s = p.seller || {};
+                  const acct = p.accountDetails || s.payoutAccount || {};
+                  const isProcessing = approvingId === p._id;
+
+                  return (
+                    <tr key={p._id}>
+                      <td>
+                        <div className="fd-customer-cell">
+                          <strong>{s.storeName || s.fullName || "Seller"}</strong>
+                          <small>{s.fullName && s.storeName ? `Owner: ${s.fullName}` : "Verified Seller"}</small>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="fd-customer-cell">
+                          <span>{s.email || "—"}</span>
+                          <small>{s.phone || acct.telebirrPhone || "—"}</small>
+                        </div>
+                      </td>
+                      <td>
+                        <strong style={{ fontSize: "1.05rem", color: "#7C3AED" }}>
+                          ETB {fmt(p.amount)}
+                        </strong>
+                        <div style={{ fontSize: 11, color: "#6B7280" }}>
+                          Net after commission
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: 13, lineHeight: 1.4 }}>
+                          {acct.bankName && (
+                            <div>
+                              <strong>{acct.bankName}</strong>
+                              <div style={{ fontSize: 12, color: "#4B5563" }}>
+                                Acc: {acct.accountNumber || "—"}
+                              </div>
+                              {acct.accountHolder && (
+                                <div style={{ fontSize: 11, color: "#6B7280" }}>
+                                  Holder: {acct.accountHolder}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {acct.telebirrPhone && (
+                            <div style={{ marginTop: acct.bankName ? 4 : 0, color: "#0284C7" }}>
+                              <strong>Telebirr:</strong> {acct.telebirrPhone}
+                            </div>
+                          )}
+                          {!acct.bankName && !acct.telebirrPhone && (
+                            <span style={{ color: "#9CA3AF" }}>No account saved</span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ fontSize: 12, color: "#6B7280", whiteSpace: "nowrap" }}>
+                        {new Date(p.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                      <td>
+                        <span className="fd-badge fd-badge--pending">
+                          ⏳ {p.status || "Pending"}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <button
+                          type="button"
+                          className="fd-approve-btn"
+                          onClick={() => handleApprovePayout(p._id, p.amount)}
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? "Processing…" : "✓ Approve & Mark Paid"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Automated Commission & Revenue Split Ledger */}

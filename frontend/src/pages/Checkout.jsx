@@ -7,6 +7,7 @@ import { initializeChapaPayment, getPaymentSettings } from "../services/paymentS
 import { applyCoupon, checkFirstOrderDiscount }   from "../services/couponService";
 import { useCart }                                from "../context/CartContext";
 import { useAuth }                                from "../context/AuthContext";
+import { toast }                               from "react-toastify";
 
 import "../styles/checkout.css";
 import { BASE_URL } from "../services/api";
@@ -153,11 +154,11 @@ const Checkout = () => {
 
   // ── Place order ────────────────────────────────────────────────
   const handleOrder = async () => {
-    if (!shipping.fullName.trim()) { alert("Please enter your full name."); return; }
-    if (!shipping.phone.trim())    { alert("Please enter your phone number."); return; }
-    if (!shipping.address.trim())  { alert("Please enter your address."); return; }
-    if (!shipping.city.trim())     { alert("Please enter your city."); return; }
-    if (!cart.items.length)        { alert("Your cart is empty."); return; }
+    if (!shipping.fullName.trim()) { toast.warning("Please enter your full name."); return; }
+    if (!shipping.phone.trim())    { toast.warning("Please enter your phone number."); return; }
+    if (!shipping.address.trim())  { toast.warning("Please enter your address."); return; }
+    if (!shipping.city.trim())     { toast.warning("Please enter your city."); return; }
+    if (!cart.items.length)        { toast.error("Your cart is empty."); return; }
 
     try {
       setLoading(true);
@@ -179,7 +180,7 @@ const Checkout = () => {
 
       // ── Chapa ────────────────────────────────────────────────────
       if (paymentMethod === "Chapa") {
-        if (!shipping.email.trim()) { alert("Please enter your email for Chapa payment."); return; }
+        if (!shipping.email.trim()) { toast.warning("Please enter your email for Chapa payment."); return; }
         const parts     = shipping.fullName.trim().split(" ");
         const firstName = parts[0] || "";
         const lastName  = parts.slice(1).join(" ") || firstName;
@@ -200,7 +201,7 @@ const Checkout = () => {
       }
     } catch (err) {
       console.error("Order error:", err);
-      alert(err.response?.data?.message || err.message || "Unable to place order.");
+      toast.error(err.response?.data?.message || err.message || "Unable to place order.");
     } finally {
       setLoading(false);
     }

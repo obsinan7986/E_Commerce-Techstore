@@ -3,6 +3,7 @@
  * Review pending seller products: approve or reject with reason
  */
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import api, { BASE_URL } from "../services/api";
 import "../styles/adminProductApproval.css";
 
@@ -50,24 +51,26 @@ const AdminProductApproval = () => {
         commissionOverride: commOverride.trim() !== "" ? Number(commOverride) : null,
       });
       setReviewing(null);
+      toast.success("Product approved successfully!");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Approval failed.");
+      toast.error(err.response?.data?.message || "Approval failed.");
     } finally {
       setBusy(false);
     }
   };
 
   const handleReject = async (id) => {
-    if (!reason.trim()) { alert("Please enter a rejection reason."); return; }
+    if (!reason.trim()) { toast.warning("Please enter a rejection reason."); return; }
     try {
       setBusy(true);
       await api.patch(`/admin/product-approvals/${id}/reject`, { reason });
       setReviewing(null);
       setReason("");
+      toast.success("Product rejected.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Rejection failed.");
+      toast.error(err.response?.data?.message || "Rejection failed.");
     } finally {
       setBusy(false);
     }

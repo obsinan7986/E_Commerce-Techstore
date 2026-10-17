@@ -9,6 +9,7 @@ import {
   getAdminReviewStats,
   deleteAdminReview,
 } from "../services/adminservice";
+import { toast } from "react-toastify";
 import { BASE_URL } from "../services/api";
 import "../styles/adminReviews.css";
 
@@ -66,9 +67,10 @@ const AdminReviews = () => {
     try {
       setDeleting(id);
       await deleteAdminReview(id);
+      toast.success("Review removed successfully.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed.");
+      toast.error(err.response?.data?.message || "Delete failed.");
     } finally {
       setDeleting(null);
     }

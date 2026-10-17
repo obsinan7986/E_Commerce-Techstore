@@ -9,6 +9,7 @@ import {
   getMeetings, createMeeting, updateMeeting,
   cancelMeeting, deleteMeeting, getStaffUsers,
 } from "../services/adminservice";
+import { toast } from "react-toastify";
 import "../styles/commModule.css";
 
 const STATUS_CLS = {
@@ -157,9 +158,10 @@ const MeetingsPage = () => {
       setCancelling(true);
       await cancelMeeting(cancelTarget, cancelReason);
       setCancelTarget(null); setCancelReason("");
+      toast.success("Meeting cancelled.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Cancel failed.");
+      toast.error(err.response?.data?.message || "Cancel failed.");
     } finally {
       setCancelling(false);
     }
@@ -169,9 +171,10 @@ const MeetingsPage = () => {
     try {
       await deleteMeeting(deleteTarget);
       setDeleteTarget(null);
+      toast.success("Meeting deleted successfully.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed.");
+      toast.error(err.response?.data?.message || "Delete failed.");
     }
   };
 

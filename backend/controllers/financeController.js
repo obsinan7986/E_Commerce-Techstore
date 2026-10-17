@@ -12,6 +12,7 @@
 import Order              from "../models/Order.js";
 import User               from "../models/User.js";
 import PaymentSettings    from "../models/PaymentSettings.js";
+import Payout             from "../models/Payout.js";
 import { settleOrderCommission } from "../utils/commissionEngine.js";
 import createNotification from "../utils/createNotification.js";
 
@@ -38,6 +39,8 @@ export const getFinanceDashboard = async (req, res) => {
       pSettings,
       sellerAgg,
       ledgerTransactions,
+      pendingPayouts,
+      pendingPayoutsCount,
     ] = await Promise.all([
       // Total revenue (all paid)
       Order.aggregate([
@@ -122,6 +125,14 @@ export const getFinanceDashboard = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(25)
         .select("orderItems totalPrice totalGrossItemsPrice totalCommissionDebited totalSellerNetPayout isCommissionSettled paymentStatus paymentMethod orderStatus paidAt createdAt"),
+
+      // Pending seller payout requests
+      Payout.find({ status: "Pending" })
+        .populate("seller", "fullName storeName email phone sellerCredits pendingSellerCredits payoutAccount")
+        .sort({ createdAt: -1 }),
+
+      // Pending seller payouts count
+      Payout.countDocuments({ status: "Pending" }),
     ]);
 
     const revenue = totalRevenue[0]?.total || 0;
@@ -152,6 +163,8 @@ export const getFinanceDashboard = async (req, res) => {
         manualPending,
         manualVerified,
         manualRejected,
+        pendingPayouts:          pendingPayouts || [],
+        pendingPayoutsCount:     pendingPayoutsCount || 0,
         methodBreakdown,
         monthlyRevenue,
         recentTransactions,
@@ -417,6 +430,121 @@ export const getFinanceStats = async (req, res) => {
         refundedOrders,
       },
     });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================
+// GET ALL SELLER PAYOUT REQUESTS
+// GET /api/finance/payouts
+// ============================================================
+export const getFinancePayouts = async (req, res) => {
+  try {
+    const status = req.query.status;
+    const filter = {};
+    if (status) filter.status = status;
+
+    const payouts = await Payout.find(filter)
+      .populate("seller", "fullName storeName email phone sellerCredits pendingSellerCredits payoutAccount")
+      .populate("processedBy", "fullName email")
+      .sort({ createdAt: -1 });
+
+    const pendingCount = await Payout.countDocuments({ status: "Pending" });
+
+    res.status(200).json({
+      success: true,
+      payouts,
+      pendingCount,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================
+// APPROVE & MARK PAID / REJECT SELLER PAYOUT
+// PATCH /api/finance/payouts/:id/approve
+// Body: { action: "approve" | "reject", adminNote?: string }
+// ============================================================
+export const approveFinancePayout = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payout = await Payout.findById(id).populate("seller");
+    if (!payout) {
+      return res.status(404).json({ success: false, message: "Payout request not found." });
+    }
+
+    if (payout.status !== "Pending") {
+      return res.status(400).json({
+        success: false,
+        message: `Payout request has already been marked as ${payout.status}.`,
+      });
+    }
+
+    const { action = "approve", adminNote = "" } = req.body;
+
+    if (action === "approve") {
+      payout.status = "Paid";
+      payout.processedBy = req.user._id;
+      payout.processedAt = new Date();
+      if (adminNote) payout.adminNote = adminNote.trim();
+      await payout.save();
+
+      // Release pending seller escrow credits
+      if (payout.seller) {
+        await User.findByIdAndUpdate(payout.seller._id, {
+          $inc: {
+            pendingSellerCredits: -payout.amount,
+          },
+        });
+
+        // Notify seller of payout completion
+        await createNotification({
+          userId: payout.seller._id,
+          type: "payout_paid",
+          title: "Payout Approved & Disbursed ✅",
+          message: `Your payout request of ETB ${payout.amount.toLocaleString()} has been approved and marked paid to your ${payout.accountDetails?.bankName || "account"}.`,
+          link: "/seller/dashboard?tab=earnings",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Payout of ETB ${payout.amount.toLocaleString()} approved and marked as Paid.`,
+        payout,
+      });
+    } else {
+      // Reject payout: return credits back to sellerCredits
+      payout.status = "Rejected";
+      payout.processedBy = req.user._id;
+      payout.processedAt = new Date();
+      if (adminNote) payout.adminNote = adminNote.trim();
+      await payout.save();
+
+      if (payout.seller) {
+        await User.findByIdAndUpdate(payout.seller._id, {
+          $inc: {
+            sellerCredits: payout.amount,
+            pendingSellerCredits: -payout.amount,
+          },
+        });
+
+        await createNotification({
+          userId: payout.seller._id,
+          type: "payout_rejected",
+          title: "Payout Request Declined ❌",
+          message: `Your payout request of ETB ${payout.amount.toLocaleString()} was declined.${adminNote ? " Reason: " + adminNote : ""}`,
+          link: "/seller/dashboard?tab=earnings",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Payout request rejected and credits returned to seller balance.`,
+        payout,
+      });
+    }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

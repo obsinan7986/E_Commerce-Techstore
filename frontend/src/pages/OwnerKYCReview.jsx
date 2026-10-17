@@ -16,6 +16,7 @@ import {
   FiAlertTriangle,
 } from "react-icons/fi";
 import api, { BASE_URL } from "../services/api";
+import { toast } from "react-toastify";
 import "../styles/ownerDashboard.css";
 
 const STATUS_TABS = [
@@ -106,7 +107,7 @@ const OwnerKYCReview = () => {
   const handleConfirmReject = async () => {
     if (!rejectingUser) return;
     if (!rejectReason.trim()) {
-      alert("Please provide a rejection reason so the seller can re-submit.");
+      toast.warning("Please provide a rejection reason so the seller can re-submit.");
       return;
     }
     try {

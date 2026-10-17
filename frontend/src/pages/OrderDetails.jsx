@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { FaArrowLeft, FaCheck, FaUpload, FaClock, FaTimesCircle, FaCheckCircle } from "react-icons/fa";
+import { FaArrowLeft, FaCheck, FaUpload, FaClock, FaTimesCircle, FaCheckCircle, FaPrint } from "react-icons/fa";
+import { toast } from "react-toastify";
 import { getOrderById }                    from "../services/orderService";
 import { initializeChapaPayment,
          uploadPaymentScreenshot,
@@ -96,7 +97,7 @@ const OrderDetails = () => {
         throw new Error(payment.message || "Unable to start payment.");
       window.location.href = payment.checkoutUrl;
     } catch (err) {
-      alert(err.response?.data?.message || err.message || "Unable to start payment.");
+      toast.error(err.response?.data?.message || err.message || "Unable to start payment.");
     } finally {
       setPaying(false);
     }
@@ -177,6 +178,14 @@ const OrderDetails = () => {
           <p>Placed {new Date(order.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="print-invoice-btn"
+            onClick={() => window.print()}
+            title="Print / Download Official Invoice"
+          >
+            <FaPrint size={13} /> Print / Download Official Invoice
+          </button>
           {canPayNow && (
             <button className="pay-now-btn" onClick={handlePayNow} disabled={paying}>
               {paying ? "Redirecting…" : "💳 Pay Now"}
@@ -426,6 +435,151 @@ const OrderDetails = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Official Printable Invoice Layout (@media print) ── */}
+      <div className="order-invoice-printable" aria-hidden="true">
+        <div className="inv-header-box">
+          <div className="inv-header-left">
+            <h1 className="inv-brand-name">
+              OICT_Tech<span>Store</span>
+            </h1>
+            <p className="inv-brand-tagline">Premium Electronics &amp; Computer Technology Store</p>
+            <p className="inv-brand-info">
+              Addis Ababa, Ethiopia · support@oictstore.et · +251 911 000 000
+            </p>
+          </div>
+          <div className="inv-header-right">
+            <div className="inv-badge-wrap">
+              {order.paymentStatus === "Paid" || order.manualPayment?.verificationStatus === "Verified" || order.isPaid ? (
+                <div className="inv-badge-official inv-badge--paid">
+                  ✓ PAID &amp; VERIFIED
+                </div>
+              ) : (
+                <div className="inv-badge-official inv-badge--pending">
+                  ⏳ PAYMENT PENDING
+                </div>
+              )}
+            </div>
+            <div className="inv-meta-line">
+              <span>Invoice / Order #:</span>
+              <strong>INV-{order._id.slice(-8).toUpperCase()}</strong>
+            </div>
+            <div className="inv-meta-line">
+              <span>Order Date:</span>
+              <span>{new Date(order.createdAt).toLocaleDateString("en-US", { dateStyle: "long" })}</span>
+            </div>
+            {order.paidAt && (
+              <div className="inv-meta-line">
+                <span>Payment Date:</span>
+                <span>{new Date(order.paidAt).toLocaleDateString("en-US", { dateStyle: "long" })}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="inv-rule" />
+
+        {/* Customer & Payment Info Columns */}
+        <div className="inv-cols-box">
+          <div className="inv-col">
+            <h3 className="inv-section-title">Delivery &amp; Customer Info</h3>
+            <p className="inv-customer-name">
+              <strong>{order.shippingAddress?.fullName || order.user?.fullName || "Valued Customer"}</strong>
+            </p>
+            <p><strong>Phone:</strong> {order.shippingAddress?.phone || order.user?.phone || "N/A"}</p>
+            <p><strong>Address:</strong> {order.shippingAddress?.address || "N/A"}</p>
+            {(order.shippingAddress?.subCity || order.shippingAddress?.city) && (
+              <p>
+                <strong>City / Sub-City:</strong>{" "}
+                {[order.shippingAddress?.subCity, order.shippingAddress?.city].filter(Boolean).join(", ")}
+              </p>
+            )}
+            {order.user?.email && <p><strong>Email:</strong> {order.user.email}</p>}
+          </div>
+
+          <div className="inv-col">
+            <h3 className="inv-section-title">Payment &amp; Fulfillment</h3>
+            <p><strong>Payment Method:</strong> {order.paymentMethod}</p>
+            <p><strong>Payment Status:</strong> {order.paymentStatus}</p>
+            {order.manualPayment?.verificationStatus && order.manualPayment.verificationStatus !== "None" && (
+              <p><strong>Verification:</strong> {order.manualPayment.verificationStatus}</p>
+            )}
+            {order.paymentResult?.txRef && (
+              <p><strong>Transaction Ref:</strong> {order.paymentResult.txRef}</p>
+            )}
+            <p><strong>Order Status:</strong> {order.orderStatus}</p>
+          </div>
+        </div>
+
+        {/* Itemized Table */}
+        <table className="inv-items-table">
+          <thead>
+            <tr>
+              <th style={{ width: "40px" }}>#</th>
+              <th>Product Description</th>
+              <th style={{ textAlign: "center", width: "60px" }}>Qty</th>
+              <th style={{ textAlign: "right", width: "120px" }}>Unit Price</th>
+              <th style={{ textAlign: "right", width: "130px" }}>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.orderItems?.map((item, i) => (
+              <tr key={i}>
+                <td>{i + 1}</td>
+                <td>
+                  <strong>{item.name}</strong>
+                </td>
+                <td style={{ textAlign: "center" }}>{item.quantity}</td>
+                <td style={{ textAlign: "right" }}>ETB {Number(item.price).toLocaleString()}</td>
+                <td style={{ textAlign: "right" }}>ETB {Number(item.price * item.quantity).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Calculation Summary Block */}
+        <div className="inv-summary-section">
+          <div className="inv-terms-block">
+            <h4>Official Warranty &amp; Terms:</h4>
+            <p>• All products sold by OICT_TechStore are brand new and 100% authentic.</p>
+            <p>• Retain this official receipt for warranty validation and returns inspection.</p>
+            <p>• For inquiries, contact support@oictstore.et or call +251 911 000 000.</p>
+            <div className="inv-seal-stamp">
+              <span>★ OICT_TECHSTORE VERIFIED OFFICIAL RECEIPT ★</span>
+            </div>
+          </div>
+
+          <div className="inv-breakdown-card">
+            <div className="inv-calc-row">
+              <span>Items Subtotal:</span>
+              <span>ETB {Number(order.itemsPrice || 0).toLocaleString()}</span>
+            </div>
+            <div className="inv-calc-row">
+              <span>Shipping &amp; Delivery:</span>
+              <span>{order.shippingPrice === 0 ? "FREE" : `ETB ${Number(order.shippingPrice || 0).toLocaleString()}`}</span>
+            </div>
+            <div className="inv-calc-row">
+              <span>Tax (15% VAT):</span>
+              <span>ETB {Number(order.taxPrice || 0).toLocaleString()}</span>
+            </div>
+            {order.coupon?.discountAmount > 0 && (
+              <div className="inv-calc-row inv-calc-row--discount">
+                <span>Discount ({order.coupon.code || "Promo"}):</span>
+                <span>- ETB {Number(order.coupon.discountAmount).toLocaleString()}</span>
+              </div>
+            )}
+            <div className="inv-calc-total">
+              <span>Total in ETB:</span>
+              <span>ETB {Number(order.totalPrice || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Invoice Footer */}
+        <div className="inv-footer-strip">
+          <p>This is a computer-generated official receipt issued by OICT_TechStore. Thank you for your business!</p>
         </div>
       </div>
     </div>

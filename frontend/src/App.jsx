@@ -17,6 +17,9 @@ import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import GoogleAuthSuccess from "./pages/GoogleAuthSuccess";
+import OAuthCallback from "./pages/OAuthCallback";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Protected customer checkout & shopping pages (Storefront layout)
 import Cart from "./pages/Cart";
@@ -83,6 +86,7 @@ import ShippingInfoPage from "./pages/ShippingInfoPage";
 
 function App() {
   return (
+    <>
     <Routes>
       {/* ── 1. Storefront Public & Consumer Layout ── */}
       <Route element={<MainLayout />}>
@@ -96,7 +100,8 @@ function App() {
         <Route path="/search/:keyword" element={<SearchPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
+        <Route path="/auth/google/success" element={<OAuthCallback />} />
+        <Route path="/oauth-callback" element={<OAuthCallback />} />
 
         {/* Informational */}
         <Route path="/contact" element={<ContactPage />} />
@@ -183,6 +188,8 @@ function App() {
       {/* 404 Catch-All */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnHover />
+    </>
   );
 }
 

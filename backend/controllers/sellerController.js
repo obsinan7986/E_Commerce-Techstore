@@ -15,6 +15,8 @@ import Product from "../models/Product.js";
 import Order   from "../models/Order.js";
 import User    from "../models/User.js";
 import Review  from "../models/Review.js";
+import Payout  from "../models/Payout.js";
+import Notification from "../models/Notification.js";
 
 // ============================================================
 // GET OWN PRODUCTS  –  GET /api/seller/products
@@ -363,16 +365,57 @@ export const sellerRequestPayout = async (req, res) => {
       if (telebirrPhone) user.payoutAccount.telebirrPhone = telebirrPhone.trim();
     }
 
+    const effectiveAccount = {
+      bankName: bankName?.trim() || user.payoutAccount?.bankName || "",
+      accountNumber: accountNumber?.trim() || user.payoutAccount?.accountNumber || "",
+      accountHolder: accountHolder?.trim() || user.payoutAccount?.accountHolder || user.fullName,
+      telebirrPhone: telebirrPhone?.trim() || user.payoutAccount?.telebirrPhone || "",
+    };
+
     user.sellerCredits = Math.max(0, currentCredits - reqAmount);
     user.pendingSellerCredits = Number(user.pendingSellerCredits || 0) + reqAmount;
     await user.save();
 
+    // Create persistent Payout record for Finance approval
+    const payout = await Payout.create({
+      seller: user._id,
+      amount: reqAmount,
+      accountDetails: effectiveAccount,
+      status: "Pending",
+    });
+
+    // Notify Finance
+    try {
+      await Notification.create({
+        targetRole: "finance",
+        type: "payout_requested",
+        title: "New Seller Payout Request 💸",
+        message: `Seller "${user.storeName || user.fullName}" requested payout of ETB ${reqAmount.toLocaleString()} to ${effectiveAccount.bankName || "Telebirr"}.`,
+        link: "/finance/dashboard",
+      });
+    } catch (notifErr) {
+      console.error("[sellerRequestPayout] Notification error:", notifErr.message);
+    }
+
     res.status(200).json({
       success: true,
       message: `Payout request for ETB ${reqAmount.toFixed(2)} submitted successfully! The finance team will process your transfer.`,
+      payout,
       sellerCredits: user.sellerCredits,
       pendingSellerCredits: user.pendingSellerCredits,
     });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================
+// GET SELLER PAYOUT HISTORY  –  GET /api/seller/payout-requests
+// ============================================================
+export const sellerGetPayoutHistory = async (req, res) => {
+  try {
+    const payouts = await Payout.find({ seller: req.user._id }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, payouts });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -192,12 +192,15 @@
    SEARCH BOX
    ========================================================= */
 
-.search-box {
+.search-wrap {
+  position: relative;
   flex: 1;
-
   width: 100%;
   max-width: 560px;
+}
 
+.search-box {
+  width: 100%;
   height: 44px;
 
   display: flex;
@@ -220,6 +223,150 @@
 
   box-shadow:
     0 0 0 3px var(--primary-border);
+}
+
+/* ── Instant Floating Autocomplete Dropdown ── */
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.16);
+  z-index: 600;
+  overflow: hidden;
+  animation: searchDropdownFadeIn 0.16s ease-out;
+}
+
+@keyframes searchDropdownFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.search-dropdown-header {
+  padding: 8px 14px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.search-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.search-dropdown-item:hover {
+  background: #F8FAFC;
+}
+
+.search-item-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #F1F5F9;
+  flex-shrink: 0;
+  border: 1px solid #E2E8F0;
+}
+
+.search-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.search-item-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.search-item-cat {
+  padding: 1px 7px;
+  background: #EFF6FF;
+  color: #2563EB;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.search-item-brand {
+  color: #64748B;
+  font-weight: 500;
+}
+
+.search-item-price {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0F172A;
+  white-space: nowrap;
+}
+
+.search-dropdown-footer {
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  text-align: center;
+}
+
+.search-dropdown-footer button {
+  background: none;
+  border: none;
+  color: #2563EB;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.search-dropdown-footer button:hover {
+  text-decoration: underline;
+  color: #1D4ED8;
+}
+
+.search-dropdown-loading,
+.search-dropdown-empty {
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #64748B;
 }
 
 

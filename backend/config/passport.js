@@ -6,12 +6,19 @@
  * If GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are not set the strategy is
  * skipped gracefully so the server still boots without Google OAuth.
  */
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import passport from "passport";
 import User     from "../models/User.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
+
 const clientID     = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const callbackURL  = process.env.GOOGLE_CALLBACK_URL;
+const callbackURL  = process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/auth/google/callback";
 
 if (clientID && clientSecret) {
   const { Strategy: GoogleStrategy } =
@@ -40,6 +47,7 @@ if (clientID && clientSecret) {
               user.googleId     = googleId;
               user.authProvider = "google";
               if (!user.profileImage) user.profileImage = profileImage;
+              if (!user.status)       user.status = "active";
               await user.save();
             } else {
               // 3 — create new account
@@ -52,9 +60,14 @@ if (clientID && clientSecret) {
                 phone:         "",
                 password:      null,
                 role:          "customer",
+                status:        "active",
                 isAdmin:       false,
               });
             }
+          }
+
+          if (user.isSuspended || user.status === "suspended") {
+            return done(new Error("Account is suspended. Please contact support."), null);
           }
 
           return done(null, user);

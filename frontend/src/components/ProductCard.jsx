@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
+import { toast } from "react-toastify";
 import { addToCart }     from "../services/cartService";
 import { addToWishlist } from "../services/wishlistService";
 import { useCart }       from "../context/CartContext";
 import { useCurrency }   from "../context/CurrencyContext";
 import { BASE_URL }      from "../services/api";
+import { handleImageError } from "../utils/imageFallback";
 import "../styles/productcard.css";
 
 const ProductCard = ({ product }) => {
@@ -17,16 +19,18 @@ const ProductCard = ({ product }) => {
     try {
       await addToCart(product._id, 1);
       await loadCartCount();
+      toast.success(t("cart.added") || "Added to cart!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add to cart");
+      toast.error(err.response?.data?.message || "Failed to add to cart");
     }
   };
 
   const handleWishlist = async () => {
     try {
       await addToWishlist(product._id);
+      toast.success("Added to wishlist!");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add to wishlist");
+      toast.error(err.response?.data?.message || "Failed to add to wishlist");
     }
   };
 
@@ -66,7 +70,7 @@ const ProductCard = ({ product }) => {
         <img
           src={imgSrc}
           alt={product.name}
-          onError={(e) => { e.target.style.opacity = "0.3"; }}
+          onError={(e) => handleImageError(e, "product")}
           style={!inStock ? { opacity: 0.45, filter: "grayscale(40%)" } : undefined}
         />
         <span className="quick-view">{t("product.quickView")}</span>

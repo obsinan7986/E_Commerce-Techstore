@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getMyOrders, cancelOrder } from "../services/orderService";
 import { initializeChapaPayment } from "../services/paymentService";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 import "../styles/orders.css";
 import { BASE_URL } from "../services/api";
 
@@ -36,7 +37,7 @@ const Orders = () => {
       await cancelOrder(id);
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Unable to cancel order.");
+      toast.error(err.response?.data?.message || "Unable to cancel order.");
     }
   };
 
@@ -65,7 +66,7 @@ const Orders = () => {
 
       window.location.href = payment.checkoutUrl;
     } catch (err) {
-      alert(err.response?.data?.message || err.message || "Unable to start payment.");
+      toast.error(err.response?.data?.message || err.message || "Unable to start payment.");
     } finally {
       setPayingId(null);
     }

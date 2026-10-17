@@ -9,6 +9,7 @@ import {
   sellerGetSales,
   sellerGetDashboardStats,
   sellerRequestPayout,
+  sellerGetPayoutHistory,
   sellerSubmitKYC,
   sellerGetKYCStatus,
   sellerGetReviews,
@@ -39,6 +40,8 @@ router.post( "/kyc",            protect, upload.single("idDocumentImage"), selle
 router.get(  "/payout-account", ...sellerOnly, sellerGetKYCStatus);
 router.put(  "/payout-account", ...sellerOnly, sellerUpdatePayoutAccount);
 router.post( "/payout-request", ...sellerOnly, sellerRequestPayout);
+router.get(  "/payout-requests", ...sellerOnly, sellerGetPayoutHistory);
+router.get(  "/payouts",        ...sellerOnly, sellerGetPayoutHistory);
 
 // Reviews (read-only)
 router.get( "/reviews", ...sellerOnly, sellerGetReviews);

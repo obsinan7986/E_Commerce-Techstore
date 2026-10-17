@@ -23,6 +23,7 @@ import {
 } from "react-icons/fi";
 import api, { BASE_URL } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 import "../styles/sellerDashboard.css";
 
 const CATEGORIES = [
@@ -113,6 +114,7 @@ const SellerDashboard = () => {
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [payoutMsg, setPayoutMsg] = useState("");
   const [payoutErr, setPayoutErr] = useState("");
+  const [payoutHistory, setPayoutHistory] = useState([]);
 
   // Number formatting helper
   const fmt = (n) =>
@@ -125,9 +127,10 @@ const SellerDashboard = () => {
   const loadDashboardData = async () => {
     try {
       setStatsLoading(true);
-      const [salesRes, statsRes] = await Promise.allSettled([
+      const [salesRes, statsRes, payoutsRes] = await Promise.allSettled([
         api.get("/seller/sales"),
         api.get("/seller/dashboard"),
+        api.get("/seller/payout-requests"),
       ]);
 
       if (salesRes.status === "fulfilled" && salesRes.value?.data?.success) {
@@ -142,6 +145,9 @@ const SellerDashboard = () => {
           if (pa.accountHolder) setPayoutAccHolder(pa.accountHolder);
           if (pa.telebirrPhone) setPayoutTelebirr(pa.telebirrPhone);
         }
+      }
+      if (payoutsRes.status === "fulfilled" && payoutsRes.value?.data?.success) {
+        setPayoutHistory(payoutsRes.value.data.payouts || []);
       }
     } catch (err) {
       console.error("Error loading seller dashboard data:", err);
@@ -332,7 +338,7 @@ const SellerDashboard = () => {
       await loadProducts();
       await loadDashboardData();
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed.");
+      toast.error(err.response?.data?.message || "Delete failed.");
     }
   };
 
@@ -344,10 +350,16 @@ const SellerDashboard = () => {
 
     const reqAmt = Number(payoutAmount);
     if (!reqAmt || reqAmt <= 0) {
-      return setPayoutErr("Please enter a valid payout amount in ETB.");
+      const msg = "Please enter a valid payout amount in ETB.";
+      setPayoutErr(msg);
+      toast.error(msg);
+      return;
     }
     if (reqAmt > availableCredits) {
-      return setPayoutErr(`Payout amount exceeds available net credits (ETB ${fmt(availableCredits)}).`);
+      const msg = `Payout amount exceeds available net credits (ETB ${fmt(availableCredits)}).`;
+      setPayoutErr(msg);
+      toast.error(msg);
+      return;
     }
 
     try {
@@ -360,11 +372,16 @@ const SellerDashboard = () => {
         telebirrPhone: payoutTelebirr,
       });
 
-      setPayoutMsg(data?.message || "Payout request submitted successfully!");
+      const succ = data?.message || "Payout request submitted successfully!";
+      setPayoutMsg(succ);
+      toast.success(succ);
       setPayoutAmount("");
       await loadDashboardData();
+      if (refreshProfile) refreshProfile().catch(() => {});
     } catch (err) {
-      setPayoutErr(err.response?.data?.message || "Failed to submit payout request.");
+      const errMsg = err.response?.data?.message || "Failed to submit payout request.";
+      setPayoutErr(errMsg);
+      toast.error(errMsg);
     } finally {
       setPayoutLoading(false);
     }
@@ -1260,6 +1277,82 @@ const SellerDashboard = () => {
                 </div>
               </div>
             </form>
+          </div>
+
+          {/* Payout Request History */}
+          <div className="sd-card-panel" style={{ marginTop: 20 }}>
+            <div className="sd-panel-head">
+              <h2 className="sd-panel-title">My Payout Requests &amp; Disbursal History</h2>
+            </div>
+            {payoutHistory && payoutHistory.length > 0 ? (
+              <div className="sd-table-wrap">
+                <table className="sd-table">
+                  <thead>
+                    <tr>
+                      <th>Requested Date</th>
+                      <th>Requested Net Amount</th>
+                      <th>Destination Account</th>
+                      <th>Processed Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payoutHistory.map((p) => (
+                      <tr key={p._id}>
+                        <td>
+                          {new Date(p.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td>
+                          <strong style={{ color: "#7C3AED", fontSize: "0.95rem" }}>
+                            ETB {fmt(p.amount)}
+                          </strong>
+                        </td>
+                        <td>
+                          <div style={{ fontSize: 13 }}>
+                            {p.accountDetails?.bankName && (
+                              <div>{p.accountDetails.bankName} ({p.accountDetails.accountNumber || "—"})</div>
+                            )}
+                            {p.accountDetails?.telebirrPhone && (
+                              <div style={{ color: "#0284C7" }}>Telebirr: {p.accountDetails.telebirrPhone}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          {p.processedAt
+                            ? new Date(p.processedAt).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </td>
+                        <td>
+                          <span
+                            className={
+                              p.status === "Paid"
+                                ? "sd-badge sd-badge--success"
+                                : p.status === "Pending"
+                                ? "sd-badge sd-badge--pending"
+                                : "sd-badge sd-badge--danger"
+                            }
+                          >
+                            {p.status === "Paid" ? "✓ Paid" : p.status === "Pending" ? "⏳ Pending Review" : p.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="sd-empty-state" style={{ padding: "24px 0" }}>
+                <p>No payout requests submitted yet.</p>
+              </div>
+            )}
           </div>
 
           {/* Full Itemized Sales & Commission Settlement Ledger */}

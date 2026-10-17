@@ -16,6 +16,7 @@ import {
   deleteReview,
   checkCanReview,
 } from "../services/reviewService";
+import { toast } from "react-toastify";
 import "../styles/ReviewSection.css";
 
 /* ── Star display helper ── */
@@ -183,8 +184,9 @@ const ReviewSection = ({ productId }) => {
         setCanReview(d.canReview);
         setMyReview(d.existingReview);
       }
+      toast.success("Review deleted successfully.");
     } catch (err) {
-      alert(err.response?.data?.message || "Could not delete review.");
+      toast.error(err.response?.data?.message || "Could not delete review.");
     } finally {
       setDeletingId(null);
     }

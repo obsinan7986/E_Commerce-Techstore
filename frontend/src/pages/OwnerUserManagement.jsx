@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import api, { BASE_URL } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 import "../styles/ownerDashboard.css";
 
 const ROLES     = ["customer", "seller", "admin", "finance", "owner"];
@@ -88,9 +89,10 @@ const OwnerUserManagement = () => {
       setRoleBusy(true);
       await api.put(`/owner/users/${userId}/role`, { role: newRole });
       setRoleTarget(null);
+      toast.success("Role updated successfully.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Role change failed.");
+      toast.error(err.response?.data?.message || "Role change failed.");
     } finally {
       setRoleBusy(false);
     }
@@ -101,9 +103,10 @@ const OwnerUserManagement = () => {
     const path = u.isSuspended ? "activate" : "suspend";
     try {
       await api.patch(`/owner/users/${u._id}/${path}`);
+      toast.success(`User ${u.isSuspended ? "activated" : "suspended"} successfully.`);
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "Action failed.");
+      toast.error(err.response?.data?.message || "Action failed.");
     }
   };
 
@@ -116,24 +119,26 @@ const OwnerUserManagement = () => {
         commissionType: kycCommissionType || "percentage",
       });
       setKycUser(null);
+      toast.success("KYC approved successfully.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "KYC approval failed.");
+      toast.error(err.response?.data?.message || "KYC approval failed.");
     } finally {
       setKycBusy(false);
     }
   };
 
   const handleKycReject = async () => {
-    if (!kycReason.trim()) { alert("Please enter a rejection reason."); return; }
+    if (!kycReason.trim()) { toast.warning("Please enter a rejection reason."); return; }
     try {
       setKycBusy(true);
       await api.patch(`/owner/kyc/${kycUser._id}/reject`, { reason: kycReason });
       setKycUser(null);
       setKycReason("");
+      toast.success("KYC rejected.");
       await load();
     } catch (err) {
-      alert(err.response?.data?.message || "KYC rejection failed.");
+      toast.error(err.response?.data?.message || "KYC rejection failed.");
     } finally {
       setKycBusy(false);
     }

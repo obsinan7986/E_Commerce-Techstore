@@ -1,5 +1,6 @@
 import express    from "express";
 import passport   from "../config/passport.js";
+import generateToken from "../utils/generateToken.js";
 import {
   registerUser,
   loginUser,
@@ -52,32 +53,24 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    session:      false,
+    session:         false,
     failureRedirect: `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_failed`,
   }),
   (req, res) => {
-    // Passport attached the user to req.user via the strategy
-    const user  = req.user;
-    const token = generateToken(user._id);
-
-    // Build the user payload the frontend expects (same shape as /login)
-    const payload = {
-      _id:      user._id,
-      fullName: user.fullName,
-      email:    user.email,
-      phone:    user.phone,
-      address:  user.address,
-      role:     user.role,
-      isAdmin:  user.isAdmin,
-      profileImage: user.profileImage,
-      token,
-    };
-
-    // Encode as base64 so it survives the URL redirect safely
-    const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
-
-    const frontend = process.env.FRONTEND_URL || "http://localhost:5173";
-    res.redirect(`${frontend}/auth/google/success?data=${encoded}`);
+    try {
+      const user = req.user;
+      if (!user) {
+        const frontend = process.env.FRONTEND_URL || "http://localhost:5173";
+        return res.redirect(`${frontend}/login?error=google_failed`);
+      }
+      const token = generateToken(user._id);
+      const frontend = process.env.FRONTEND_URL || "http://localhost:5173";
+      return res.redirect(`${frontend}/oauth-callback?token=${token}`);
+    } catch (err) {
+      console.error("[google/callback] Error:", err.message);
+      const frontend = process.env.FRONTEND_URL || "http://localhost:5173";
+      return res.redirect(`${frontend}/login?error=google_failed`);
+    }
   }
 );
 

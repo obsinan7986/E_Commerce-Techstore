@@ -17,6 +17,7 @@ import {
   updateOrderStatus,
   getLowStockProducts,
 } from "../services/adminservice";
+import { toast } from "react-toastify";
 import api, { BASE_URL } from "../services/api";
 import "../styles/admin.css";
 
@@ -58,9 +59,10 @@ const AdminDashboard = () => {
   const handleStatusChange = async (orderId, status) => {
     try {
       await updateOrderStatus(orderId, status);
+      toast.success(`Order status updated to ${status}.`);
       await loadDashboard();
     } catch (err) {
-      alert(err.response?.data?.message || "Unable to update order.");
+      toast.error(err.response?.data?.message || "Unable to update order.");
     }
   };
 

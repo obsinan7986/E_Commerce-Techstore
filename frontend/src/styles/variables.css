@@ -1,19 +1,17 @@
 :root {
-  /* ── Primary ── */
+  /* ── 10% Brand Accent: OICT Royal Blue ── */
   --primary:        #2563EB;
   --primary-dark:   #1D4ED8;
   --primary-light:  #EFF6FF;
   --primary-border: #BFDBFE;
 
-  /* ── Navy ── */
-  --navy:       #111827;
-  --navy-light: #1F2937;
+  /* ── 30% Structural Slate & Footer ── */
+  --navy:       #0F172A;
+  --navy-light: #1E293B;
+  --slate-dark: #0F172A;
+  --slate-mid:  #334155;
 
-  /* ── Accent / Orange (discount badges, Place Order) ── */
-  --accent:      #F97316;
-  --accent-dark: #EA6C00;
-
-  /* ── Feedback ── */
+  /* ── Feedback Badges ── */
   --success:    #16A34A;
   --success-bg: #DCFCE7;
   --danger:     #DC2626;
@@ -21,7 +19,7 @@
   --warning:    #F59E0B;
   --warning-bg: #FEF3C7;
 
-  /* ── Surfaces ── */
+  /* ── 60% Base Neutrals & Surfaces ── */
   --background:    #F8FAFC;
   --bg:            #F8FAFC;      /* alias */
   --surface:       #FFFFFF;
@@ -30,20 +28,20 @@
   --surface-muted: #F1F5F9;
   --muted:         #F1F5F9;      /* alias */
 
-  /* ── Text ── */
-  --text:           #111827;
-  --text-primary:   #111827;
-  --text-2:         #374151;
-  --text-secondary: #374151;     /* alias */
-  --text-3:         #6B7280;
-  --text-light:     #6B7280;     /* alias */
-  --text-4:         #9CA3AF;
-  --text-muted:     #9CA3AF;     /* alias */
+  /* ── Typography (Structural Slate) ── */
+  --text:           #0F172A;
+  --text-primary:   #0F172A;
+  --text-2:         #334155;
+  --text-secondary: #334155;     /* alias */
+  --text-3:         #64748B;
+  --text-light:     #64748B;     /* alias */
+  --text-4:         #94A3B8;
+  --text-muted:     #94A3B8;     /* alias */
 
-  /* ── Border ── */
-  --border:      #E5E7EB;
-  --border-2:    #D1D5DB;
-  --border-dark: #D1D5DB;        /* alias */
+  /* ── Subtle 1px Borders ── */
+  --border:      #E2E8F0;
+  --border-2:    #CBD5E1;
+  --border-dark: #94A3B8;        /* alias */
 
   /* ── Shadows ── */
   --sh-xs:    0 1px 2px rgba(0,0,0,.05);

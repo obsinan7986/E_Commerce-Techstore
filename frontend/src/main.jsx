@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 // ── i18n — must be imported before any component that uses useTranslation ──
 import "./i18n/index.js";
+import "./index.css";
 
 import App from "./App";
 

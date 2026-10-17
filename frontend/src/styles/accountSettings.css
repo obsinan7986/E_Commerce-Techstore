@@ -35,7 +35,7 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #7C3AED);
+  background: linear-gradient(135deg, #1D4ED8, #2563EB);
   color: #FFFFFF;
   display: flex;
   align-items: center;
@@ -77,8 +77,9 @@
 }
 
 .acc-role--owner {
-  background: #7C3AED;
+  background: #0F172A;
   color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .acc-role--admin {

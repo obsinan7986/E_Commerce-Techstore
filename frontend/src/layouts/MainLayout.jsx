@@ -7,7 +7,7 @@ const MainLayout = () => {
     <>
       <Navbar />
       {/* No padding here — each page controls its own spacing */}
-      <main style={{ minHeight: "80vh" }}>
+      <main style={{ minHeight: "80vh", width: "100%", maxWidth: "100%", overflowX: "hidden", margin: 0, padding: 0 }}>
         <Outlet />
       </main>
       <Footer />

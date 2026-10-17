@@ -111,7 +111,7 @@ const FinanceDashboard = () => {
         <div className="fd-kpi fd-kpi--liability">
           <span className="fd-kpi-icon">👥</span>
           <div>
-            <strong style={{ color: "#7C3AED" }}>ETB {fmt(d.totalSellerNetCredits)}</strong>
+            <strong style={{ color: "#0F172A" }}>ETB {fmt(d.totalSellerNetCredits)}</strong>
             <span>Net Seller Payout Liability</span>
             <small>Pending escrow: ETB {fmt(d.pendingSellerCredits)}</small>
           </div>
@@ -230,7 +230,7 @@ const FinanceDashboard = () => {
                 <tr>
                   <th>Seller / Store</th>
                   <th>Contact Info</th>
-                  <th style={{ color: "#7C3AED" }}>Requested Net Payout</th>
+                  <th style={{ color: "#0F172A" }}>Requested Net Payout</th>
                   <th>Payout Destination</th>
                   <th>Requested Date</th>
                   <th>Status</th>
@@ -258,7 +258,7 @@ const FinanceDashboard = () => {
                         </div>
                       </td>
                       <td>
-                        <strong style={{ fontSize: "1.05rem", color: "#7C3AED" }}>
+                        <strong style={{ fontSize: "1.05rem", color: "#0F172A" }}>
                           ETB {fmt(p.amount)}
                         </strong>
                         <div style={{ fontSize: 11, color: "#6B7280" }}>
@@ -346,7 +346,7 @@ const FinanceDashboard = () => {
                   <th>Gross Price</th>
                   <th>Seller(s)</th>
                   <th style={{ color: "#059669" }}>Platform Commission</th>
-                  <th style={{ color: "#7C3AED" }}>Seller Net Credit</th>
+                  <th style={{ color: "#0F172A" }}>Seller Net Credit</th>
                   <th>Split Settlement</th>
                   <th>Payment Status</th>
                   <th>Date</th>
@@ -383,7 +383,7 @@ const FinanceDashboard = () => {
                       <td style={{ fontWeight: 700, color: "#059669" }}>
                         + ETB {fmt(commVal)}
                       </td>
-                      <td style={{ fontWeight: 700, color: "#7C3AED" }}>
+                      <td style={{ fontWeight: 700, color: "#0F172A" }}>
                         ETB {fmt(netVal)}
                       </td>
                       <td>
@@ -420,7 +420,7 @@ const FinanceDashboard = () => {
         <Link to="/finance/payments?paymentStatus=Pending" className="fd-quick-link" style={{ "--ql-color": "#D97706" }}>
           <span>⏳</span><div><strong>Pending Payments</strong><span>Awaiting action</span></div>
         </Link>
-        <Link to="/finance/payments?paymentStatus=Refunded" className="fd-quick-link" style={{ "--ql-color": "#7C3AED" }}>
+        <Link to="/finance/payments?paymentStatus=Refunded" className="fd-quick-link" style={{ "--ql-color": "#475569" }}>
           <span>↩</span><div><strong>Refunds</strong><span>Refunded orders</span></div>
         </Link>
       </div>

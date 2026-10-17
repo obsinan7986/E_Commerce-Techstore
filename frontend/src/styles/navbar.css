@@ -61,10 +61,15 @@
 
 .promo-bar {
   width: 100%;
+  max-width: 100%;
+  margin: 0;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
   min-height: 34px;
 
-  background: var(--primary);
-  color: var(--white);
+  background: var(--primary, #2563EB);
+  color: #ffffff;
 
   display: flex;
   align-items: center;
@@ -92,9 +97,14 @@
   z-index: 400;
 
   width: 100%;
+  max-width: 100%;
+  margin: 0;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
 
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
+  background: #ffffff;
+  border-bottom: 1px solid var(--border, #E2E8F0);
 
   box-shadow: var(--sh-xs);
 }
@@ -104,17 +114,18 @@
 
 .header-inner {
   width: 100%;
-  max-width: var(--maxw);
+  max-width: var(--maxw, 1400px);
 
   min-height: 72px;
 
   margin: 0 auto;
-  padding: 0 var(--px);
+  padding: 0 24px;
+  box-sizing: border-box;
 
   display: flex;
   align-items: center;
 
-  gap: 28px;
+  gap: 24px;
 }
 
 
@@ -521,16 +532,16 @@
 
   gap: 10px;
 
-  min-height: 46px;
+  min-height: 44px;
 
-  padding: 7px 12px;
+  padding: 6px 14px;
 
-  background: var(--white);
+  background: var(--white, #ffffff);
 
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  border: 1px solid var(--border, #E2E8F0);
+  border-radius: var(--r, 10px);
 
-  color: var(--text);
+  color: var(--text, #0F172A);
 
   font-family: var(--font);
 
@@ -539,6 +550,8 @@
   cursor: pointer;
 
   white-space: nowrap;
+  flex-shrink: 0;
+  box-sizing: border-box;
 
   transition:
     border-color 0.2s ease,
@@ -547,8 +560,8 @@
 }
 
 .header-cart-btn:hover {
-  border-color: var(--primary);
-  background: var(--primary-light);
+  border-color: var(--primary, #2563EB);
+  background: var(--primary-light, #EFF6FF);
 
   box-shadow: var(--sh-xs);
 }
@@ -639,10 +652,15 @@
 
 .nav {
   width: 100%;
+  max-width: 100%;
+  margin: 0;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
 
-  background: var(--white);
+  background: #ffffff;
 
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border, #E2E8F0);
 }
 
 
@@ -650,12 +668,13 @@
 
 .nav-inner {
   width: 100%;
-  max-width: var(--maxw);
+  max-width: var(--maxw, 1400px);
 
   height: 50px;
 
   margin: 0 auto;
-  padding: 0 var(--px);
+  padding: 0 24px;
+  box-sizing: border-box;
 
   display: flex;
   align-items: center;

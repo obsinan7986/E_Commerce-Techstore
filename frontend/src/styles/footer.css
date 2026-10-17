@@ -9,6 +9,10 @@
   color: #94a3b8;
   margin-top: 0;
   width: 100%;
+  max-width: 100%;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
   overflow-x: hidden;
 }
 
@@ -18,9 +22,9 @@
 
 .footer-top {
   width: 100%;
-  max-width: var(--maxw, 1200px);
+  max-width: var(--maxw, 1400px);
   margin: 0 auto;
-  padding: 56px var(--px, 24px) 42px;
+  padding: 56px 24px 42px;
   box-sizing: border-box;
 }
 
@@ -385,14 +389,24 @@
 
 .footer-bottom {
   width: 100%;
-  max-width: var(--maxw, 1200px);
+  max-width: 100%;
+  margin: 0;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b1120;
+}
+
+.footer-bottom-inner {
+  width: 100%;
+  max-width: var(--maxw, 1400px);
 
   margin: 0 auto;
 
-  padding: 18px var(--px, 24px);
+  padding: 18px 24px;
   box-sizing: border-box;
-
-  border-top: 1px solid #1e293b;
 
   display: flex;
   align-items: center;

@@ -1307,7 +1307,7 @@ const SellerDashboard = () => {
                           })}
                         </td>
                         <td>
-                          <strong style={{ color: "#7C3AED", fontSize: "0.95rem" }}>
+                          <strong style={{ color: "#0F172A", fontSize: "0.95rem" }}>
                             ETB {fmt(p.amount)}
                           </strong>
                         </td>

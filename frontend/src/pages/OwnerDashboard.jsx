@@ -67,11 +67,11 @@ const OwnerDashboard = () => {
 
   const TOOLS = [
     { to: "/owner/users",             icon: "👥", label: "User Management",    desc: "Create, promote, suspend users",   color: "#2563EB" },
-    { to: "/owner/kyc",               icon: "🪪", label: "KYC Review",         desc: "Approve or reject seller KYC",     color: "#7C3AED" },
+    { to: "/owner/kyc",               icon: "🪪", label: "KYC Review",         desc: "Approve or reject seller KYC",     color: "#0F172A" },
     { to: "/admin/product-approvals", icon: "📦", label: "Product Approvals",  desc: "Review pending seller products",   color: "#0369A1" },
     { to: "/admin/reviews",           icon: "⭐", label: "Review Management",  desc: "Moderate all customer reviews",    color: "#F59E0B" },
     { to: "/comm/meetings",           icon: "📅", label: "Meetings",           desc: "Create & manage all meetings",     color: "#059669" },
-    { to: "/comm/announcements",      icon: "📢", label: "Announcements",      desc: "Publish internal announcements",   color: "#7C3AED" },
+    { to: "/comm/announcements",      icon: "📢", label: "Announcements",      desc: "Publish internal announcements",   color: "#2563EB" },
     { to: "/comm/schedule",           icon: "🗓", label: "Schedule",           desc: "View meeting calendar",            color: "#0369A1" },
     { to: "/admin/dashboard",         icon: "📊", label: "Admin Dashboard",    desc: "Full store management",            color: "#374151" },
     { to: "/admin/analytics",         icon: "📈", label: "Analytics",          desc: "Revenue and order reports",        color: "#D97706" },

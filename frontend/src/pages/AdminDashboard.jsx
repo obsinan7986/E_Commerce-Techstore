@@ -134,7 +134,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: "#F5F3FF", color: "#7C3AED" }}>
+          <div className="stat-icon" style={{ background: "#F1F5F9", color: "#0F172A" }}>
             <FiShoppingBag />
           </div>
           <div className="stat-body">
@@ -232,14 +232,14 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ── Modern 2-Column Executive Operations Grid ── */}
-      <div className="admin-dashboard-grid">
-        {/* Left Column: Recent Orders (6 most recent) */}
-        <div className="admin-card-panel">
+      {/* ── Executive Operations Vertical Sequence ── */}
+      <div className="admin-dashboard-vertical">
+        {/* 1. Full-Width Recent Orders Panel */}
+        <div className="admin-card-panel" style={{ width: "100%" }}>
           <div className="admin-panel-header">
             <div>
               <h2>Recent Orders</h2>
-              <span style={{ fontSize: "0.8rem", color: "#64748B" }}>
+              <span style={{ fontSize: "0.82rem", color: "#64748B" }}>
                 Latest customer purchases awaiting or undergoing fulfillment
               </span>
             </div>
@@ -250,7 +250,7 @@ const AdminDashboard = () => {
             <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>No orders found.</div>
           ) : (
             <div className="table-responsive">
-              <table className="orders-table" style={{ margin: 0, border: "none" }}>
+              <table className="orders-table" style={{ width: "100%", margin: 0, border: "none" }}>
                 <thead>
                   <tr>
                     <th>Order</th>
@@ -264,7 +264,7 @@ const AdminDashboard = () => {
                 <tbody>
                   {orders.slice(0, 6).map((order) => (
                     <tr key={order._id}>
-                      <td>
+                      <td style={{ whiteSpace: "nowrap" }}>
                         <Link
                           to={`/orders/${order._id}`}
                           style={{ fontWeight: 700, color: "#2563EB", textDecoration: "none" }}
@@ -278,7 +278,7 @@ const AdminDashboard = () => {
                           {order.user?.email || "—"}
                         </small>
                       </td>
-                      <td style={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+                      <td style={{ fontWeight: 700, whiteSpace: "nowrap", color: "#0F172A" }}>
                         ETB {Number(order.totalPrice).toFixed(2)}
                       </td>
                       <td>
@@ -297,11 +297,12 @@ const AdminDashboard = () => {
                           onChange={(e) => handleStatusChange(order._id, e.target.value)}
                           disabled={order.orderStatus === "Delivered" || order.orderStatus === "Cancelled"}
                           style={{
-                            padding: "4px 8px",
+                            padding: "6px 10px",
                             borderRadius: 6,
                             border: "1px solid #CBD5E1",
                             fontSize: "0.85rem",
                             background: "#fff",
+                            cursor: "pointer",
                           }}
                         >
                           {order.orderStatus === "Pending" && (
@@ -338,119 +339,121 @@ const AdminDashboard = () => {
           )}
         </div>
 
-        {/* Right Column: Store Health & Quick Insights */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {/* Low Stock Items List */}
-          <div className="admin-card-panel">
-            <div className="admin-panel-header">
+        {/* 2. Full-Width Inventory Watch Panel */}
+        <div className="admin-card-panel" style={{ width: "100%" }}>
+          <div className="admin-panel-header">
+            <div>
               <h2>Inventory Watch</h2>
-              <Link to="/admin/products">Catalog →</Link>
+              <span style={{ fontSize: "0.82rem", color: "#64748B" }}>
+                Products currently low in stock or out of stock across the catalog
+              </span>
             </div>
-            <div style={{ padding: 16 }}>
-              {!lowStock.length ? (
-                <div style={{ textAlign: "center", padding: "20px 0", color: "#059669", fontSize: "0.9rem" }}>
-                  <FiCheckCircle style={{ marginRight: 6 }} /> All products have healthy stock levels.
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {lowStock.slice(0, 5).map((p) => (
-                    <div
-                      key={p._id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "8px 10px",
-                        background: "#F8FAFC",
-                        borderRadius: 8,
-                        border: "1px solid #E2E8F0",
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <strong
-                          style={{
-                            display: "block",
-                            fontSize: "0.85rem",
-                            color: "#1E293B",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: 180,
-                          }}
-                        >
-                          {p.name}
-                        </strong>
-                        <span style={{ fontSize: "0.75rem", color: "#64748B" }}>
-                          ETB {Number(p.price).toFixed(0)} · {p.brand}
-                        </span>
-                      </div>
-                      <span
+            <Link to="/admin/products">Catalog →</Link>
+          </div>
+          <div style={{ padding: 20 }}>
+            {!lowStock.length ? (
+              <div style={{ textAlign: "center", padding: "24px 0", color: "#059669", fontSize: "0.95rem", fontWeight: 500 }}>
+                <FiCheckCircle style={{ marginRight: 8, verticalAlign: "middle" }} /> All products have healthy stock levels.
+              </div>
+            ) : (
+              <div className="admin-inventory-grid">
+                {lowStock.slice(0, 8).map((p) => (
+                  <div
+                    key={p._id}
+                    className="admin-inventory-card"
+                  >
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <strong
                         style={{
-                          fontSize: "0.75rem",
-                          fontWeight: 700,
-                          padding: "3px 8px",
-                          borderRadius: 6,
-                          background: p.stock === 0 ? "#FEE2E2" : "#FEF3C7",
-                          color: p.stock === 0 ? "#DC2626" : "#B45309",
+                          display: "block",
+                          fontSize: "0.9rem",
+                          color: "#0F172A",
                           whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
+                        title={p.name}
                       >
-                        {p.stock === 0 ? "Out of Stock" : `${p.stock} units left`}
+                        {p.name}
+                      </strong>
+                      <span style={{ fontSize: "0.8rem", color: "#64748B" }}>
+                        ETB {Number(p.price).toFixed(0)} · {p.brand || "Generic"}
                       </span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Platform Commission & Revenue Split Card */}
-          <div className="admin-card-panel">
-            <div className="admin-panel-header">
-              <h2>Finance & Commission Ledger</h2>
-              <Link to="/finance/dashboard">Split Ledger →</Link>
-            </div>
-            <div style={{ padding: 18 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.88rem", color: "#64748B" }}>Platform Gross Volume</span>
-                  <strong style={{ fontSize: "1rem", color: "#1E293B" }}>
-                    ETB {fmt(paymentSettings?.platformTotalRevenue || stats.totalRevenue || 0)}
-                  </strong>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.88rem", color: "#64748B" }}>Platform Commission Debited</span>
-                  <strong style={{ fontSize: "1rem", color: "#059669" }}>
-                    ETB {fmt(paymentSettings?.platformTotalCommission || 0)}
-                  </strong>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.88rem", color: "#64748B" }}>Global Baseline Rate</span>
-                  <strong style={{ fontSize: "0.95rem", color: "#7C3AED" }}>
-                    {paymentSettings?.defaultCommissionRate || 10}%
-                  </strong>
-                </div>
-
-                <div style={{ borderTop: "1px solid #F1F5F9", paddingTop: 12 }}>
-                  <Link
-                    to="/finance/dashboard"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      color: "#2563EB",
-                      fontSize: "0.88rem",
-                      fontWeight: 600,
-                      textDecoration: "none",
-                    }}
-                  >
-                    <span>Open Full Revenue Split Ledger</span>
-                    <FiArrowRight />
-                  </Link>
-                </div>
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        padding: "4px 10px",
+                        borderRadius: 6,
+                        background: p.stock === 0 ? "#FEE2E2" : "#FEF3C7",
+                        color: p.stock === 0 ? "#DC2626" : "#B45309",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {p.stock === 0 ? "Out of Stock" : `${p.stock} units left`}
+                    </span>
+                  </div>
+                ))}
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Full-Width Finance & Commission Ledger Panel */}
+        <div className="admin-card-panel" style={{ width: "100%" }}>
+          <div className="admin-panel-header">
+            <div>
+              <h2>Finance & Commission Ledger</h2>
+              <span style={{ fontSize: "0.82rem", color: "#64748B" }}>
+                Summary of platform gross merchandise volume, CEO commissions, and baseline rates
+              </span>
+            </div>
+            <Link to="/finance/dashboard">Split Ledger →</Link>
+          </div>
+          <div style={{ padding: 22 }}>
+            <div className="admin-finance-summary-grid">
+              <div className="admin-finance-stat-box">
+                <span className="admin-finance-stat-label">Platform Gross Volume</span>
+                <strong className="admin-finance-stat-value" style={{ color: "#0F172A" }}>
+                  ETB {fmt(paymentSettings?.platformTotalRevenue || stats.totalRevenue || 0)}
+                </strong>
+                <span className="admin-finance-stat-sub">Cumulative customer orders GMV</span>
+              </div>
+
+              <div className="admin-finance-stat-box">
+                <span className="admin-finance-stat-label">Platform Commission Debited</span>
+                <strong className="admin-finance-stat-value" style={{ color: "#059669" }}>
+                  ETB {fmt(paymentSettings?.platformTotalCommission || 0)}
+                </strong>
+                <span className="admin-finance-stat-sub">Retained revenue credited to CEO wallet</span>
+              </div>
+
+              <div className="admin-finance-stat-box">
+                <span className="admin-finance-stat-label">Global Baseline Rate</span>
+                <strong className="admin-finance-stat-value" style={{ color: "#2563EB" }}>
+                  {paymentSettings?.defaultCommissionRate || 10}%
+                </strong>
+                <span className="admin-finance-stat-sub">Default commission applied to seller orders</span>
+              </div>
+            </div>
+
+            <div style={{ borderTop: "1px solid #E2E8F0", marginTop: 18, paddingTop: 14 }}>
+              <Link
+                to="/finance/dashboard"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "#2563EB",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                <span>Open Full Revenue Split Ledger</span>
+                <FiArrowRight />
+              </Link>
             </div>
           </div>
         </div>

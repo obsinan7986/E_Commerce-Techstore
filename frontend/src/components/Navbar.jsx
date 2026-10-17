@@ -235,21 +235,23 @@ const Navbar = () => {
 
             <Link
               to="/cart"
-              className="header-cart-btn cart-badge-wrap"
+              className="header-cart-btn"
               aria-label={`${t("nav.cart")}, ${cartCount} items`}
             >
-              <FaShoppingCart style={{ fontSize: 20 }} />
+              <div className="cart-badge-wrap">
+                <FaShoppingCart style={{ fontSize: 20 }} />
+                {cartCount > 0 && (
+                  <span className="cart-badge">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                 <span className="cart-label">{t("nav.cart")}</span>
                 <span className="cart-total">
                   {cartCount} {cartCount !== 1 ? "items" : "item"}
                 </span>
               </div>
-              {cartCount > 0 && (
-                <span className="cart-badge">
-                  {cartCount > 99 ? "99+" : cartCount}
-                </span>
-              )}
             </Link>
 
           </div>

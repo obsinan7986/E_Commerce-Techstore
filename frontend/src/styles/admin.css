@@ -128,19 +128,78 @@
   text-overflow: ellipsis;
 }
 
-/* ── 2-Column Executive Operations Grid ── */
-.admin-dashboard-grid {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
+/* ── Vertical Executive Operations Sequence ── */
+.admin-dashboard-vertical {
+  display: flex;
+  flex-direction: column;
   gap: 24px;
+  width: 100%;
   margin-top: 24px;
-  align-items: start;
 }
 
-@media (max-width: 1024px) {
-  .admin-dashboard-grid {
-    grid-template-columns: 1fr;
-  }
+.admin-inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.admin-inventory-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #F8FAFC;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-inventory-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.admin-finance-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.admin-finance-stat-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-finance-stat-label {
+  font-size: 0.85rem;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.admin-finance-stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.admin-finance-stat-sub {
+  font-size: 0.75rem;
+  color: #94A3B8;
+}
+
+/* ── Legacy 2-Column Grid (fallback) ── */
+.admin-dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  margin-top: 24px;
 }
 
 .admin-card-panel {
@@ -313,7 +372,7 @@
 }
 .status-pending    { background: #FEF3C7; color: #B45309; }
 .status-processing { background: #DBEAFE; color: #1D4ED8; }
-.status-shipped    { background: #EDE9FE; color: #6D28D9; }
+.status-shipped    { background: #E0F2FE; color: #0284C7; }
 .status-delivered  { background: #DCFCE7; color: #15803D; }
 .status-cancelled  { background: #FEE2E2; color: #B91C1C; }
 .payment-pending   { background: #FEF3C7; color: #B45309; }

@@ -985,7 +985,7 @@ const AccountSettingsPage = () => {
                 <span>Cumulative Debited Platform Commission</span>
               </div>
               <div className="acc-bal-card">
-                <strong style={{ color: "#7C3AED" }}>
+                <strong style={{ color: "#2563EB" }}>
                   {globalSettings.defaultCommissionRate || 10}%
                 </strong>
                 <span>Global Baseline Rate</span>

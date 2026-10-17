@@ -96,12 +96,14 @@ const Footer = () => {
 
       {/* ── Bottom bar ── */}
       <div className="footer-bottom">
-        <p>© {year} OICT_TechStore. All rights reserved.</p>
-        <div className="footer-bottom-links">
-          <Link to="/privacy">Privacy Policy</Link>
-          <Link to="/terms">Terms &amp; Conditions</Link>
-          <Link to="/returns">Return Policy</Link>
-          <Link to="/shipping-info">Shipping Policy</Link>
+        <div className="footer-bottom-inner">
+          <p>© {year} OICT_TechStore. All rights reserved.</p>
+          <div className="footer-bottom-links">
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms &amp; Conditions</Link>
+            <Link to="/returns">Return Policy</Link>
+            <Link to="/shipping-info">Shipping Policy</Link>
+          </div>
         </div>
       </div>
     </footer>

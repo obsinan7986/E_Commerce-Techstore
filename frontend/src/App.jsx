@@ -16,8 +16,6 @@ import SearchPage from "./pages/searchpage";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import GoogleAuthSuccess from "./pages/GoogleAuthSuccess";
-import OAuthCallback from "./pages/OAuthCallback";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -100,8 +98,6 @@ function App() {
         <Route path="/search/:keyword" element={<SearchPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/auth/google/success" element={<OAuthCallback />} />
-        <Route path="/oauth-callback" element={<OAuthCallback />} />
 
         {/* Informational */}
         <Route path="/contact" element={<ContactPage />} />

@@ -20,7 +20,6 @@ if (!fs.existsSync(uploadsDir)) {
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 // ── All other imports come AFTER dotenv ───────────────────────────
-import passport          from "./config/passport.js";
 import connectDB          from "./config/db.js";
 import productRoutes      from "./routes/productRoutes.js";
 import authRoutes         from "./routes/authRoutes.js";
@@ -74,8 +73,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// ── Passport (no sessions — JWT only) ─────────────────────────────
-app.use(passport.initialize());
 
 // ── Static uploads — with CORS headers so browsers can load images ──
 app.use("/uploads", (req, res, next) => {

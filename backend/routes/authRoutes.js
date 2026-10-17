@@ -1,6 +1,4 @@
 import express    from "express";
-import passport   from "../config/passport.js";
-import generateToken from "../utils/generateToken.js";
 import {
   registerUser,
   loginUser,
@@ -37,52 +35,5 @@ router.post(  "/addresses",              protect, addAddress);
 router.put(   "/addresses/:addrId",      protect, updateAddress);
 router.delete("/addresses/:addrId",      protect, deleteAddress);
 router.patch( "/addresses/:addrId/default", protect, setDefaultAddress);
-
-/* ── Google OAuth ──────────────────────────────────────────────── */
-
-// Step 1 — redirect user to Google consent screen
-router.get("/google", (req, res, next) => {
-  if (!passport._strategy("google")) {
-    return res.status(503).json({
-      success: false,
-      message:
-        "Google OAuth is not configured on this server. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your server environment variables (Render Dashboard).",
-    });
-  }
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-    session: false,
-  })(req, res, next);
-});
-
-// Step 2 — Google redirects back here with auth code
-router.get(
-  "/google/callback",
-  (req, res, next) => {
-    if (!passport._strategy("google")) {
-      const frontend = process.env.FRONTEND_URL || "http://localhost:5173";
-      return res.redirect(`${frontend}/login?error=google_not_configured`);
-    }
-    passport.authenticate("google", {
-      session:         false,
-      failureRedirect: `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_failed`,
-    })(req, res, next);
-  },
-  (req, res) => {
-    try {
-      const user = req.user;
-      const frontend = process.env.FRONTEND_URL || "http://localhost:5173";
-      if (!user) {
-        return res.redirect(`${frontend}/login?error=google_failed`);
-      }
-      const token = generateToken(user._id);
-      return res.redirect(`${frontend}/oauth-callback?token=${token}`);
-    } catch (err) {
-      console.error("[google/callback] Error:", err.message);
-      const frontend = process.env.FRONTEND_URL || "http://localhost:5173";
-      return res.redirect(`${frontend}/login?error=google_failed`);
-    }
-  }
-);
 
 export default router;

@@ -18,7 +18,10 @@ dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 const clientID     = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const callbackURL  = process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/auth/google/callback";
+const defaultCallback = process.env.RENDER_EXTERNAL_URL
+  ? `${process.env.RENDER_EXTERNAL_URL}/api/auth/google/callback`
+  : "http://localhost:5000/api/auth/google/callback";
+const callbackURL  = process.env.GOOGLE_CALLBACK_URL || defaultCallback;
 
 if (clientID && clientSecret) {
   const { Strategy: GoogleStrategy } =

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaEye, FaEyeSlash, FaShoppingBag } from "react-icons/fa";
@@ -24,6 +24,16 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const err = params.get("error");
+    if (err === "google_failed") {
+      setError("Google authentication failed. Please try again or use your email and password.");
+    } else if (err === "google_not_configured") {
+      setError("Google Sign-In is not configured on the server. Please sign in with email and password.");
+    }
+  }, [location.search]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));

@@ -7,7 +7,7 @@
 /* ── Page wrapper ── */
 .admin-page {
   min-height: calc(100vh - 120px);
-  padding: 32px 28px 60px;
+  padding: 20px 20px 48px;
   background: #F8FAFC;
   max-width: 1400px;
   margin: 0 auto;
@@ -24,7 +24,7 @@
 }
 
 .admin-header h1 {
-  font-size: 26px;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #111827;
   margin: 0 0 5px;

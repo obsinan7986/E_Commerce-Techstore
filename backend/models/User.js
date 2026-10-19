@@ -82,10 +82,19 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    idFrontImage: {
+      type:    String,
+      default: "",
+    },
+
+    idBackImage: {
+      type:    String,
+      default: "",
+    },
+
     kycDocs: {
       idFront:  { type: String, default: "" }, // path to National ID front image
       idBack:   { type: String, default: "" }, // path to National ID back image
-      selfie:   { type: String, default: "" }, // path to selfie image
     },
 
     kycRejectionReason: {

@@ -248,8 +248,9 @@ const OwnerKYCReview = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           {sellers.map((seller) => {
             const docs = seller.kycDocs || {};
-            const idImg = seller.idDocumentImage || docs.idFront;
-            const hasDocs = idImg || docs.idBack || docs.selfie;
+            const idFront = seller.idFrontImage || docs.idFront || seller.idDocumentImage;
+            const idBack = seller.idBackImage || docs.idBack;
+            const hasDocs = idFront || idBack;
             const isVerified = seller.kycStatus === "verified" || seller.kycStatus === "approved";
             const isRejected = seller.kycStatus === "rejected";
 
@@ -435,8 +436,8 @@ const OwnerKYCReview = () => {
                       No verification documents were attached with this account.
                     </div>
                   ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-                      {/* ID Front */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+                      {/* Slot 1: ID Front */}
                       <div
                         style={{
                           border: "1px solid #E2E8F0",
@@ -446,14 +447,14 @@ const OwnerKYCReview = () => {
                         }}
                       >
                         <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#334155", marginBottom: 6 }}>
-                          National ID / Trade License (Document)
+                          National ID / Passport (Front)
                         </div>
-                        {idImg ? (
+                        {idFront ? (
                           <div
-                            onClick={() => setDocPreview({ url: resolveImgUrl(idImg), title: "National ID / Trade License" })}
+                            onClick={() => setDocPreview({ url: resolveImgUrl(idFront), title: "National ID / Passport (Front)" })}
                             style={{
                               cursor: "pointer",
-                              height: 120,
+                              height: 130,
                               borderRadius: 6,
                               overflow: "hidden",
                               background: "#E2E8F0",
@@ -464,9 +465,9 @@ const OwnerKYCReview = () => {
                             }}
                           >
                             <img
-                              src={resolveImgUrl(idImg)}
-                              alt="ID Document"
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              src={resolveImgUrl(idFront)}
+                              alt="National ID (Front)"
+                              style={{ width: "100%", height: "100%", objectFit: "contain", background: "#F1F5F9" }}
                             />
                             <div
                               style={{
@@ -483,17 +484,17 @@ const OwnerKYCReview = () => {
                                 gap: 4,
                               }}
                             >
-                              <FiEye /> View
+                              <FiEye /> View Full
                             </div>
                           </div>
                         ) : (
-                          <div style={{ height: 120, display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "0.85rem" }}>
+                          <div style={{ height: 130, display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "0.85rem", background: "#F8FAFC", borderRadius: 6 }}>
                             Not Provided
                           </div>
                         )}
                       </div>
 
-                      {/* ID Back */}
+                      {/* Slot 2: ID Back */}
                       <div
                         style={{
                           border: "1px solid #E2E8F0",
@@ -505,12 +506,12 @@ const OwnerKYCReview = () => {
                         <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#334155", marginBottom: 6 }}>
                           National ID / Passport (Back)
                         </div>
-                        {docs.idBack ? (
+                        {idBack ? (
                           <div
-                            onClick={() => setDocPreview({ url: resolveImgUrl(docs.idBack), title: "National ID (Back)" })}
+                            onClick={() => setDocPreview({ url: resolveImgUrl(idBack), title: "National ID / Passport (Back)" })}
                             style={{
                               cursor: "pointer",
-                              height: 120,
+                              height: 130,
                               borderRadius: 6,
                               overflow: "hidden",
                               background: "#E2E8F0",
@@ -521,9 +522,9 @@ const OwnerKYCReview = () => {
                             }}
                           >
                             <img
-                              src={resolveImgUrl(docs.idBack)}
-                              alt="ID Back"
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              src={resolveImgUrl(idBack)}
+                              alt="National ID (Back)"
+                              style={{ width: "100%", height: "100%", objectFit: "contain", background: "#F1F5F9" }}
                             />
                             <div
                               style={{
@@ -540,68 +541,11 @@ const OwnerKYCReview = () => {
                                 gap: 4,
                               }}
                             >
-                              <FiEye /> View
+                              <FiEye /> View Full
                             </div>
                           </div>
                         ) : (
-                          <div style={{ height: 120, display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "0.85rem" }}>
-                            Not Provided
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Selfie */}
-                      <div
-                        style={{
-                          border: "1px solid #E2E8F0",
-                          borderRadius: 8,
-                          padding: 10,
-                          background: "#FAFAFA",
-                        }}
-                      >
-                        <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#334155", marginBottom: 6 }}>
-                          Verification Selfie
-                        </div>
-                        {docs.selfie ? (
-                          <div
-                            onClick={() => setDocPreview({ url: resolveImgUrl(docs.selfie), title: "Verification Selfie" })}
-                            style={{
-                              cursor: "pointer",
-                              height: 120,
-                              borderRadius: 6,
-                              overflow: "hidden",
-                              background: "#E2E8F0",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              position: "relative",
-                            }}
-                          >
-                            <img
-                              src={resolveImgUrl(docs.selfie)}
-                              alt="Selfie"
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
-                            <div
-                              style={{
-                                position: "absolute",
-                                bottom: 4,
-                                right: 4,
-                                background: "rgba(0,0,0,0.6)",
-                                color: "#fff",
-                                padding: "2px 6px",
-                                borderRadius: 4,
-                                fontSize: "0.75rem",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 4,
-                              }}
-                            >
-                              <FiEye /> View
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ height: 120, display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "0.85rem" }}>
+                          <div style={{ height: 130, display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "0.85rem", background: "#F8FAFC", borderRadius: 6 }}>
                             Not Provided
                           </div>
                         )}

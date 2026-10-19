@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { FaShoppingCart, FaHeart, FaStar, FaMinus, FaPlus } from "react-icons/fa";
 
 import api from "../services/api";
@@ -16,6 +16,8 @@ import "../styles/productpage.css";
 
 const ProductPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { loadCartCount } = useCart();
   const { formatPrice }   = useCurrency();
   const [product, setProduct]   = useState(null);
@@ -31,9 +33,26 @@ const ProductPage = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
+  const checkAuth = (actionType = "cart") => {
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem("user"));
+    } catch {}
+    const token = user?.token || localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) {
+      if (actionType === "cart") {
+        toast.info("Please create an account to add items to your cart");
+      } else {
+        toast.info("Please create an account to save items to your wishlist");
+      }
+      navigate("/register", { state: { from: location.pathname, pendingProductId: product?._id || id } });
+      return false;
+    }
+    return true;
+  };
+
   const handleAddToCart = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) { toast.warning("Please login first."); return; }
+    if (!checkAuth("cart")) return;
     try {
       await addToCart(product._id, quantity);
       await loadCartCount();
@@ -44,8 +63,7 @@ const ProductPage = () => {
   };
 
   const handleWishlist = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) { toast.warning("Please login first."); return; }
+    if (!checkAuth("wishlist")) return;
     try {
       await addToWishlist(product._id);
       toast.success("Added to wishlist!");

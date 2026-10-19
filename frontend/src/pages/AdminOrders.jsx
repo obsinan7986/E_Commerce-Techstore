@@ -6,6 +6,7 @@ import {
   adminCancelOrder,
 } from "../services/adminservice";
 import { formatCurrency, formatDate, shortOrderId } from "../utils/formatters";
+import Pagination from "../components/Pagination";
 import "../styles/admin.css";
 
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
@@ -30,12 +31,12 @@ const AdminOrders = () => {
 
   // Filters
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");
-  const LIMIT = 10;
 
   const load = useCallback(async () => {
     try {
@@ -43,7 +44,7 @@ const AdminOrders = () => {
       setError("");
       const data = await getAdminOrders({
         page,
-        limit: LIMIT,
+        limit: pageSize,
         keyword: keyword.trim(),
         orderStatus,
         paymentStatus,
@@ -57,7 +58,7 @@ const AdminOrders = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, keyword, orderStatus, paymentStatus]);
+  }, [page, pageSize, keyword, orderStatus, paymentStatus]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -203,15 +204,13 @@ const AdminOrders = () => {
           </div>
 
           {/* Pagination */}
-          {pages > 1 && (
-            <div className="admin-pagination">
-              <span>Page {page} of {pages} · {total} orders</span>
-              <div>
-                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
-                <button disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            currentPage={page}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </>
       )}
 

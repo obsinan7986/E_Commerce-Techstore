@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaEye, FaEyeSlash, FaShoppingBag } from "react-icons/fa";
 
@@ -14,6 +14,8 @@ import "../styles/auth.css";
 const Register = () => {
   const { t }                = useTranslation();
   const navigate             = useNavigate();
+  const location             = useLocation();
+  const [searchParams]       = useSearchParams();
   const { login: loginUser } = useAuth();
   const { loadCartCount }    = useCart();
 
@@ -70,7 +72,8 @@ const Register = () => {
       const data = await register(payload);
       loginUser(data);
       await loadCartCount();
-      navigate("/", { replace: true, state: { registered: true } });
+      const redirectTo = location.state?.from || searchParams.get("from") || "/";
+      navigate(redirectTo, { replace: true, state: { registered: true, pendingProductId: location.state?.pendingProductId } });
     } catch (err) {
       setError(
         err.response?.data?.message ||

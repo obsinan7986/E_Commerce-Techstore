@@ -4,6 +4,7 @@ import { getMyOrders, cancelOrder } from "../services/orderService";
 import { initializeChapaPayment } from "../services/paymentService";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
+import Pagination from "../components/Pagination";
 import "../styles/orders.css";
 import { BASE_URL } from "../services/api";
 
@@ -15,6 +16,8 @@ const Orders = () => {
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState("");
   const [payingId,   setPayingId]   = useState(null); // order id being retried
+  const [page,       setPage]       = useState(1);
+  const [pageSize,   setPageSize]   = useState(10);
 
   const load = async () => {
     try {
@@ -113,8 +116,9 @@ const Orders = () => {
           <Link to="/products">Browse Products</Link>
         </div>
       ) : (
-        <div className="orders-list">
-          {orders.map((order) => (
+        <div className="orders-wrapper">
+          <div className="orders-list">
+          {orders.slice((page - 1) * pageSize, page * pageSize).map((order) => (
             <div className="order-card" key={order._id}>
 
               {/* Top meta bar */}
@@ -215,6 +219,14 @@ const Orders = () => {
 
             </div>
           ))}
+          </div>
+          <Pagination
+            currentPage={page}
+            totalItems={orders.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
     </div>

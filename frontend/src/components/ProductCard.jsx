@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -12,10 +12,31 @@ import "../styles/productcard.css";
 
 const ProductCard = ({ product }) => {
   const { t }             = useTranslation();
+  const navigate          = useNavigate();
+  const location          = useLocation();
   const { loadCartCount } = useCart();
   const { formatPrice }   = useCurrency();
 
+  const checkAuth = (actionType = "cart") => {
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem("user"));
+    } catch {}
+    const token = user?.token || localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) {
+      if (actionType === "cart") {
+        toast.info("Please create an account to add items to your cart");
+      } else {
+        toast.info("Please create an account to save items to your wishlist");
+      }
+      navigate("/register", { state: { from: location.pathname, pendingProductId: product?._id } });
+      return false;
+    }
+    return true;
+  };
+
   const handleAddCart = async () => {
+    if (!checkAuth("cart")) return;
     try {
       await addToCart(product._id, 1);
       await loadCartCount();
@@ -26,6 +47,7 @@ const ProductCard = ({ product }) => {
   };
 
   const handleWishlist = async () => {
+    if (!checkAuth("wishlist")) return;
     try {
       await addToWishlist(product._id);
       toast.success("Added to wishlist!");

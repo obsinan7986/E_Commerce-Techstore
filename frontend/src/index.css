@@ -46,3 +46,44 @@ input, select, textarea {
   font-family: inherit;
   box-sizing: border-box;
 }
+
+/* ============================================================
+   ENTERPRISE TYPOGRAPHY & PROPORTIONAL SCALE
+   ============================================================ */
+h1, .dash-title, .admin-header h1, .od-header h1, .sd-header h1, .fd-header h1 {
+  font-size: 1.25rem !important; /* 20px */
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: #0F172A;
+}
+
+h2, h3, .section-title, .card-title, .admin-panel-header h2, .sd-panel-title, .fd-card-header h2 {
+  font-size: 1rem !important; /* 16px */
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: #0F172A;
+}
+
+.kpi-value, .stat-card strong, .od-stat strong, .sd-kpi-value, .fd-kpi strong {
+  font-size: 1.35rem !important; /* 21.6px */
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+.kpi-label, .stat-card span, .od-stat span, .sd-kpi-label, .fd-kpi span {
+  font-size: 0.75rem !important; /* 12px */
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: #64748B !important;
+}
+
+p, td, input, select, textarea, button, .dash-user-name, .dash-nav-item {
+  font-size: 0.85rem; /* 13.6px */
+  line-height: 1.5;
+}
+
+th, .dash-nav-heading, .status-badge, .badge, .ps-badge, .fd-badge, .fp-badge, .dash-role-badge {
+  font-size: 0.78rem !important; /* 12.5px */
+  font-weight: 600 !important;
+}

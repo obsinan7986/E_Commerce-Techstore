@@ -6,6 +6,7 @@ import {
 } from "../services/adminservice";
 import { formatDate } from "../utils/formatters";
 import { useAuth } from "../context/AuthContext";
+import Pagination from "../components/Pagination";
 import "../styles/admin.css";
 
 const AdminUsers = () => {
@@ -15,19 +16,18 @@ const AdminUsers = () => {
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState({ type: "", message: "" });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [keyword, setKeyword] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [actionLoading, setActionLoading] = useState(null);
 
-  const LIMIT = 15;
-
   const load = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const data = await getAdminUsers({ page, limit: LIMIT, keyword: keyword.trim(), role: roleFilter });
+      const data = await getAdminUsers({ page, limit: pageSize, keyword: keyword.trim(), role: roleFilter });
       setUsers(data.users || []);
       setTotal(data.total || 0);
       setPages(data.pages || 1);
@@ -36,7 +36,7 @@ const AdminUsers = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, keyword, roleFilter]);
+  }, [page, pageSize, keyword, roleFilter]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -150,15 +150,13 @@ const AdminUsers = () => {
             </table>
           </div>
 
-          {pages > 1 && (
-            <div className="admin-pagination">
-              <span>Page {page} of {pages}</span>
-              <div>
-                <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
-                <button disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            currentPage={page}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </>
       )}
     </div>

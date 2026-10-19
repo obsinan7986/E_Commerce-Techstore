@@ -442,9 +442,43 @@ export const sellerSubmitKYC = async (req, res) => {
 
     const storeName = req.body.storeName?.trim() || user.storeName;
     const nationalIdNumber = req.body.nationalIdNumber?.trim() || user.nationalIdNumber;
-    const idDocumentImage = req.file
-      ? `/uploads/${req.file.filename}`
-      : (req.body.idDocumentImage || req.body.idFront || user.idDocumentImage);
+
+    let idFront = "";
+    let idBack = "";
+
+    if (req.files) {
+      if (req.files.idFront?.[0]) {
+        idFront = `/uploads/${req.files.idFront[0].filename}`;
+      }
+      if (req.files.idBack?.[0]) {
+        idBack = `/uploads/${req.files.idBack[0].filename}`;
+      }
+      if (!idFront && req.files.idDocumentImage?.[0]) {
+        idFront = `/uploads/${req.files.idDocumentImage[0].filename}`;
+      }
+    } else if (req.file) {
+      idFront = `/uploads/${req.file.filename}`;
+    }
+
+    if (!idFront) {
+      idFront =
+        req.body.idFrontImage ||
+        req.body.idFront ||
+        req.body.idDocumentImage ||
+        user.idFrontImage ||
+        user.kycDocs?.idFront ||
+        user.idDocumentImage ||
+        "";
+    }
+
+    if (!idBack) {
+      idBack =
+        req.body.idBackImage ||
+        req.body.idBack ||
+        user.idBackImage ||
+        user.kycDocs?.idBack ||
+        "";
+    }
 
     if (!storeName) {
       return res.status(400).json({ success: false, message: "Business / Store Name is required." });
@@ -452,18 +486,19 @@ export const sellerSubmitKYC = async (req, res) => {
     if (!nationalIdNumber) {
       return res.status(400).json({ success: false, message: "National ID / Trade License Number is required." });
     }
-    if (!idDocumentImage) {
-      return res.status(400).json({ success: false, message: "Identity document image or PDF is required." });
+    if (!idFront) {
+      return res.status(400).json({ success: false, message: "National ID / Passport (Front) is required." });
     }
 
     user.storeName        = storeName;
     user.nationalIdNumber = nationalIdNumber;
-    user.idDocumentImage  = idDocumentImage;
+    user.idFrontImage     = idFront;
+    user.idBackImage      = idBack;
+    user.idDocumentImage  = idFront; // backward compatibility
 
     user.kycDocs = user.kycDocs || {};
-    user.kycDocs.idFront = idDocumentImage;
-    if (req.body.idBack) user.kycDocs.idBack = req.body.idBack;
-    if (req.body.selfie) user.kycDocs.selfie = req.body.selfie;
+    user.kycDocs.idFront = idFront;
+    user.kycDocs.idBack  = idBack;
 
     user.kycStatus          = "pending";
     user.kycRejectionReason = "";
@@ -480,7 +515,10 @@ export const sellerSubmitKYC = async (req, res) => {
         role:             user.role,
         storeName:        user.storeName,
         nationalIdNumber: user.nationalIdNumber,
+        idFrontImage:     user.idFrontImage,
+        idBackImage:      user.idBackImage,
         idDocumentImage:  user.idDocumentImage,
+        kycDocs:          user.kycDocs,
         kycStatus:        user.kycStatus,
       },
     });
@@ -495,7 +533,7 @@ export const sellerSubmitKYC = async (req, res) => {
 export const sellerGetKYCStatus = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select(
-      "kycStatus storeName nationalIdNumber idDocumentImage kycDocs kycRejectionReason kycReviewedAt commissionAgreement sellerCredits pendingSellerCredits totalCommissionDebited payoutAccount"
+      "kycStatus storeName nationalIdNumber idDocumentImage idFrontImage idBackImage kycDocs kycRejectionReason kycReviewedAt commissionAgreement sellerCredits pendingSellerCredits totalCommissionDebited payoutAccount"
     );
     res.status(200).json({ success: true, kyc: user });
   } catch (err) {

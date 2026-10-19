@@ -32,7 +32,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 globally — token expired / invalid
+// Handle 401 globally — token expired / invalid / missing
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -40,6 +40,19 @@ api.interceptors.response.use(
       const currentPath = window.location.pathname;
       if (currentPath !== "/login" && currentPath !== "/register") {
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        const msg = error.response?.data?.message || "";
+        // If technical "Not authorized, no token" or unauthorized consumer action, cleanly redirect to /register
+        if (
+          msg.includes("Not authorized") ||
+          msg.includes("no token") ||
+          (!currentPath.startsWith("/admin") &&
+            !currentPath.startsWith("/owner") &&
+            !currentPath.startsWith("/finance"))
+        ) {
+          window.location.href = `/register?from=${encodeURIComponent(currentPath)}`;
+        }
       }
     }
     return Promise.reject(error);

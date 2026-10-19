@@ -27,7 +27,16 @@ router.get( "/profile", protect, getUserProfile);
 router.put( "/profile", protect, updateUserProfile);
 router.post("/forgot-password",  forgotPassword);
 router.post("/reset-password",   resetPassword);
-router.post("/become-seller", protect, upload.single("idDocumentImage"), sellerSubmitKYC);
+router.post(
+  "/become-seller",
+  protect,
+  upload.fields([
+    { name: "idFront", maxCount: 1 },
+    { name: "idBack", maxCount: 1 },
+    { name: "idDocumentImage", maxCount: 1 },
+  ]),
+  sellerSubmitKYC
+);
 
 /* ── Address book ──────────────────────────────────────────────── */
 router.get(   "/addresses",              protect, getAddresses);

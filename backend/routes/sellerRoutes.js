@@ -36,7 +36,16 @@ router.get( "/sales", ...sellerOnly, sellerGetSales);
 
 // KYC & Payout Account (KYC submission and status open to any authenticated user)
 router.get(  "/kyc",            protect, sellerGetKYCStatus);
-router.post( "/kyc",            protect, upload.single("idDocumentImage"), sellerSubmitKYC);
+router.post(
+  "/kyc",
+  protect,
+  upload.fields([
+    { name: "idFront", maxCount: 1 },
+    { name: "idBack", maxCount: 1 },
+    { name: "idDocumentImage", maxCount: 1 },
+  ]),
+  sellerSubmitKYC
+);
 router.get(  "/payout-account", ...sellerOnly, sellerGetKYCStatus);
 router.put(  "/payout-account", ...sellerOnly, sellerUpdatePayoutAccount);
 router.post( "/payout-request", ...sellerOnly, sellerRequestPayout);

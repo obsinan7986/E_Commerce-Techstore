@@ -122,6 +122,7 @@
   position: fixed; inset: 0; background: rgba(0,0,0,0.45);
   z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px;
 }
+.sd-modal--lg { max-width: 840px !important; }
 .sd-modal {
   background: #fff; border-radius: 14px; width: 100%; max-width: 580px;
   max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
@@ -367,7 +368,7 @@
   background: #ffffff;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 22px 24px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -408,8 +409,8 @@
 }
 
 .sd-kpi-value {
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 1.35rem;
+  font-weight: 700;
   color: #0F172A;
   margin-bottom: 6px;
   letter-spacing: -0.02em;
@@ -510,8 +511,8 @@
 
 .sd-panel-title {
   margin: 0;
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 600;
   color: #0F172A;
 }
 

@@ -24,6 +24,7 @@ import {
 import api, { BASE_URL } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
+import Pagination from "../components/Pagination";
 import "../styles/sellerDashboard.css";
 
 const CATEGORIES = [
@@ -87,6 +88,9 @@ const SellerDashboard = () => {
   const [totalProducts, setTotalProducts] = useState(0);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const [productPageSize, setProductPageSize] = useState(10);
+  const [salesPage, setSalesPage] = useState(1);
+  const [salesPageSize, setSalesPageSize] = useState(10);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [filterStatus, setFilterStatus] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -101,6 +105,7 @@ const SellerDashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState("");
   const fileRef = useRef(null);
+  const modalFileRef = useRef(null);
 
   // ── Delete confirmation ───────────────────────────────────
   const [confirmId, setConfirmId] = useState(null);
@@ -160,7 +165,7 @@ const SellerDashboard = () => {
   const loadProducts = async () => {
     try {
       setLoadingProducts(true);
-      const params = { page, limit: 12 };
+      const params = { page, limit: productPageSize };
       if (filterStatus) params.approvalStatus = filterStatus;
       if (searchKeyword.trim()) params.keyword = searchKeyword.trim();
 
@@ -183,7 +188,7 @@ const SellerDashboard = () => {
 
   useEffect(() => {
     loadProducts();
-  }, [page, filterStatus, searchKeyword]);
+  }, [page, productPageSize, filterStatus, searchKeyword]);
 
   // Derived agreed commission rate
   const agreedRate = Number(
@@ -909,27 +914,13 @@ const SellerDashboard = () => {
           )}
 
           {/* Pagination */}
-          {pages > 1 && (
-            <div className="sd-pagination">
-              <button
-                className="sd-btn sd-btn--ghost"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                ← Prev
-              </button>
-              <span>
-                Page {page} of {pages}
-              </span>
-              <button
-                className="sd-btn sd-btn--ghost"
-                disabled={page >= pages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next →
-              </button>
-            </div>
-          )}
+          <Pagination
+            currentPage={page}
+            totalItems={totalProducts}
+            pageSize={productPageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setProductPageSize}
+          />
         </div>
       )}
 
@@ -960,139 +951,209 @@ const SellerDashboard = () => {
               </div>
             )}
 
-            {/* Product Image */}
-            <div className="sd-field">
-              <label>Product Image</label>
-              <div
-                className="sd-upload"
-                onClick={() => {
-                  if (fileRef.current) fileRef.current.value = "";
-                  fileRef.current?.click();
-                }}
-              >
-                {preview ? (
-                  <img src={preview} alt="preview" className="sd-upload-preview" />
-                ) : (
-                  <div className="sd-upload-ph">
-                    <span>📤</span>
-                    <span>Click or drop to upload product photo</span>
-                    <span style={{ fontSize: "11px", color: "#94A3B8" }}>Supports JPG, PNG, WEBP, GIF, AVIF (up to 15MB)</span>
+            {/* 2-Column Standardized Layout: Left (Form Fields) & Right (Media, Live Commission & Status) */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1.2fr 1fr",
+                gap: 20,
+                alignItems: "start",
+                marginTop: 8,
+              }}
+            >
+              {/* Left Column (Form Fields) */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div className="sd-field">
+                  <label>Product Name *</label>
+                  <input
+                    className="sd-input"
+                    placeholder="e.g. Samsung Galaxy S24 Ultra 512GB"
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div className="sd-field">
+                  <label>Brand *</label>
+                  <input
+                    className="sd-input"
+                    placeholder="e.g. Samsung, Apple, Dell"
+                    value={form.brand}
+                    onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div className="sd-field">
+                  <label>Category *</label>
+                  <select
+                    className="sd-select"
+                    value={form.category}
+                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div className="sd-field">
+                    <label>Price (ETB) *</label>
+                    <input
+                      className="sd-input"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={form.price}
+                      onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                      required
+                    />
                   </div>
-                )}
-                {uploading && <div className="sd-upload-overlay">Uploading image…</div>}
-              </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.svg,.avif,.jfif,.bmp"
-                style={{ display: "none" }}
-                onChange={handleFile}
-              />
-            </div>
 
-            <div className="sd-form-row">
-              <div className="sd-field" style={{ gridColumn: "span 2" }}>
-                <label>Product Name *</label>
-                <input
-                  className="sd-input"
-                  placeholder="e.g. Samsung Galaxy S24 Ultra 512GB"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="sd-field">
-                <label>Brand *</label>
-                <input
-                  className="sd-input"
-                  placeholder="e.g. Samsung, Apple, Dell"
-                  value={form.brand}
-                  onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="sd-field">
-              <label>Product Description *</label>
-              <textarea
-                className="sd-input sd-textarea"
-                rows={3}
-                placeholder="Detailed specifications, warranty details, and box contents..."
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="sd-form-row">
-              <div className="sd-field">
-                <label>Category *</label>
-                <select
-                  className="sd-select"
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="sd-field">
-                <label>Gross Price (ETB) *</label>
-                <input
-                  className="sd-input"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={form.price}
-                  onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                  required
-                />
-              </div>
-
-              <div className="sd-field">
-                <label>Stock Quantity</label>
-                <input
-                  className="sd-input"
-                  type="number"
-                  min="0"
-                  value={form.stock}
-                  onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            {/* Live Real-Time CEO Commission & Net Earning Calculator Card */}
-            <div className="sd-calc-card">
-              <div className="sd-calc-title">
-                <span>💡</span>
-                <span>
-                  CEO Commission & Net Earning Breakdown ({commissionType === "percentage" ? `${agreedRate}% rate` : `ETB ${agreedRate} fixed`})
-                </span>
-              </div>
-              <div className="sd-calc-grid">
-                <div className="sd-calc-item">
-                  <span className="sd-calc-label">Customer Price (Gross)</span>
-                  <span className="sd-calc-val">ETB {fmt(formPriceNum)}</span>
+                  <div className="sd-field">
+                    <label>Stock Quantity</label>
+                    <input
+                      className="sd-input"
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={form.stock}
+                      onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div className="sd-calc-item">
-                  <span className="sd-calc-label">
-                    CEO Commission Debited ({commissionType === "percentage" ? `-${agreedRate}%` : `-ETB ${agreedRate}`})
-                  </span>
-                  <span className="sd-calc-val sd-calc-val--comm">
-                    -ETB {fmt(formCommDebited)}
-                  </span>
+
+                <div className="sd-field">
+                  <label>Product Description *</label>
+                  <textarea
+                    className="sd-input sd-textarea"
+                    rows={4}
+                    placeholder="Detailed specifications, warranty details, and box contents..."
+                    value={form.description}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    required
+                  />
                 </div>
-                <div className="sd-calc-item">
-                  <span className="sd-calc-label">Your Net Credit per Sale</span>
-                  <span className="sd-calc-val sd-calc-val--net">
-                    ETB {fmt(formNetEarning)}
-                  </span>
+              </div>
+
+              {/* Right Column (Media & Pricing Summary) */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* Compact Product Image upload card */}
+                <div className="sd-field">
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Product Image</span>
+                    <span style={{ fontSize: "0.75rem", color: "#64748B" }}>Upload or Direct URL</span>
+                  </label>
+                  <div
+                    onClick={() => {
+                      if (fileRef.current) fileRef.current.value = "";
+                      fileRef.current?.click();
+                    }}
+                    style={{
+                      height: 180,
+                      border: "1.5px dashed #CBD5E1",
+                      borderRadius: 8,
+                      background: "#F8FAFC",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      position: "relative",
+                      padding: 8,
+                    }}
+                  >
+                    {preview ? (
+                      <img
+                        src={preview}
+                        alt="Product Preview"
+                        style={{ width: "100%", height: 180, objectFit: "contain" }}
+                        onError={(e) => { e.target.src = "/placeholder.png"; }}
+                      />
+                    ) : form.image ? (
+                      <img
+                        src={form.image.startsWith("http") || form.image.startsWith("data:") ? form.image : `${BASE_URL}${form.image}`}
+                        alt="Product Preview"
+                        style={{ width: "100%", height: 180, objectFit: "contain" }}
+                        onError={(e) => { e.target.src = "/placeholder.png"; }}
+                      />
+                    ) : (
+                      <div style={{ textAlign: "center", color: "#64748B", fontSize: "0.80rem" }}>
+                        <div style={{ fontSize: "2rem", marginBottom: 4 }}>📷</div>
+                        <strong>Click to upload product image</strong>
+                        <div style={{ fontSize: "0.72rem", color: "#94A3B8", marginTop: 2 }}>JPG, PNG, WEBP, GIF (up to 15MB)</div>
+                      </div>
+                    )}
+                    {uploading && (
+                      <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.85)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.80rem", fontWeight: 600, color: "#2563EB" }}>
+                        Uploading image…
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.svg,.avif,.jfif,.bmp"
+                    style={{ display: "none" }}
+                    onChange={handleFile}
+                  />
+                  <input
+                    type="text"
+                    className="sd-input"
+                    placeholder="Or enter image URL (https://...)"
+                    value={form.image}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, image: e.target.value }));
+                      setPreview(e.target.value);
+                    }}
+                    style={{ marginTop: 8, fontSize: "0.80rem" }}
+                  />
+                </div>
+
+                {/* Live CEO Commission Summary Box */}
+                <div className="sd-calc-card" style={{ margin: 0, padding: 12 }}>
+                  <div className="sd-calc-title" style={{ fontSize: "0.78rem" }}>
+                    <span>💡</span>
+                    <span>
+                      Live CEO Commission Breakdown ({commissionType === "percentage" ? `${agreedRate}% rate` : `ETB ${agreedRate} fixed`})
+                    </span>
+                  </div>
+                  <div className="sd-calc-grid" style={{ gap: 8 }}>
+                    <div className="sd-calc-item" style={{ padding: "8px 10px" }}>
+                      <span className="sd-calc-label">Listing Price</span>
+                      <span className="sd-calc-val" style={{ fontSize: "0.88rem" }}>ETB {fmt(formPriceNum)}</span>
+                    </div>
+                    <div className="sd-calc-item" style={{ padding: "8px 10px" }}>
+                      <span className="sd-calc-label">
+                        {commissionType === "percentage" ? `-${agreedRate}% Comm. Debited` : `-ETB ${agreedRate} Comm.`}
+                      </span>
+                      <span className="sd-calc-val sd-calc-val--comm" style={{ fontSize: "0.88rem" }}>
+                        -ETB {fmt(formCommDebited)}
+                      </span>
+                    </div>
+                    <div className="sd-calc-item" style={{ padding: "8px 10px" }}>
+                      <span className="sd-calc-label">Net Seller Credit</span>
+                      <span className="sd-calc-val sd-calc-val--net" style={{ fontSize: "0.88rem" }}>
+                        ETB {fmt(formNetEarning)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Badge */}
+                <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, padding: "10px 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#92400E", fontWeight: 700, fontSize: "0.80rem", marginBottom: 3 }}>
+                    <span>⏳</span> Status: Pending Review / Verification
+                  </div>
+                  <p style={{ margin: 0, fontSize: "0.74rem", color: "#B45309", lineHeight: 1.4 }}>
+                    Seller listings are submitted with <strong>pending</strong> approval status for CEO / Admin verification before going live.
+                  </p>
                 </div>
               </div>
             </div>
@@ -1362,7 +1423,8 @@ const SellerDashboard = () => {
             </div>
 
             {salesData?.itemizedSales && salesData.itemizedSales.length > 0 ? (
-              <div className="sd-table-wrap">
+              <>
+                <div className="sd-table-wrap">
                 <table className="sd-table">
                   <thead>
                     <tr>
@@ -1378,7 +1440,7 @@ const SellerDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {salesData.itemizedSales.map((sale, idx) => (
+                    {salesData.itemizedSales.slice((salesPage - 1) * salesPageSize, salesPage * salesPageSize).map((sale, idx) => (
                       <tr key={idx}>
                         <td>
                           {sale.createdAt
@@ -1428,6 +1490,14 @@ const SellerDashboard = () => {
                   </tbody>
                 </table>
               </div>
+              <Pagination
+                currentPage={salesPage}
+                totalItems={salesData.itemizedSales.length}
+                pageSize={salesPageSize}
+                onPageChange={setSalesPage}
+                onPageSizeChange={setSalesPageSize}
+              />
+            </>
             ) : (
               <div className="sd-empty-state">
                 <span className="sd-empty-state-icon">📊</span>
@@ -1444,7 +1514,7 @@ const SellerDashboard = () => {
       {/* ── 8. Edit / Add Modal (when clicking edit from table) ── */}
       {showModal && (
         <div className="sd-overlay" onClick={closeModal}>
-          <div className="sd-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="sd-modal sd-modal--lg" onClick={(e) => e.stopPropagation()}>
             <div className="sd-modal-header">
               <h2>{editId ? "Edit Product" : "Add New Product"}</h2>
               <button className="sd-modal-close" onClick={closeModal}>
@@ -1464,135 +1534,209 @@ const SellerDashboard = () => {
                 </div>
               )}
 
-              {/* Image */}
-              <div className="sd-field">
-                <label>Product Image</label>
-                <div
-                  className="sd-upload"
-                  onClick={() => {
-                    if (fileRef.current) fileRef.current.value = "";
-                    fileRef.current?.click();
-                  }}
-                >
-                  {preview ? (
-                    <img src={preview} alt="preview" className="sd-upload-preview" />
-                  ) : (
-                    <div className="sd-upload-ph">
-                      <span>📤</span>
-                      <span>Click to upload image</span>
-                      <span style={{ fontSize: "11px", color: "#94A3B8" }}>Supports JPG, PNG, WEBP, GIF, AVIF (up to 15MB)</span>
+ {/* 2-Column Standardized Layout */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1.2fr 1fr",
+                  gap: 20,
+                  alignItems: "start",
+                  marginTop: 8,
+                }}
+              >
+                {/* Left Column (Form Fields) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div className="sd-field">
+                    <label>Product Name *</label>
+                    <input
+                      className="sd-input"
+                      placeholder="e.g. Samsung Galaxy S24 Ultra 512GB"
+                      value={form.name}
+                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="sd-field">
+                    <label>Brand *</label>
+                    <input
+                      className="sd-input"
+                      placeholder="e.g. Samsung, Apple, Dell"
+                      value={form.brand}
+                      onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="sd-field">
+                    <label>Category *</label>
+                    <select
+                      className="sd-select"
+                      value={form.category}
+                      onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                    >
+                      {CATEGORIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div className="sd-field">
+                      <label>Price (ETB) *</label>
+                      <input
+                        className="sd-input"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={form.price}
+                        onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                        required
+                      />
                     </div>
-                  )}
-                  {uploading && <div className="sd-upload-overlay">Uploading…</div>}
-                </div>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.svg,.avif,.jfif,.bmp"
-                  style={{ display: "none" }}
-                  onChange={handleFile}
-                />
-              </div>
 
-              <div className="sd-form-row">
-                <div className="sd-field" style={{ gridColumn: "span 2" }}>
-                  <label>Name *</label>
-                  <input
-                    className="sd-input"
-                    value={form.name}
-                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="sd-field">
-                  <label>Brand *</label>
-                  <input
-                    className="sd-input"
-                    value={form.brand}
-                    onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="sd-field">
-                <label>Description *</label>
-                <textarea
-                  className="sd-input sd-textarea"
-                  rows={3}
-                  value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  required
-                />
-              </div>
-
-              <div className="sd-form-row">
-                <div className="sd-field">
-                  <label>Category *</label>
-                  <select
-                    className="sd-select"
-                    value={form.category}
-                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sd-field">
-                  <label>Price (ETB) *</label>
-                  <input
-                    className="sd-input"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={form.price}
-                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="sd-field">
-                  <label>Stock</label>
-                  <input
-                    className="sd-input"
-                    type="number"
-                    min="0"
-                    value={form.stock}
-                    onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              {/* Calculator breakdown */}
-              <div className="sd-calc-card">
-                <div className="sd-calc-title">
-                  <span>💡</span>
-                  <span>
-                    CEO Commission & Net Price Calculator ({agreedRate}%)
-                  </span>
-                </div>
-                <div className="sd-calc-grid">
-                  <div className="sd-calc-item">
-                    <span className="sd-calc-label">Product Listing Price</span>
-                    <span className="sd-calc-val">ETB {fmt(formPriceNum)}</span>
+                    <div className="sd-field">
+                      <label>Stock Quantity</label>
+                      <input
+                        className="sd-input"
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={form.stock}
+                        onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
+                      />
+                    </div>
                   </div>
-                  <div className="sd-calc-item">
-                    <span className="sd-calc-label">
-                      CEO Agreed Commission (-{agreedRate}%)
-                    </span>
-                    <span className="sd-calc-val sd-calc-val--comm">
-                      -ETB {fmt(formCommDebited)}
-                    </span>
+
+                  <div className="sd-field">
+                    <label>Product Description *</label>
+                    <textarea
+                      className="sd-input sd-textarea"
+                      rows={4}
+                      placeholder="Detailed specifications, warranty details, and box contents..."
+                      value={form.description}
+                      onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                      required
+                    />
                   </div>
-                  <div className="sd-calc-item">
-                    <span className="sd-calc-label">Your Net Earnings</span>
-                    <span className="sd-calc-val sd-calc-val--net">
-                      ETB {fmt(formNetEarning)}
-                    </span>
+                </div>
+
+                {/* Right Column (Media & Pricing Summary) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {/* Compact Product Image upload card */}
+                  <div className="sd-field">
+                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>Product Image</span>
+                      <span style={{ fontSize: "0.75rem", color: "#64748B" }}>Upload or Direct URL</span>
+                    </label>
+                    <div
+                      onClick={() => {
+                        if (modalFileRef.current) modalFileRef.current.value = "";
+                        modalFileRef.current?.click();
+                      }}
+                      style={{
+                        height: 180,
+                        border: "1.5px dashed #CBD5E1",
+                        borderRadius: 8,
+                        background: "#F8FAFC",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        position: "relative",
+                        padding: 8,
+                      }}
+                    >
+                      {preview ? (
+                        <img
+                          src={preview}
+                          alt="Product Preview"
+                          style={{ width: "100%", height: 180, objectFit: "contain" }}
+                          onError={(e) => { e.target.src = "/placeholder.png"; }}
+                        />
+                      ) : form.image ? (
+                        <img
+                          src={form.image.startsWith("http") || form.image.startsWith("data:") ? form.image : `${BASE_URL}${form.image}`}
+                          alt="Product Preview"
+                          style={{ width: "100%", height: 180, objectFit: "contain" }}
+                          onError={(e) => { e.target.src = "/placeholder.png"; }}
+                        />
+                      ) : (
+                        <div style={{ textAlign: "center", color: "#64748B", fontSize: "0.80rem" }}>
+                          <div style={{ fontSize: "2rem", marginBottom: 4 }}>📷</div>
+                          <strong>Click to upload product image</strong>
+                          <div style={{ fontSize: "0.72rem", color: "#94A3B8", marginTop: 2 }}>JPG, PNG, WEBP, GIF (up to 15MB)</div>
+                        </div>
+                      )}
+                      {uploading && (
+                        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.85)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.80rem", fontWeight: 600, color: "#2563EB" }}>
+                          Uploading image…
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      ref={modalFileRef}
+                      type="file"
+                      accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.svg,.avif,.jfif,.bmp"
+                      style={{ display: "none" }}
+                      onChange={handleFile}
+                    />
+                    <input
+                      type="text"
+                      className="sd-input"
+                      placeholder="Or enter image URL (https://...)"
+                      value={form.image}
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, image: e.target.value }));
+                        setPreview(e.target.value);
+                      }}
+                      style={{ marginTop: 8, fontSize: "0.80rem" }}
+                    />
+                  </div>
+
+                  {/* Live CEO Commission Summary Box */}
+                  <div className="sd-calc-card" style={{ margin: 0, padding: 12 }}>
+                    <div className="sd-calc-title" style={{ fontSize: "0.78rem" }}>
+                      <span>💡</span>
+                      <span>
+                        Live CEO Commission Breakdown ({commissionType === "percentage" ? `${agreedRate}% rate` : `ETB ${agreedRate} fixed`})
+                      </span>
+                    </div>
+                    <div className="sd-calc-grid" style={{ gap: 8 }}>
+                      <div className="sd-calc-item" style={{ padding: "8px 10px" }}>
+                        <span className="sd-calc-label">Listing Price</span>
+                        <span className="sd-calc-val" style={{ fontSize: "0.88rem" }}>ETB {fmt(formPriceNum)}</span>
+                      </div>
+                      <div className="sd-calc-item" style={{ padding: "8px 10px" }}>
+                        <span className="sd-calc-label">
+                          {commissionType === "percentage" ? `-${agreedRate}% Comm. Debited` : `-ETB ${agreedRate} Comm.`}
+                        </span>
+                        <span className="sd-calc-val sd-calc-val--comm" style={{ fontSize: "0.88rem" }}>
+                          -ETB {fmt(formCommDebited)}
+                        </span>
+                      </div>
+                      <div className="sd-calc-item" style={{ padding: "8px 10px" }}>
+                        <span className="sd-calc-label">Net Seller Credit</span>
+                        <span className="sd-calc-val sd-calc-val--net" style={{ fontSize: "0.88rem" }}>
+                          ETB {fmt(formNetEarning)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#92400E", fontWeight: 700, fontSize: "0.80rem", marginBottom: 3 }}>
+                      <span>⏳</span> Status: Pending Review / Verification
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.74rem", color: "#B45309", lineHeight: 1.4 }}>
+                      Seller listings are submitted with <strong>pending</strong> approval status for CEO / Admin verification before going live.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1614,6 +1758,7 @@ const SellerDashboard = () => {
                   {saving ? "Saving…" : editId ? "Update Product" : "Submit for Review"}
                 </button>
               </div>
+            
             </form>
           </div>
         </div>

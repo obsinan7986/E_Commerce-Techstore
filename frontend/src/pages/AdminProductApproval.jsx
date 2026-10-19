@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api, { BASE_URL } from "../services/api";
+import Pagination from "../components/Pagination";
 import "../styles/adminProductApproval.css";
 
 const STATUS_LABEL = { pending: "Pending", approved: "Approved", rejected: "Rejected" };
@@ -15,6 +16,7 @@ const AdminProductApproval = () => {
   const [total,     setTotal]     = useState(0);
   const [page,      setPage]      = useState(1);
   const [pages,     setPages]     = useState(1);
+  const [pageSize,  setPageSize]  = useState(10);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState("");
   const [filterSt,  setFilterSt]  = useState("pending");
@@ -30,7 +32,7 @@ const AdminProductApproval = () => {
       setLoading(true);
       setError("");
       const { data } = await api.get("/admin/product-approvals", {
-        params: { status: filterSt, page, limit: 12 },
+        params: { status: filterSt, page, limit: pageSize },
       });
       setProducts(data.products || []);
       setTotal(data.total  || 0);
@@ -42,7 +44,7 @@ const AdminProductApproval = () => {
     }
   };
 
-  useEffect(() => { load(); }, [filterSt, page]);
+  useEffect(() => { load(); }, [filterSt, page, pageSize]);
 
   const handleApprove = async (id) => {
     try {
@@ -149,13 +151,13 @@ const AdminProductApproval = () => {
           </div>
 
           {/* Pagination */}
-          {pages > 1 && (
-            <div className="apa-pagination">
-              <button className="apa-btn apa-btn--nav" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Prev</button>
-              <span>{page} / {pages}</span>
-              <button className="apa-btn apa-btn--nav" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next →</button>
-            </div>
-          )}
+          <Pagination
+            currentPage={page}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </>
       )}
 

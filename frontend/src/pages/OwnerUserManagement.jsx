@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import api, { BASE_URL } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
+import Pagination from "../components/Pagination";
 import "../styles/ownerDashboard.css";
 
 const ROLES     = ["customer", "seller", "admin", "finance", "owner"];
@@ -19,6 +20,7 @@ const OwnerUserManagement = () => {
   const [users,    setUsers]    = useState([]);
   const [total,    setTotal]    = useState(0);
   const [page,     setPage]     = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [pages,    setPages]    = useState(1);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
@@ -50,7 +52,7 @@ const OwnerUserManagement = () => {
     try {
       setLoading(true);
       setError("");
-      const params = { page, limit: 15, keyword, role: filterRole };
+      const params = { page, limit: pageSize, keyword, role: filterRole };
       if (filterSusp !== "") params.isSuspended = filterSusp;
       const { data } = await api.get("/owner/users", { params });
       setUsers(data.users || []);
@@ -63,7 +65,7 @@ const OwnerUserManagement = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, keyword, filterRole, filterSusp]);
+  useEffect(() => { load(); }, [page, pageSize, keyword, filterRole, filterSusp]);
 
   // ── Create user ──────────────────────────────────────────
   const handleCreate = async (e) => {
@@ -265,13 +267,13 @@ const OwnerUserManagement = () => {
           </div>
 
           {/* Pagination */}
-          {pages > 1 && (
-            <div className="od-pagination">
-              <button className="od-btn od-btn--ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Prev</button>
-              <span>{page} / {pages}</span>
-              <button className="od-btn od-btn--ghost" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next →</button>
-            </div>
-          )}
+          <Pagination
+            currentPage={page}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </>
       )}
 
@@ -332,8 +334,11 @@ const OwnerUserManagement = () => {
               <h2>KYC Review — {kycUser.fullName}</h2>
               <button className="od-modal-close" onClick={() => setKycUser(null)}>×</button>
             </div>
-            <div className="od-kyc-docs">
-              {[["National ID – Front", kycUser.kycDocs?.idFront], ["National ID – Back", kycUser.kycDocs?.idBack], ["Selfie", kycUser.kycDocs?.selfie]].map(([label, path]) => (
+            <div className="od-kyc-docs" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              {[
+                ["National ID / Passport (Front)", kycUser.idFrontImage || kycUser.kycDocs?.idFront || kycUser.idDocumentImage],
+                ["National ID / Passport (Back)", kycUser.idBackImage || kycUser.kycDocs?.idBack],
+              ].map(([label, path]) => (
                 <div key={label} className="od-kyc-doc">
                   <p className="od-kyc-doc-label">{label}</p>
                   {path ? (

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   getAdminProducts,
   createAdminProduct,
@@ -9,7 +9,8 @@ import {
 import { getLowStockProducts } from "../services/adminservice";
 import { formatCurrency }      from "../utils/formatters";
 import "../styles/admin.css";
-import { BASE_URL } from "../services/api";
+import api, { BASE_URL } from "../services/api";
+import Pagination from "../components/Pagination";
 
 
 
@@ -58,7 +59,10 @@ const AdminProducts = () => {
   const [stockVal,     setStockVal]     = useState("");
   const [stockSaving,  setStockSaving]  = useState(false);
 
-  const LIMIT = 12;
+  const [pageSize, setPageSize] = useState(10);
+  const [imagePreview, setImagePreview] = useState("");
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const fileInputRef = useRef(null);
 
   const sortParam = () => {
     const map = {
@@ -76,7 +80,7 @@ const AdminProducts = () => {
       setLoading(true);
       setError("");
       const [data, lowData] = await Promise.all([
-        getAdminProducts({ page, limit: LIMIT, keyword: keyword.trim(), category, stockFilter, sort: sortParam() }),
+        getAdminProducts({ page, limit: pageSize, keyword: keyword.trim(), category, stockFilter, sort: sortParam() }),
         getLowStockProducts(),
       ]);
       setProducts(data.products || []);
@@ -88,7 +92,7 @@ const AdminProducts = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, keyword, category, stockFilter, sortBy]); // eslint-disable-line
+  }, [page, pageSize, keyword, category, stockFilter, sortBy]); // eslint-disable-line
 
   useEffect(() => { load(); }, [load]);
 
@@ -98,14 +102,35 @@ const AdminProducts = () => {
   };
 
   /* ── Modal helpers ── */
-  const openCreate = () => { setEditTarget(null); setForm(BLANK); setShowForm(true); };
+  const openCreate = () => { setEditTarget(null); setForm(BLANK); setImagePreview(""); setShowForm(true); };
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImagePreview(URL.createObjectURL(file));
+    try {
+      setUploadingImg(true);
+      const fd = new FormData();
+      fd.append("image", file);
+      const { data } = await api.post("/upload", fd);
+      const path = data.image || data.imageUrl || "";
+      if (path) {
+        setForm((prev) => ({ ...prev, image: path }));
+        flash("success", "Image uploaded successfully.");
+      }
+    } catch {
+      flash("error", "Failed to upload image file. You can enter an image URL directly.");
+    } finally {
+      setUploadingImg(false);
+    }
+  };
   const openEdit   = (p)  => {
     setEditTarget(p._id);
     setForm({ name: p.name, description: p.description, brand: p.brand,
                category: p.category, price: p.price, stock: p.stock, image: p.image || "" });
+    setImagePreview(p.image?.startsWith("http") ? p.image : p.image ? `${BASE_URL}${p.image}` : "");
     setShowForm(true);
   };
-  const closeForm  = () => { setShowForm(false); setEditTarget(null); setForm(BLANK); };
+  const closeForm  = () => { setShowForm(false); setEditTarget(null); setForm(BLANK); setImagePreview(""); };
 
   const handleFormChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -349,72 +374,206 @@ const AdminProducts = () => {
             </table>
           </div>
 
-          {pages > 1 && (
-            <div className="admin-pagination">
-              <span>Page {page} of {pages} · {total} products</span>
-              <div>
-                <button disabled={page <= 1}    onClick={() => setPage((p) => p - 1)}>Previous</button>
-                <button disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next</button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            currentPage={page}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </>
       )}
 
-      {/* Create / Edit Modal */}
+      {/* Create / Edit Modal - Clean 2-Column Layout */}
       {showForm && (
         <div className="admin-modal-overlay" onClick={closeForm}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 860, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
             <div className="admin-modal-header">
               <div>
                 <h2>{editTarget ? "Edit Product" : "Add Product"}</h2>
-                <p>{editTarget ? "Update product details" : "Fill in the product details"}</p>
+                <p>{editTarget ? "Update product details & specifications" : "Fill in the product specifications and pricing"}</p>
               </div>
               <button className="admin-modal-close" onClick={closeForm}>×</button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[
-                { label: "Name *",           name: "name",  type: "text",   placeholder: "Product name" },
-                { label: "Brand *",          name: "brand", type: "text",   placeholder: "Brand" },
-                { label: "Price (ETB) *",    name: "price", type: "number", placeholder: "0", min: 1 },
-                { label: "Stock Quantity",   name: "stock", type: "number", placeholder: "0", min: 0 },
-                { label: "Image path (e.g. /uploads/img.jpg)", name: "image", type: "text", placeholder: "/uploads/..." },
-              ].map(({ label, name, ...rest }) => (
-                <div key={name} className="form-group">
-                  <label>{label}</label>
-                  <input name={name} value={form[name]} onChange={handleFormChange} {...rest} />
-                </div>
-              ))}
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 20 }}>
+                {/* Left Column (Form Fields) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div className="form-group">
+                    <label>Product Name *</label>
+                    <input
+                      name="name"
+                      value={form.name}
+                      onChange={handleFormChange}
+                      placeholder="e.g. iPhone 15 Pro 256GB"
+                      required
+                    />
+                  </div>
 
-              <div className="form-group">
-                <label>Category *</label>
-                <select name="category" value={form.category} onChange={handleFormChange} className="admin-select" style={{ height: 42 }}>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                  <div className="form-group">
+                    <label>Brand *</label>
+                    <input
+                      name="brand"
+                      value={form.brand}
+                      onChange={handleFormChange}
+                      placeholder="e.g. Apple, Samsung, Dell"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Category *</label>
+                    <select
+                      name="category"
+                      value={form.category}
+                      onChange={handleFormChange}
+                      className="admin-select"
+                      style={{ height: 40 }}
+                    >
+                      {CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div className="form-group">
+                      <label>Price (ETB) *</label>
+                      <input
+                        name="price"
+                        type="number"
+                        min="1"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={form.price}
+                        onChange={handleFormChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Stock Quantity</label>
+                      <input
+                        name="stock"
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={form.stock}
+                        onChange={handleFormChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Description *</label>
+                    <textarea
+                      name="description"
+                      value={form.description}
+                      onChange={handleFormChange}
+                      rows={3}
+                      placeholder="Detailed product features and specifications..."
+                      style={{ padding: "8px 12px", border: "1.5px solid #D1D5DB", borderRadius: 8, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column (Media & Pricing Summary) */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {/* Compact Product Image upload card (height: 180px, object-fit: contain) */}
+                  <div className="form-group">
+                    <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>Product Image</span>
+                      <span style={{ fontSize: "0.75rem", color: "#64748B" }}>Upload or Direct URL</span>
+                    </label>
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        height: 180,
+                        border: "1.5px dashed #CBD5E1",
+                        borderRadius: 8,
+                        background: "#F8FAFC",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        position: "relative",
+                        padding: 8,
+                      }}
+                    >
+                      {imagePreview ? (
+                        <img
+                          src={imagePreview}
+                          alt="Product Preview"
+                          style={{ width: "100%", height: 180, objectFit: "contain" }}
+                          onError={(e) => { e.target.src = "/placeholder.png"; }}
+                        />
+                      ) : (
+                        <div style={{ textAlign: "center", color: "#64748B", fontSize: "0.80rem" }}>
+                          <div style={{ fontSize: "2rem", marginBottom: 4 }}>📷</div>
+                          <strong>Click to upload image</strong>
+                          <div style={{ fontSize: "0.72rem", color: "#94A3B8", marginTop: 2 }}>JPG, PNG, WEBP (up to 10MB)</div>
+                        </div>
+                      )}
+                      {uploadingImg && (
+                        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.85)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.80rem", fontWeight: 600, color: "#2563EB" }}>
+                          Uploading…
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={handleImageUpload}
+                    />
+
+                    <input
+                      name="image"
+                      type="text"
+                      placeholder="Or enter image URL (https://...)"
+                      value={form.image}
+                      onChange={(e) => {
+                        handleFormChange(e);
+                        setImagePreview(e.target.value);
+                      }}
+                      style={{ marginTop: 8, fontSize: "0.80rem" }}
+                    />
+                  </div>
+
+                  {/* Status & Review Notice Box */}
+                  <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, padding: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#166534", fontWeight: 700, fontSize: "0.82rem", marginBottom: 4 }}>
+                      <span>✓</span> Status: Approved & Live Immediately
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: "#15803D", lineHeight: 1.4 }}>
+                      Administrator listings bypass approval queues and are instantly published to the storefront.
+                    </p>
+                  </div>
+
+                  {/* Stock Level Quick Indicator */}
+                  {form.stock !== "" && (
+                    <div style={{
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      fontSize: "0.80rem",
+                      fontWeight: 600,
+                      background: Number(form.stock) === 0 ? "#FEF2F2" : Number(form.stock) <= 9 ? "#FFFBEB" : "#F0FDF4",
+                      color: Number(form.stock) === 0 ? "#B91C1C" : Number(form.stock) <= 9 ? "#92400E" : "#166534",
+                      border: `1px solid ${Number(form.stock) === 0 ? "#FCA5A5" : Number(form.stock) <= 9 ? "#FDE68A" : "#86EFAC"}`
+                    }}>
+                      {Number(form.stock) === 0 ? "✗ Out of Stock (0 units)" : Number(form.stock) <= 9 ? `⚠ Low Stock (${form.stock} units)` : `✓ In Stock (${form.stock} units)`}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>Description *</label>
-                <textarea
-                  name="description" value={form.description} onChange={handleFormChange}
-                  rows={3} placeholder="Product description…"
-                  style={{ padding: "10px 13px", border: "1.5px solid #D1D5DB", borderRadius: 8, fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
-                />
-              </div>
-
-              {/* Stock hint */}
-              {form.stock !== "" && (
-                <div style={{ padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  background: Number(form.stock) === 0 ? "#FEF2F2" : Number(form.stock) <= 9 ? "#FFFBEB" : "#F0FDF4",
-                  color:      Number(form.stock) === 0 ? "#B91C1C" : Number(form.stock) <= 9 ? "#92400E" : "#166534",
-                }}>
-                  {Number(form.stock) === 0 ? "✗ Out of Stock" : Number(form.stock) <= 9 ? `⚠ Low Stock (${form.stock} units)` : `✓ In Stock (${form.stock} units)`}
-                </div>
-              )}
-
-              <div className="admin-modal-actions">
-                <button type="submit" className="admin-btn admin-btn-primary" disabled={formLoading}>
+              <div className="admin-modal-actions" style={{ marginTop: 8 }}>
+                <button type="submit" className="admin-btn admin-btn-primary" disabled={formLoading || uploadingImg}>
                   {formLoading ? "Saving…" : editTarget ? "Save Changes" : "Create Product"}
                 </button>
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={closeForm}>Cancel</button>

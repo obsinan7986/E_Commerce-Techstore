@@ -286,11 +286,14 @@ const Profile = () => {
   };
 
   // ── Tab 2: "Become a Seller" KYC State ────────────────────
-  const fileInputRef = useRef(null);
+  const frontInputRef = useRef(null);
+  const backInputRef = useRef(null);
   const [storeName,        setStoreName]        = useState(user?.storeName || "");
   const [nationalIdNumber, setNationalIdNumber] = useState(user?.nationalIdNumber || "");
-  const [docFile,          setDocFile]          = useState(null);
-  const [docPreview,       setDocPreview]       = useState("");
+  const [frontFile,        setFrontFile]        = useState(null);
+  const [frontPreview,     setFrontPreview]     = useState("");
+  const [backFile,         setBackFile]         = useState(null);
+  const [backPreview,      setBackPreview]      = useState("");
   const [sellerSubmitting, setSellerSubmitting] = useState(false);
   const [sellerError,      setSellerError]      = useState("");
   const [sellerSuccess,    setSellerSuccess]    = useState("");
@@ -301,17 +304,29 @@ const Profile = () => {
     if (user?.nationalIdNumber) setNationalIdNumber(user.nationalIdNumber);
   }, [user]);
 
-  const handleFileChange = (e) => {
+  const handleFrontChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setDocFile(file);
+    setFrontFile(file);
     setSellerError("");
 
     if (file.type.startsWith("image/")) {
-      const url = URL.createObjectURL(file);
-      setDocPreview(url);
+      setFrontPreview(URL.createObjectURL(file));
     } else {
-      setDocPreview(file.name);
+      setFrontPreview(file.name);
+    }
+  };
+
+  const handleBackChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBackFile(file);
+    setSellerError("");
+
+    if (file.type.startsWith("image/")) {
+      setBackPreview(URL.createObjectURL(file));
+    } else {
+      setBackPreview(file.name);
     }
   };
 
@@ -328,8 +343,9 @@ const Profile = () => {
       setSellerError("National ID / Trade License Number is required.");
       return;
     }
-    if (!docFile && !user?.idDocumentImage) {
-      setSellerError("Please upload a photo or document of your National ID or Trade License.");
+    const hasFront = frontFile || user?.idFrontImage || user?.kycDocs?.idFront || user?.idDocumentImage;
+    if (!hasFront) {
+      setSellerError("Please upload National ID / Passport (Front).");
       return;
     }
 
@@ -338,8 +354,12 @@ const Profile = () => {
       const fd = new FormData();
       fd.append("storeName", storeName.trim());
       fd.append("nationalIdNumber", nationalIdNumber.trim());
-      if (docFile) {
-        fd.append("idDocumentImage", docFile);
+      if (frontFile) {
+        fd.append("idFront", frontFile);
+        fd.append("idDocumentImage", frontFile); // backwards compat
+      }
+      if (backFile) {
+        fd.append("idBack", backFile);
       }
 
       const { data } = await api.post("/seller/kyc", fd, {
@@ -662,43 +682,120 @@ const Profile = () => {
                     />
                   </div>
 
-                  {/* Field 3: National ID / Identity Document Image */}
+                  {/* Field 3: 2-Column Side-by-Side ID Front & Back Upload Grid */}
                   <div className="form-group">
-                    <label>
-                      National ID / Identity Document Image <span className="auth-required">*</span>
+                    <label style={{ display: "block", marginBottom: 8 }}>
+                      National ID / Identity Documents <span className="auth-required">*</span>
                     </label>
-                    <div
-                      className={`file-upload-box ${docFile || user.idDocumentImage ? "has-file" : ""}`}
-                      onClick={() => !isPendingKYC && !sellerSubmitting && fileInputRef.current?.click()}
-                    >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*,.pdf"
-                        style={{ display: "none" }}
-                        onChange={handleFileChange}
-                        disabled={isPendingKYC || sellerSubmitting}
-                      />
-                      <FiUploadCloud size={36} className="file-upload-icon" />
-                      {docFile ? (
-                        <div className="file-preview-info">
-                          <span className="file-name">Selected: {docFile.name}</span>
-                          <span className="file-subtext">Click to change file</span>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                      {/* Slot 1: Front */}
+                      <div>
+                        <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155", marginBottom: 6 }}>
+                          National ID / Passport (Front) <span className="auth-required">*</span>
                         </div>
-                      ) : user.idDocumentImage ? (
-                        <div className="file-preview-info">
-                          <span className="file-name">Document already uploaded</span>
-                          <span className="file-subtext">Click to replace document</span>
+                        <div
+                          className={`file-upload-box ${(frontFile || user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage) ? "has-file" : ""}`}
+                          onClick={() => !isPendingKYC && !sellerSubmitting && frontInputRef.current?.click()}
+                          style={{ minHeight: 120, padding: 12, cursor: isPendingKYC || sellerSubmitting ? "not-allowed" : "pointer" }}
+                        >
+                          <input
+                            ref={frontInputRef}
+                            type="file"
+                            accept="image/*,.pdf"
+                            style={{ display: "none" }}
+                            onChange={handleFrontChange}
+                            disabled={isPendingKYC || sellerSubmitting}
+                          />
+                          {frontPreview && frontFile?.type.startsWith("image/") ? (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                              <img src={frontPreview} alt="Front Preview" style={{ width: "100%", height: 80, objectFit: "contain", borderRadius: 6 }} />
+                              <span style={{ fontSize: "0.75rem", color: "#2563EB", fontWeight: 600 }}>Change Front Photo</span>
+                            </div>
+                          ) : frontFile ? (
+                            <div className="file-preview-info">
+                              <span className="file-name">Selected: {frontFile.name}</span>
+                              <span className="file-subtext">Click to change</span>
+                            </div>
+                          ) : (user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage) ? (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                              <img
+                                src={
+                                  (user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage).startsWith("http")
+                                    ? (user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage)
+                                    : `${BASE_URL}${user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage}`
+                                }
+                                alt="Front Document"
+                                style={{ width: "100%", height: 80, objectFit: "contain", borderRadius: 6 }}
+                                onError={(e) => { e.target.style.display = "none"; }}
+                              />
+                              <span className="file-name" style={{ fontSize: "0.78rem" }}>Front ID Uploaded</span>
+                              <span className="file-subtext" style={{ fontSize: "0.72rem" }}>Click to replace</span>
+                            </div>
+                          ) : (
+                            <div className="file-preview-info" style={{ textAlign: "center" }}>
+                              <FiUploadCloud size={28} className="file-upload-icon" />
+                              <span className="file-maintext" style={{ fontSize: "0.82rem", display: "block" }}>Upload Front Side *</span>
+                              <span className="file-subtext" style={{ fontSize: "0.72rem" }}>PNG, JPG up to 10MB</span>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="file-preview-info">
-                          <span className="file-maintext">Click to browse or drag and drop your document</span>
-                          <span className="file-subtext">PNG, JPG, JPEG, or PDF up to 10MB</span>
+                      </div>
+
+                      {/* Slot 2: Back */}
+                      <div>
+                        <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155", marginBottom: 6 }}>
+                          National ID / Passport (Back) <span className="auth-required">*</span>
                         </div>
-                      )}
+                        <div
+                          className={`file-upload-box ${(backFile || user.idBackImage || user.kycDocs?.idBack) ? "has-file" : ""}`}
+                          onClick={() => !isPendingKYC && !sellerSubmitting && backInputRef.current?.click()}
+                          style={{ minHeight: 120, padding: 12, cursor: isPendingKYC || sellerSubmitting ? "not-allowed" : "pointer" }}
+                        >
+                          <input
+                            ref={backInputRef}
+                            type="file"
+                            accept="image/*,.pdf"
+                            style={{ display: "none" }}
+                            onChange={handleBackChange}
+                            disabled={isPendingKYC || sellerSubmitting}
+                          />
+                          {backPreview && backFile?.type.startsWith("image/") ? (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                              <img src={backPreview} alt="Back Preview" style={{ width: "100%", height: 80, objectFit: "contain", borderRadius: 6 }} />
+                              <span style={{ fontSize: "0.75rem", color: "#2563EB", fontWeight: 600 }}>Change Back Photo</span>
+                            </div>
+                          ) : backFile ? (
+                            <div className="file-preview-info">
+                              <span className="file-name">Selected: {backFile.name}</span>
+                              <span className="file-subtext">Click to change</span>
+                            </div>
+                          ) : (user.idBackImage || user.kycDocs?.idBack) ? (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                              <img
+                                src={
+                                  (user.idBackImage || user.kycDocs?.idBack).startsWith("http")
+                                    ? (user.idBackImage || user.kycDocs?.idBack)
+                                    : `${BASE_URL}${user.idBackImage || user.kycDocs?.idBack}`
+                                }
+                                alt="Back Document"
+                                style={{ width: "100%", height: 80, objectFit: "contain", borderRadius: 6 }}
+                                onError={(e) => { e.target.style.display = "none"; }}
+                              />
+                              <span className="file-name" style={{ fontSize: "0.78rem" }}>Back ID Uploaded</span>
+                              <span className="file-subtext" style={{ fontSize: "0.72rem" }}>Click to replace</span>
+                            </div>
+                          ) : (
+                            <div className="file-preview-info" style={{ textAlign: "center" }}>
+                              <FiUploadCloud size={28} className="file-upload-icon" />
+                              <span className="file-maintext" style={{ fontSize: "0.82rem", display: "block" }}>Upload Back Side *</span>
+                              <span className="file-subtext" style={{ fontSize: "0.72rem" }}>PNG, JPG up to 10MB</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <small className="field-caption">
-                      Upload a clear photo of your national ID, passport, or trade license. This is required for verification.
+                    <small className="field-caption" style={{ display: "block", marginTop: 8 }}>
+                      Upload clear photos of both Front and Back of your national ID, passport, or trade license.
                     </small>
                   </div>
 

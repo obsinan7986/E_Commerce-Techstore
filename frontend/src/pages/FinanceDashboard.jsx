@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { getFinanceDashboard } from "../services/adminservice";
 import api from "../services/api";
+import Pagination from "../components/Pagination";
 import "../styles/financeDashboard.css";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -35,6 +36,8 @@ const FinanceDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
   const [approvingId, setApprovingId] = useState(null);
+  const [ledgerPage, setLedgerPage] = useState(1);
+  const [ledgerLimit, setLedgerLimit] = useState(10);
 
   const handleApprovePayout = async (payoutId, amount) => {
     try {
@@ -337,7 +340,8 @@ const FinanceDashboard = () => {
         {!(d.ledgerTransactions?.length) ? (
           <div className="fd-empty">No transaction splits recorded yet</div>
         ) : (
-          <div className="fd-table-wrap">
+          <>
+            <div className="fd-table-wrap">
             <table className="fd-table">
               <thead>
                 <tr>
@@ -353,7 +357,7 @@ const FinanceDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {(d.ledgerTransactions || []).map((t) => {
+                {(d.ledgerTransactions || []).slice((ledgerPage - 1) * ledgerLimit, ledgerPage * ledgerLimit).map((t) => {
                   const sellers = (t.orderItems || [])
                     .map((item) => item.seller?.fullName)
                     .filter(Boolean);
@@ -409,6 +413,17 @@ const FinanceDashboard = () => {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={ledgerPage}
+            totalItems={d.ledgerTransactions?.length || 0}
+            pageSize={ledgerLimit}
+            onPageChange={setLedgerPage}
+            onPageSizeChange={(newLim) => {
+              setLedgerLimit(newLim);
+              setLedgerPage(1);
+            }}
+          />
+          </>
         )}
       </div>
 

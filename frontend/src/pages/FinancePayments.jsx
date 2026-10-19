@@ -12,6 +12,7 @@ import {
   financeMarkRefund,
 } from "../services/adminservice";
 import { BASE_URL } from "../services/api";
+import Pagination from "../components/Pagination";
 import "../styles/financePayments.css";
 
 const MANUAL_METHODS = ["CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
@@ -39,6 +40,7 @@ const FinancePayments = () => {
   const [total,     setTotal]     = useState(0);
   const [page,      setPage]      = useState(1);
   const [pages,     setPages]     = useState(1);
+  const [limit,     setLimit]     = useState(10);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState("");
   const [msg,       setMsg]       = useState({ type: "", text: "" });
@@ -68,7 +70,7 @@ const FinancePayments = () => {
     try {
       setLoading(true);
       setError("");
-      const res = await getFinancePayments({ page, limit: 15, keyword, paymentStatus, paymentMethod });
+      const res = await getFinancePayments({ page, limit, keyword, paymentStatus, paymentMethod });
       setPayments(res.payments || []);
       setTotal(res.total  || 0);
       setPages(res.pages  || 1);
@@ -79,7 +81,7 @@ const FinancePayments = () => {
     }
   };
 
-  useEffect(() => { load(); }, [page, paymentStatus, paymentMethod]);
+  useEffect(() => { load(); }, [page, limit, paymentStatus, paymentMethod]);
 
   const handleSearch = (e) => { e.preventDefault(); setPage(1); load(); };
 
@@ -293,13 +295,16 @@ const FinancePayments = () => {
             })}
           </div>
 
-          {pages > 1 && (
-            <div className="fp-pagination">
-              <button disabled={page <= 1}    onClick={() => setPage(p => p - 1)}>← Prev</button>
-              <span>{page} / {pages}</span>
-              <button disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next →</button>
-            </div>
-          )}
+          <Pagination
+            currentPage={page}
+            totalItems={total}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(newLim) => {
+              setLimit(newLim);
+              setPage(1);
+            }}
+          />
         </>
       )}
 

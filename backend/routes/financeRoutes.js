@@ -11,12 +11,14 @@ import {
   getFinanceStats,
   getFinancePayouts,
   approveFinancePayout,
+  getFinanceReport,
 } from "../controllers/financeController.js";
 
 const router     = express.Router();
 const financeOnly = [protect, requireRole("finance", "owner")];
 
 router.get(   "/dashboard",                       ...financeOnly, getFinanceDashboard);
+router.get(   "/report",                          ...financeOnly, getFinanceReport);
 router.get(   "/payments",                        ...financeOnly, getFinancePayments);
 router.get(   "/stats",                           ...financeOnly, getFinanceStats);
 router.get(   "/payouts",                         ...financeOnly, getFinancePayouts);

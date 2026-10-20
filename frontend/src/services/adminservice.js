@@ -236,6 +236,11 @@ export const getSellerReviews = async (params = {}) => {
 // FINANCE
 // ==========================================
 
+export const getFinanceReport = async (params = {}) => {
+  const { data } = await api.get("/finance/report", { params });
+  return data;
+};
+
 export const getFinanceDashboard = async () => {
   const { data } = await api.get("/finance/dashboard");
   return data;

@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -421,8 +422,33 @@ const Profile = () => {
           {/* 1. Top Header Card (Royal Blue Background) */}
           <div className="cust-sidebar-header">
             {/* Centered circular avatar (64px) with pink/rose background (#E11D48) */}
-            <div className="cust-avatar-circle">
-              {userInitial}
+            <div style={{ position: "relative", width: 68, height: 68, margin: "0 auto 12px" }}>
+              <div className="cust-avatar-circle" style={{ width: "100%", height: "100%", overflow: "hidden", margin: 0 }}>
+                {(user.avatar || user.profileImage) ? (
+                  <img
+                    src={user.avatar || user.profileImage}
+                    alt={user.fullName || "User"}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  userInitial
+                )}
+              </div>
+              <label
+                htmlFor="profile-avatar-upload"
+                className="cust-avatar-camera-btn"
+                title="Upload Profile Picture"
+              >
+                {uploadingAvatar ? "⏳" : "📷"}
+              </label>
+              <input
+                id="profile-avatar-upload"
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleAvatarUpload}
+                disabled={uploadingAvatar}
+              />
             </div>
 
             {/* Bold white user name */}

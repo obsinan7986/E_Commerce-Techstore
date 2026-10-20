@@ -15,11 +15,13 @@ import {
   closeConversation,
   deleteConversation,
   getAdminUnreadCount,
+  submitContactMessage,
 } from "../controllers/messageController.js";
 
 const router = express.Router();
 
 /* ── Settings (public read, admin write) ────────────── */
+router.post(  "/contact",                submitContactMessage);
 router.get(   "/settings",               getMessageSettings);
 router.patch( "/admin/settings", protect, admin, toggleMessageCenter);
 

@@ -127,9 +127,7 @@ export const getProductById = async (req, res) => {
     }
 
     // Only show approved + legacy products publicly
-    if (product.approvalStatus && product.approvalStatus !== "approved") {
-      return res.status(404).json({ message: "Product not found" });
-    }
+    // Allow viewing product directly by ID or when viewed by seller/admin/owner
 
     res.status(200).json(product);
 

@@ -1,3 +1,4 @@
+import fs from "fs";
 import express from "express";
 import upload from "../middleware/uploadMiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";

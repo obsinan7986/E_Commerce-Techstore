@@ -8,8 +8,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
-import { getFinanceDashboard } from "../services/adminservice";
-import api from "../services/api";
+import {
+  getFinanceDashboard,
+  getFinanceReport,
+  financeVerifyPayment,
+} from "../services/adminservice";
+import api, { BASE_URL } from "../services/api";
 import Pagination from "../components/Pagination";
 import "../styles/financeDashboard.css";
 
@@ -36,8 +40,28 @@ const FinanceDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
   const [approvingId, setApprovingId] = useState(null);
+  const [verifyingOrderId, setVerifyingOrderId] = useState(null);
   const [ledgerPage, setLedgerPage] = useState(1);
   const [ledgerLimit, setLedgerLimit] = useState(10);
+
+  // Date filters & Excel export
+  const [exportPeriod, setExportPeriod] = useState("all");
+  const [exportStartDate, setExportStartDate] = useState("");
+  const [exportEndDate, setExportEndDate] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Screenshot modal preview
+  const [previewScreenshot, setPreviewScreenshot] = useState(null);
+
+  // Reject modal state
+  const [rejectModalOrder, setRejectModalOrder] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const screenshotSrc = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http") || path.startsWith("data:")) return path;
+    return `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  };
 
   const handleApprovePayout = async (payoutId, amount) => {
     try {
@@ -49,6 +73,92 @@ const FinanceDashboard = () => {
       toast.error(err.response?.data?.message || "Failed to approve payout request.");
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const handleVerifyManualPayment = async (orderId, action, adminNote = "") => {
+    try {
+      setVerifyingOrderId(orderId);
+      const res = await financeVerifyPayment(orderId, action, adminNote);
+      toast.success(res.message || `Payment ${action === "verify" ? "approved & verified" : "rejected"} successfully.`);
+      setRejectModalOrder(null);
+      setRejectReason("");
+      await load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || `Failed to ${action} payment.`);
+    } finally {
+      setVerifyingOrderId(null);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      const params = {};
+      if (exportPeriod !== "custom") {
+        params.period = exportPeriod;
+      } else {
+        if (exportStartDate) params.startDate = exportStartDate;
+        if (exportEndDate) params.endDate = exportEndDate;
+      }
+
+      const res = await getFinanceReport(params);
+      const rows = res.report || [];
+      if (rows.length === 0) {
+        toast.info("No transaction records found for the selected date range.");
+        return;
+      }
+
+      const escapeCsv = (val) => {
+        if (val === null || val === undefined) return '""';
+        return `"${String(val).replace(/"/g, '""')}"`;
+      };
+
+      const headers = [
+        "Transaction/Order ID",
+        "Date & Time",
+        "Customer Name",
+        "Email",
+        "Payment Method",
+        "Gross Amount (ETB)",
+        "Platform Commission (ETB)",
+        "Net Seller Payout (ETB)",
+        "Payment Status",
+        "Verified By",
+      ];
+
+      const csvLines = [
+        headers.map(escapeCsv).join(","),
+        ...rows.map((r) => [
+          escapeCsv(r.orderId),
+          escapeCsv(new Date(r.createdAt).toLocaleString("en-US")),
+          escapeCsv(r.customerName),
+          escapeCsv(r.customerEmail),
+          escapeCsv(r.paymentMethod),
+          r.grossAmount,
+          r.commissionAmount,
+          r.sellerNetAmount,
+          escapeCsv(r.paymentStatus),
+          escapeCsv(r.verifiedBy),
+        ].join(",")),
+      ];
+
+      const csvString = "\uFEFF" + csvLines.join("\r\n");
+      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      link.href = url;
+      link.download = `OICT_TechStore_Finance_Report_${dateStr}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${rows.length} transactions to CSV successfully!`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to generate CSV report.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -76,18 +186,65 @@ const FinanceDashboard = () => {
 
   const d = data || {};
   const maxMonthly = Math.max(...(d.monthlyRevenue || []).map(m => m.total), 1);
+  const pendingOrders = d.pendingManualOrders || [];
 
   return (
     <div className="fd-page">
 
-      {/* Header Toolbar */}
+      {/* Header Toolbar with Export & Date Filters */}
       <div className="fd-header" style={{ marginBottom: 20 }}>
         <div>
-          <p style={{ margin: 0, color: "#64748B", fontSize: "0.95rem" }}>
-            Welcome, <strong>{user?.fullName}</strong> · Gross revenue, debited CEO commission margin & seller liabilities
+          <h1 style={{ margin: 0, fontSize: "1.45rem", fontWeight: 800, color: "#0F172A" }}>
+            Finance &amp; Treasury Dashboard
+          </h1>
+          <p style={{ margin: "4px 0 0", color: "#64748B", fontSize: "0.95rem" }}>
+            Welcome, <strong>{user?.fullName}</strong> · Real-time ledger, commission settlement &amp; payment verification
           </p>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
+
+        {/* Date Filter & Export Controls */}
+        <div className="fd-filter-toolbar">
+          <select
+            className="fd-filter-select"
+            value={exportPeriod}
+            onChange={(e) => setExportPeriod(e.target.value)}
+          >
+            <option value="all">All Time Transactions</option>
+            <option value="today">Today / Daily Report</option>
+            <option value="week">This Week (Last 7 Days)</option>
+            <option value="month">This Month (Last 30 Days)</option>
+            <option value="custom">Specific Date Range</option>
+          </select>
+
+          {exportPeriod === "custom" && (
+            <>
+              <input
+                type="date"
+                className="fd-date-input"
+                value={exportStartDate}
+                onChange={(e) => setExportStartDate(e.target.value)}
+                title="Start Date"
+              />
+              <span style={{ color: "#94A3B8" }}>to</span>
+              <input
+                type="date"
+                className="fd-date-input"
+                value={exportEndDate}
+                onChange={(e) => setExportEndDate(e.target.value)}
+                title="End Date"
+              />
+            </>
+          )}
+
+          <button
+            type="button"
+            className="fd-export-btn"
+            onClick={handleExportCsv}
+            disabled={isExporting}
+          >
+            {isExporting ? "⏳ Exporting…" : "📊 Export to Excel (.csv)"}
+          </button>
+
           <button className="fd-refresh-btn" onClick={load}>↻ Refresh</button>
           <Link to="/finance/payments" className="fd-primary-btn">View All Payments →</Link>
         </div>
@@ -129,19 +286,137 @@ const FinanceDashboard = () => {
         </div>
       </div>
 
-      {/* Manual payment queue alert */}
-      {(d.manualPending || 0) > 0 && (
-        <div className="fd-alert">
-          <span>⚠️</span>
+      {/* ── Payment Verification & Approval Table (Direct inside FinanceDashboard) ── */}
+      <div className="fd-card fd-card--verification" style={{ marginBottom: 20 }}>
+        <div className="fd-card-header">
           <div>
-            <strong>{d.manualPending} manual payment{d.manualPending !== 1 ? "s" : ""} awaiting verification</strong>
-            <span>Review and verify or reject customer payment screenshots.</span>
+            <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span>📋 Manual Payment Verification &amp; Approval</span>
+              {pendingOrders.length > 0 && (
+                <span className="fd-badge fd-badge--pending" style={{ fontSize: 12 }}>
+                  {pendingOrders.length} Pending Approval
+                </span>
+              )}
+            </h2>
+            <span style={{ fontSize: "0.82rem", color: "#6B7280" }}>
+              Verify customer receipts from Telebirr, CBE Birr, Awash Bank, or M-Pesa. Approving sets status to Paid, confirms the order, and settles CEO commission.
+            </span>
           </div>
-          <Link to="/finance/payments?paymentMethod=manual" className="fd-alert-btn">
-            Verify Now →
-          </Link>
+          <button className="fd-refresh-btn" onClick={load} style={{ fontSize: 12 }}>
+            ↻ Refresh Queue
+          </button>
         </div>
-      )}
+
+        {pendingOrders.length === 0 ? (
+          <div className="fd-empty" style={{ padding: "28px 20px" }}>
+            <span style={{ fontSize: 26, display: "block", marginBottom: 6 }}>✅</span>
+            No manual payments awaiting verification. All customer receipts are up to date!
+          </div>
+        ) : (
+          <div className="fd-table-wrap">
+            <table className="fd-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Payment Method</th>
+                  <th style={{ color: "#0F172A" }}>Amount (ETB)</th>
+                  <th>Receipt Screenshot</th>
+                  <th>Submitted At</th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingOrders.map((ord) => {
+                  const cust = ord.user || {};
+                  const isActing = verifyingOrderId === ord._id;
+                  const screenshot = ord.manualPayment?.screenshotUrl;
+
+                  return (
+                    <tr key={ord._id}>
+                      <td>
+                        <Link to={`/finance/payments?orderId=${ord._id}`} className="fd-order-link">
+                          #{ord._id.toString().slice(-8).toUpperCase()}
+                        </Link>
+                      </td>
+                      <td>
+                        <div className="fd-customer-cell">
+                          <strong>{cust.fullName || "Customer"}</strong>
+                          <small>{cust.email || cust.phone || "—"}</small>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="fd-badge fd-badge--pending" style={{ fontWeight: 600 }}>
+                          {ord.paymentMethod}
+                        </span>
+                      </td>
+                      <td>
+                        <strong style={{ fontSize: "1.05rem", color: "#0F172A" }}>
+                          ETB {fmt(ord.totalPrice)}
+                        </strong>
+                      </td>
+                      <td>
+                        {screenshot ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <img
+                              src={screenshotSrc(screenshot)}
+                              alt="Receipt"
+                              className="fd-receipt-thumb"
+                              onClick={() => setPreviewScreenshot(screenshotSrc(screenshot))}
+                              title="Click to view full receipt"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setPreviewScreenshot(screenshotSrc(screenshot))}
+                              style={{ background: "none", border: "none", color: "#2563EB", cursor: "pointer", fontSize: 12, fontWeight: 600, padding: 0 }}
+                            >
+                              🔍 View
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ color: "#9CA3AF", fontSize: 12 }}>No image attached</span>
+                        )}
+                      </td>
+                      <td style={{ fontSize: 12, color: "#6B7280", whiteSpace: "nowrap" }}>
+                        {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }) : "—"}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <div style={{ display: "inline-flex", gap: 8 }}>
+                          <button
+                            type="button"
+                            className="fd-approve-btn"
+                            onClick={() => handleVerifyManualPayment(ord._id, "verify")}
+                            disabled={isActing}
+                          >
+                            {isActing ? "Processing…" : "✓ Approve Payment"}
+                          </button>
+                          <button
+                            type="button"
+                            className="fd-reject-btn"
+                            onClick={() => {
+                              setRejectModalOrder(ord);
+                              setRejectReason("");
+                            }}
+                            disabled={isActing}
+                          >
+                            ✕ Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <div className="fd-row">
 
@@ -330,7 +605,7 @@ const FinanceDashboard = () => {
       <div className="fd-card fd-card--recent">
         <div className="fd-card-header">
           <div>
-            <h2>Automated Commission & Revenue Split Ledger</h2>
+            <h2>Automated Commission &amp; Revenue Split Ledger</h2>
             <span style={{ fontSize: "0.82rem", color: "#6B7280" }}>
               Live split: debits CEO commission from product price and credits platform finance ledger
             </span>
@@ -439,6 +714,74 @@ const FinanceDashboard = () => {
           <span>↩</span><div><strong>Refunds</strong><span>Refunded orders</span></div>
         </Link>
       </div>
+
+      {/* ── Receipt Screenshot Preview Modal ── */}
+      {previewScreenshot && (
+        <div className="fd-modal-backdrop" onClick={() => setPreviewScreenshot(null)}>
+          <div className="fd-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 680, textAlign: "center" }}>
+            <button className="fd-modal-close" onClick={() => setPreviewScreenshot(null)}>✕</button>
+            <h3 style={{ margin: "0 0 16px", color: "#0F172A", fontSize: "1.1rem" }}>Payment Receipt Screenshot</h3>
+            <img
+              src={previewScreenshot}
+              alt="Payment Receipt"
+              style={{ maxWidth: "100%", maxHeight: "72vh", objectFit: "contain", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+            />
+            <div style={{ marginTop: 16 }}>
+              <a
+                href={previewScreenshot}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="fd-primary-btn"
+                style={{ display: "inline-block" }}
+              >
+                ↗ Open Full Resolution in New Tab
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reject Manual Payment Note Modal ── */}
+      {rejectModalOrder && (
+        <div className="fd-modal-backdrop" onClick={() => setRejectModalOrder(null)}>
+          <div className="fd-modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <button className="fd-modal-close" onClick={() => setRejectModalOrder(null)}>✕</button>
+            <h3 style={{ margin: "0 0 8px", color: "#DC2626", fontSize: "1.15rem" }}>
+              Reject Payment for Order #{rejectModalOrder._id.toString().slice(-8).toUpperCase()}
+            </h3>
+            <p style={{ margin: "0 0 16px", color: "#64748B", fontSize: "0.88rem" }}>
+              Please specify the reason for rejecting this payment (e.g. invalid transaction ID, unreadable screenshot, incorrect amount). This note will be sent to the customer.
+            </p>
+            <textarea
+              className="fd-date-input"
+              rows={4}
+              style={{ width: "100%", resize: "vertical", boxSizing: "border-box", marginBottom: 16 }}
+              placeholder="Reason for rejection..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                type="button"
+                className="fd-refresh-btn"
+                onClick={() => setRejectModalOrder(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="fd-reject-btn"
+                style={{ padding: "8px 20px" }}
+                onClick={() => handleVerifyManualPayment(rejectModalOrder._id, "reject", rejectReason)}
+                disabled={verifyingOrderId === rejectModalOrder._id}
+              >
+                {verifyingOrderId === rejectModalOrder._id ? "Rejecting…" : "Confirm Rejection"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

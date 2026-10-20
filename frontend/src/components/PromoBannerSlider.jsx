@@ -37,7 +37,7 @@ const STATIC_SLIDE = {
   accent:      "Technology",
   subtitle:    "Discover the latest smartphones, laptops and accessories at the best prices.",
   productLink: "/products",
-  image:       "/oict-thumbnail.png",
+  image:       "/oict-banner.png",
   badge:       { top: "UP TO", number: "20%", unit: "OFF" },
 };
 

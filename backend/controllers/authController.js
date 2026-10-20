@@ -1,3 +1,4 @@
+import fs from "fs";
 import User           from "../models/User.js";
 import bcrypt         from "bcryptjs";
 import jwt            from "jsonwebtoken";
@@ -252,7 +253,21 @@ export const updateUserProfile = async (req, res) => {
       });
     }
 
-    const { fullName, phone, address, currentPassword, newPassword } = req.body;
+    const { fullName, phone, address, currentPassword, newPassword, avatar, profileImage } = req.body;
+    const file = req.file || req.files?.[0] || req.files?.avatar?.[0] || req.files?.image?.[0];
+    if (file && fs.existsSync(file.path)) {
+      const buf = fs.readFileSync(file.path);
+      const mime = file.mimetype || "image/jpeg";
+      const b64 = "data:" + mime + ";base64," + buf.toString("base64");
+      user.avatar = b64;
+      user.profileImage = b64;
+    } else if (avatar) {
+      user.avatar = avatar;
+      user.profileImage = avatar;
+    } else if (profileImage) {
+      user.avatar = profileImage;
+      user.profileImage = profileImage;
+    }
 
     if (fullName !== undefined) user.fullName = fullName.trim();
     if (phone    !== undefined) user.phone    = phone.trim();
@@ -297,6 +312,8 @@ export const updateUserProfile = async (req, res) => {
       address:  updated.address,
       role:     updated.role,
       isAdmin:  updated.isAdmin,
+      avatar:   updated.avatar,
+      profileImage: updated.profileImage,
       createdAt:updated.createdAt,
     });
 
@@ -399,5 +416,60 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error("[resetPassword] Error:", error.message);
     return res.status(500).json({ success: false, message: "Failed to reset password." });
+  }
+};
+
+
+// ============================================================
+// UPLOAD AVATAR (All 5 Roles: Owner, Admin, Finance, Seller, Customer)
+// POST /api/auth/avatar
+// ============================================================
+export const uploadAvatar = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    let avatarBase64 = "";
+    const file = req.file || req.files?.[0] || req.files?.avatar?.[0] || req.files?.image?.[0];
+
+    if (file && fs.existsSync(file.path)) {
+      const buf = fs.readFileSync(file.path);
+      const mime = file.mimetype || "image/jpeg";
+      avatarBase64 = "data:" + mime + ";base64," + buf.toString("base64");
+    } else if (req.body?.avatar && typeof req.body.avatar === "string") {
+      avatarBase64 = req.body.avatar;
+    } else if (req.body?.image && typeof req.body.image === "string") {
+      avatarBase64 = req.body.image;
+    }
+
+    if (!avatarBase64) {
+      return res.status(400).json({ success: false, message: "No avatar image provided." });
+    }
+
+    user.avatar = avatarBase64;
+    user.profileImage = avatarBase64;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile picture updated successfully.",
+      avatar: user.avatar,
+      profileImage: user.profileImage,
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        isAdmin: user.isAdmin,
+        avatar: user.avatar,
+        profileImage: user.profileImage,
+        phone: user.phone,
+        address: user.address,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

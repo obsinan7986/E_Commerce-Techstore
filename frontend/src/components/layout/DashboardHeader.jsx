@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { FiMenu, FiLogOut, FiUser, FiSettings, FiShoppingBag, FiChevronDown } from "react-icons/fi";
+import { FiMenu, FiLogOut, FiUser, FiSettings, FiShoppingBag, FiChevronDown, FiCamera } from "react-icons/fi";
+import { toast } from "react-toastify";
+import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import NotificationBell from "../NotificationBell";
@@ -52,7 +54,8 @@ const getInitials = (name = "") => {
 };
 
 const DashboardHeader = ({ onToggleMobile }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const { currency, setCurrency } = useCurrency();
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,6 +85,32 @@ const DashboardHeader = ({ onToggleMobile }) => {
   };
 
   const isAdminOrOwner = user?.role === "admin" || user?.role === "owner";
+  const handleDashAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file must be under 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result;
+      try {
+        setUploadingAvatar(true);
+        const res = await api.post("/auth/avatar", { avatar: base64 });
+        if (updateUser) {
+          updateUser({ avatar: res.data.avatar, profileImage: res.data.avatar });
+        }
+        toast.success("Profile picture updated successfully!");
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to update profile picture.");
+      } finally {
+        setUploadingAvatar(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
 
   return (
     <header className="dash-header">
@@ -127,8 +156,16 @@ const DashboardHeader = ({ onToggleMobile }) => {
             onClick={() => setDropdownOpen((prev) => !prev)}
             aria-expanded={dropdownOpen}
           >
-            <div className="dash-avatar-circle">
-              {getInitials(user?.fullName)}
+            <div className="dash-avatar-circle" style={{ overflow: "hidden" }}>
+              {(user?.avatar || user?.profileImage) ? (
+                <img
+                  src={user.avatar || user.profileImage}
+                  alt={user?.fullName || "User"}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                />
+              ) : (
+                getInitials(user?.fullName)
+              )}
             </div>
             <div className="dash-user-meta">
               <div className="dash-user-name">{user?.fullName || "User"}</div>
@@ -147,6 +184,23 @@ const DashboardHeader = ({ onToggleMobile }) => {
                 <FiUser size={16} />
                 <span>Account Profile</span>
               </Link>
+
+              <label
+                htmlFor="dash-avatar-file-input"
+                className="dash-dropdown-item"
+                style={{ cursor: "pointer", margin: 0 }}
+              >
+                <FiCamera size={16} />
+                <span>{uploadingAvatar ? "Uploading…" : "Change Photo"}</span>
+                <input
+                  id="dash-avatar-file-input"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleDashAvatarUpload}
+                  disabled={uploadingAvatar}
+                />
+              </label>
 
               {user?.role === "seller" && (
                 <Link

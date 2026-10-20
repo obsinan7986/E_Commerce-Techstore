@@ -1,5 +1,6 @@
 import Conversation from "../models/Message.js";
 import SiteSettings from "../models/SiteSettings.js";
+import ContactMessage from "../models/ContactMessage.js";
 import createAdminNotification from "../utils/createAdminNotification.js";
 
 /* ── helper: get or create singleton settings ── */
@@ -289,5 +290,43 @@ export const getAdminUnreadCount = async (req, res) => {
     return res.status(200).json({ success: true, count: result[0]?.total || 0 });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+// POST /api/messages/contact
+export const submitContactMessage = async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    if (!name?.trim() || !email?.trim() || !message?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and message are required.",
+      });
+    }
+
+    const contact = await ContactMessage.create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      subject: (subject || "General Inquiry").trim(),
+      message: message.trim(),
+      user: req.user?._id || null,
+    });
+
+    // Notify administrators
+    createAdminNotification({
+      type: "admin_new_message",
+      title: "New Contact Inquiry: " + name.trim(),
+      message: "[" + contact.subject + "] " + message.trim().slice(0, 100) + " (From: " + email.trim() + ")",
+      link: "/admin/messages",
+    }).catch(() => {});
+
+    return res.status(201).json({
+      success: true,
+      message: "Thank you! Your message has been received.",
+      contact,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };

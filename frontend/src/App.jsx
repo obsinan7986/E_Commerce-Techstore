@@ -93,6 +93,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/product/:id" element={<ProductPage />} />
+        <Route path="/products/:id" element={<ProductPage />} />
         <Route path="/products" element={<Products />} />
         <Route path="/deals" element={<Products initialFilter="deals" />} />
         <Route path="/new-arrivals" element={<Products initialFilter="new-arrivals" />} />

@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
@@ -21,10 +22,37 @@ import "../styles/accountSettings.css";
 const EMPTY_ADDR = { label: "Home", fullName: "", phone: "", address: "", city: "", subCity: "" };
 
 const AccountSettingsPage = () => {
-  const { user, login: updateUser } = useAuth();
+  const { user, updateUser, login } = useAuth();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "profile";
   const [activeTab, setActiveTab] = useState(initialTab);
+  const handleAccAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file must be under 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result;
+      try {
+        setUploadingAvatar(true);
+        const res = await api.post("/auth/avatar", { avatar: base64 });
+        if (updateUser) {
+          updateUser({ avatar: res.data.avatar, profileImage: res.data.avatar });
+        }
+        toast.success("Profile picture updated successfully!");
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to update profile picture.");
+      } finally {
+        setUploadingAvatar(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
 
   // Sync tab with URL
   const handleTabChange = (tab) => {
@@ -315,8 +343,49 @@ const AccountSettingsPage = () => {
       {/* ── Modern Gradient Profile Hero Banner ── */}
       <div className="acc-hero-banner">
         <div className="acc-hero-left">
-          <div className="acc-hero-avatar">
-            {user?.fullName?.charAt(0).toUpperCase() || "U"}
+          <div style={{ position: "relative", width: 72, height: 72 }}>
+            <div className="acc-hero-avatar" style={{ width: "100%", height: "100%", overflow: "hidden", margin: 0 }}>
+              {(user?.avatar || user?.profileImage) ? (
+                <img
+                  src={user.avatar || user.profileImage}
+                  alt={user?.fullName || "User"}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                />
+              ) : (
+                user?.fullName?.charAt(0).toUpperCase() || "U"
+              )}
+            </div>
+            <label
+              htmlFor="acc-avatar-upload"
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                width: 26,
+                height: 26,
+                borderRadius: "50%",
+                background: "#ffffff",
+                border: "2px solid #2563EB",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontSize: 13,
+                boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+                zIndex: 5,
+              }}
+              title="Change Profile Picture"
+            >
+              {uploadingAvatar ? "⏳" : "📷"}
+            </label>
+            <input
+              id="acc-avatar-upload"
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleAccAvatarUpload}
+              disabled={uploadingAvatar}
+            />
           </div>
           <div className="acc-hero-details">
             <h1>{user?.fullName || "User Account"}</h1>

@@ -22,6 +22,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
+  const updateUser = (data) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...data };
+      try { localStorage.setItem("user", JSON.stringify(merged)); } catch {}
+      return merged;
+    });
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -69,6 +77,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         login,
+        updateUser,
         logout,
         loading,
         refreshProfile,

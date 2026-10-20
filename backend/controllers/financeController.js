@@ -133,6 +133,15 @@ export const getFinanceDashboard = async (req, res) => {
 
       // Pending seller payouts count
       Payout.countDocuments({ status: "Pending" }),
+
+      // Pending manual payment orders for Finance direct approval
+      Order.find({
+        "manualPayment.verificationStatus": "Pending",
+        paymentMethod: { $in: MANUAL_METHODS },
+      })
+        .populate("user", "fullName email phone")
+        .sort({ createdAt: -1 })
+        .select("user totalPrice paymentMethod orderStatus manualPayment createdAt"),
     ]);
 
     const revenue = totalRevenue[0]?.total || 0;
@@ -165,6 +174,7 @@ export const getFinanceDashboard = async (req, res) => {
         manualRejected,
         pendingPayouts:          pendingPayouts || [],
         pendingPayoutsCount:     pendingPayoutsCount || 0,
+        pendingManualOrders:     pendingManualOrders || [],
         methodBreakdown,
         monthlyRevenue,
         recentTransactions,
@@ -547,5 +557,80 @@ export const approveFinancePayout = async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================
+// EXPORT FINANCE TRANSACTIONS REPORT (.csv / .xlsx data)
+// GET /api/finance/report
+// Query: period ("all", "today", "week", "month"), startDate, endDate
+// ============================================================
+export const getFinanceReport = async (req, res) => {
+  try {
+    const { period, startDate, endDate } = req.query;
+    const filter = {};
+    const now = new Date();
+
+    if (period === "today") {
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      filter.createdAt = { $gte: startOfToday };
+    } else if (period === "week") {
+      const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      filter.createdAt = { $gte: lastWeek };
+    } else if (period === "month") {
+      const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      filter.createdAt = { $gte: lastMonth };
+    } else if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = end;
+      }
+    }
+
+    const orders = await Order.find(filter)
+      .populate("user", "fullName email")
+      .populate("manualPayment.reviewedBy", "fullName email")
+      .sort({ createdAt: -1 });
+
+    const rows = orders.map((o) => {
+      const gross = o.totalGrossItemsPrice || o.totalPrice || 0;
+      const commission = o.totalCommissionDebited || 0;
+      const sellerNet = o.totalSellerNetPayout || (gross - commission);
+
+      let verifiedBy = "—";
+      if (o.manualPayment?.reviewedBy?.fullName) {
+        verifiedBy = o.manualPayment.reviewedBy.fullName;
+      } else if (o.paymentMethod === "Chapa" && o.isPaid) {
+        verifiedBy = "Chapa Gateway";
+      } else if (o.isPaid) {
+        verifiedBy = "Finance Staff";
+      }
+
+      return {
+        orderId: o._id.toString(),
+        createdAt: o.createdAt,
+        customerName: o.user?.fullName || "Guest / Customer",
+        customerEmail: o.user?.email || "—",
+        paymentMethod: o.paymentMethod || "—",
+        grossAmount: gross,
+        commissionAmount: commission,
+        sellerNetAmount: sellerNet,
+        paymentStatus: o.paymentStatus || "Pending",
+        verifiedBy,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: rows.length,
+      report: rows,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };

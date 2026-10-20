@@ -447,14 +447,36 @@ export const sellerSubmitKYC = async (req, res) => {
     let idBack = "";
 
     if (req.files) {
-      if (req.files.idFront?.[0]) {
-        idFront = `/uploads/${req.files.idFront[0].filename}`;
-      }
-      if (req.files.idBack?.[0]) {
-        idBack = `/uploads/${req.files.idBack[0].filename}`;
-      }
-      if (!idFront && req.files.idDocumentImage?.[0]) {
-        idFront = `/uploads/${req.files.idDocumentImage[0].filename}`;
+      if (Array.isArray(req.files)) {
+        for (const file of req.files) {
+          const fn = file.fieldname;
+          const filePath = `/uploads/${file.filename}`;
+          if (["idFront", "idFrontImage", "idDocumentImage", "front"].includes(fn)) {
+            if (!idFront) idFront = filePath;
+          } else if (["idBack", "idBackImage", "back"].includes(fn)) {
+            if (!idBack) idBack = filePath;
+          }
+        }
+        // Fallback: if not matched by fieldname, use position order
+        if (!idFront && req.files[0]) {
+          idFront = `/uploads/${req.files[0].filename}`;
+        }
+        if (!idBack && req.files[1]) {
+          idBack = `/uploads/${req.files[1].filename}`;
+        }
+      } else if (typeof req.files === "object") {
+        const front =
+          req.files.idFront?.[0] ||
+          req.files.idFrontImage?.[0] ||
+          req.files.idDocumentImage?.[0] ||
+          req.files.front?.[0];
+        const back =
+          req.files.idBack?.[0] ||
+          req.files.idBackImage?.[0] ||
+          req.files.back?.[0];
+
+        if (front) idFront = `/uploads/${front.filename}`;
+        if (back) idBack = `/uploads/${back.filename}`;
       }
     } else if (req.file) {
       idFront = `/uploads/${req.file.filename}`;

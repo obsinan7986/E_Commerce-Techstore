@@ -39,11 +39,7 @@ router.get(  "/kyc",            protect, sellerGetKYCStatus);
 router.post(
   "/kyc",
   protect,
-  upload.fields([
-    { name: "idFront", maxCount: 1 },
-    { name: "idBack", maxCount: 1 },
-    { name: "idDocumentImage", maxCount: 1 },
-  ]),
+  upload.any(),
   sellerSubmitKYC
 );
 router.get(  "/payout-account", ...sellerOnly, sellerGetKYCStatus);

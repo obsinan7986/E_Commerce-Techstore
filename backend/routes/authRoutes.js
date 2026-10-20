@@ -30,11 +30,7 @@ router.post("/reset-password",   resetPassword);
 router.post(
   "/become-seller",
   protect,
-  upload.fields([
-    { name: "idFront", maxCount: 1 },
-    { name: "idBack", maxCount: 1 },
-    { name: "idDocumentImage", maxCount: 1 },
-  ]),
+  upload.any(),
   sellerSubmitKYC
 );
 

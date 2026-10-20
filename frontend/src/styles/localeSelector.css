@@ -167,12 +167,13 @@
   }
 }
 
-/* ≤ 480px — hide currency to save space, keep language visible */
+/* ≤ 480px — keep currency and language visible and compact */
 @media (max-width: 480px) {
-  .locale-selector .ls-dropdown:last-child { display: none; }
-
   .ls-trigger {
-    padding: 0 7px;
-    min-width: 38px;
+    padding: 0 4px;
+    min-width: 30px;
+    height: 32px;
+    min-height: 32px;
+    font-size: 11px;
   }
 }

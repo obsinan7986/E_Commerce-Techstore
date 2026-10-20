@@ -304,31 +304,64 @@
 }
 
 @media (max-width: 768px) {
-  .pbs-root    { min-height: 240px; }
-  .pbs-skeleton { min-height: 240px; }
+  .pbs-root { min-height: 220px; }
+  .pbs-skeleton { min-height: 220px; }
 
   .pbs-content {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 28px 20px 48px;
-    gap: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 18px 36px;
+    gap: 12px;
   }
 
   .pbs-text {
-    max-width: 100%;
+    flex: 1;
+    max-width: 62%;
     min-width: 0;
   }
 
-  .pbs-text h1 { font-size: 22px; }
-  .pbs-text p  { font-size: 13.5px; }
+  .pbs-text h1 {
+    font-size: 20px;
+    margin: 0 0 6px;
+    line-height: 1.15;
+  }
 
-  /* Hide product image on small screens to avoid layout shift */
-  .pbs-image-wrap { display: none; }
+  .pbs-text p {
+    font-size: 12.5px;
+    line-height: 1.4;
+    margin: 0 0 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 
-  /* Always show arrows on mobile (no hover state) */
-  .pbs-arrow { opacity: 1; width: 30px; height: 30px; }
-  .pbs-arrow--prev { left: 8px; }
-  .pbs-arrow--next { right: 8px; }
+  .hero-cta-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .pbs-image-wrap {
+    display: flex;
+    flex: 0 0 35%;
+    max-width: 140px;
+    height: 130px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .pbs-image-wrap img {
+    max-height: 120px;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  /* Always show arrows on mobile */
+  .pbs-arrow { opacity: 1; width: 28px; height: 28px; }
+  .pbs-arrow--prev { left: 6px; }
+  .pbs-arrow--next { right: 6px; }
 
   /* Reduce animation shift on mobile */
   @keyframes pbs-enter-from-right {
@@ -342,8 +375,31 @@
 }
 
 @media (max-width: 480px) {
-  .pbs-text h1 { font-size: 19px; }
-  .hero-dots { bottom: 10px; }
+  .pbs-root { min-height: 200px; }
+  .pbs-skeleton { min-height: 200px; }
+
+  .pbs-content {
+    padding: 16px 14px 30px;
+    gap: 8px;
+  }
+
+  .pbs-text {
+    max-width: 64%;
+  }
+
+  .pbs-text h1 { font-size: 17px; }
+  .pbs-text p  { font-size: 11.5px; margin: 0 0 10px; }
+
+  .pbs-image-wrap {
+    max-width: 105px;
+    height: 105px;
+  }
+
+  .pbs-image-wrap img {
+    max-height: 95px;
+  }
+
+  .hero-dots { bottom: 8px; }
 }
 
 /* ── Reduced motion — respect user preference ────────────── */

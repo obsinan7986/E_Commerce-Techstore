@@ -918,167 +918,179 @@
 @media (max-width: 768px) {
   .promo-bar {
     min-height: 30px;
-
     padding: 6px 10px;
-
     font-size: 11px;
   }
 
-
-  /* Header */
-
+  /* ── Header: Row 1 (Logo + Icons) & Row 2 (Search) ── */
   .header-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
     min-height: auto;
-
-    padding: 10px 14px;
-
-    display: grid;
-
-    grid-template-columns: auto 1fr auto;
-
-    grid-template-areas:
-      "logo spacer icons"
-      "search search search";
-
-    gap: 10px 8px;
+    padding: 10px 14px 8px;
+    gap: 0;
   }
 
-
+  /* Row 1 Left: Logo */
   .logo {
-    grid-area: logo;
+    order: 1;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
   }
-
 
   .logo a {
-    font-size: 20px;
+    font-size: 18px;
+    gap: 7px;
   }
 
+  .logo-img {
+    width: 32px;
+    height: 32px;
+  }
 
   .logo-icon {
     width: 30px;
     height: 30px;
-
     font-size: 14px;
   }
 
-
+  /* Row 1 Right: Compact Icons (Wishlist, Currency, Account, Cart) */
   .header-icons {
-    grid-area: icons;
-
-    margin-left: 0;
-
-    gap: 2px;
+    order: 2;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-left: auto;
   }
 
+  .header-icon-btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 4px 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-icon-btn svg {
+    font-size: 18px !important;
+  }
+
+  .header-icon-btn .icon-label {
+    display: none !important;
+  }
+
+  .header-cart-btn {
+    min-height: 34px;
+    height: 34px;
+    padding: 4px 8px;
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .header-cart-btn:hover {
+    background: var(--primary-light);
+  }
+
+  .cart-label,
+  .cart-total {
+    display: none !important;
+  }
+
+  .cart-badge-wrap {
+    width: 24px;
+    height: 24px;
+  }
+
+  .cart-badge-wrap svg {
+    font-size: 18px !important;
+  }
+
+  /* Row 2: Full-Width Search Bar */
+  .search-wrap {
+    order: 3;
+    width: 100%;
+    flex: 1 1 100%;
+    margin-top: 8px;
+    max-width: 100%;
+  }
 
   .search-box {
-    grid-area: search;
-
     width: 100%;
-    max-width: none;
-
+    max-width: 100%;
     height: 40px;
   }
-
 
   .search-box input {
     font-size: 13px;
   }
-
 
   .search-box button {
     width: 44px;
     min-width: 44px;
   }
 
-
-  /* Hide text under icons */
-
-  .header-icon-btn {
-    min-width: 36px;
-
-    padding: 5px;
+  /* Row 3: Horizontal Scrollable Categories & Navigation Strip */
+  .nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-bottom: 1px solid var(--border, #E2E8F0);
   }
-
-
-  .header-icon-btn svg {
-    font-size: 19px;
-  }
-
-
-  .header-icon-btn .icon-label {
-    display: none;
-  }
-
-
-  .header-cart-btn {
-    min-height: 36px;
-
-    padding: 5px 8px;
-
-    border: none;
-  }
-
-
-  .header-cart-btn:hover {
-    background: var(--primary-light);
-  }
-
-
-  .cart-label,
-  .cart-total {
-    display: none;
-  }
-
-
-  .cart-badge-wrap {
-    width: 28px;
-    height: 28px;
-  }
-
-
-  /* Navigation */
 
   .nav-inner {
-    height: 46px;
-
+    height: 44px;
     padding: 0 10px;
-
-    gap: 5px;
-
+    gap: 6px;
     overflow-x: auto;
-
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
     scrollbar-width: none;
+    width: max-content;
+    min-width: 100%;
   }
-
 
   .nav-inner::-webkit-scrollbar {
     display: none;
   }
 
+  .category-wrapper {
+    flex-shrink: 0;
+  }
 
   .category-btn {
     height: 32px;
-
     padding: 0 11px;
-
     font-size: 12px;
+    white-space: nowrap;
   }
 
-
   .nav-links {
-    flex: 0 0 auto;
-
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    white-space: nowrap;
     gap: 0;
   }
 
-
   .nav-links a {
-    height: 46px;
-
-    padding: 0 10px;
-
+    height: 44px;
+    padding: 0 9px;
     font-size: 12px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -1089,87 +1101,109 @@
 
 @media (max-width: 480px) {
   .header-inner {
-    padding: 9px 10px;
+    padding: 8px 10px 6px;
   }
-
 
   .logo a {
-    font-size: 18px;
-
-    letter-spacing: -0.5px;
+    font-size: 16px;
+    letter-spacing: -0.4px;
+    gap: 5px;
   }
 
-
-  .logo-icon {
+  .logo-img {
     width: 28px;
     height: 28px;
-
-    font-size: 13px;
   }
 
-
-  .header-icons {
-    gap: 0;
-  }
-
-
-  .header-icon-btn {
-    min-width: 32px;
-
-    padding: 4px;
-  }
-
-
-  .header-icon-btn svg {
-    font-size: 18px;
-  }
-
-
-  .header-cart-btn {
-    padding: 4px 5px;
-  }
-
-
-  .cart-badge-wrap {
+  .logo-icon {
     width: 26px;
     height: 26px;
+    font-size: 12px;
   }
 
+  .header-icons {
+    gap: 2px;
+  }
+
+  .header-icon-btn {
+    min-width: 30px;
+    height: 32px;
+    padding: 3px 4px;
+  }
+
+  .header-icon-btn svg {
+    font-size: 16px !important;
+  }
+
+  .header-cart-btn {
+    min-height: 32px;
+    height: 32px;
+    padding: 3px 6px;
+  }
+
+  .cart-badge-wrap {
+    width: 20px;
+    height: 20px;
+  }
+
+  .cart-badge {
+    font-size: 9px;
+    min-width: 15px;
+    height: 15px;
+    top: -5px;
+    right: -7px;
+  }
+
+  .search-wrap {
+    margin-top: 6px;
+  }
 
   .search-box {
     height: 38px;
   }
 
-
-  .nav-inner {
-    height: 44px;
-
-    padding: 0 7px;
+  .search-box input {
+    font-size: 12.5px;
+    padding: 0 10px;
   }
 
+  .search-box button {
+    width: 38px;
+    min-width: 38px;
+  }
+
+  .nav-inner {
+    height: 42px;
+    padding: 0 6px;
+    gap: 4px;
+  }
 
   .category-btn {
     height: 30px;
-
-    padding: 0 9px;
-
+    padding: 0 8px;
     font-size: 11px;
   }
 
-
   .nav-links a {
-    height: 44px;
-
-    padding: 0 8px;
-
-    font-size: 12px;
+    height: 42px;
+    padding: 0 7px;
+    font-size: 11.5px;
   }
-
 
   .nav-link-badge {
     font-size: 8px;
-
     padding: 2px 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .logo a span {
+    font-size: 14.5px;
+  }
+
+  .header-icon-btn {
+    min-width: 28px;
+    padding: 2px;
   }
 }
 

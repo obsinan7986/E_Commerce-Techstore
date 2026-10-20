@@ -74,12 +74,35 @@ app.use(cors({
 app.use(express.json());
 
 
-// ── Static uploads — with CORS headers so browsers can load images ──
-app.use("/uploads", (req, res, next) => {
+// ── Static uploads — with CORS headers & fallback placeholder for missing files ──
+const uploadsHeaderMiddleware = (req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   next();
-}, express.static(path.join(__dirname, "uploads")));
+};
+
+const missingUploadFallback = (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  res.setHeader("Content-Type", "image/svg+xml");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#F8FAFC"/>
+  <rect x="20" y="20" width="360" height="260" rx="12" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="2"/>
+  <circle cx="200" cy="120" r="32" fill="#CBD5E1"/>
+  <path d="M175 160l20-22 15 16 15-18 25 24H150l25z" fill="#94A3B8"/>
+  <text x="200" y="195" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="13" font-weight="600" fill="#64748B">Image Not Found</text>
+  <text x="200" y="215" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="11" fill="#94A3B8">OICT TechStore</text>
+</svg>`;
+  return res.status(200).send(svg);
+};
+
+app.use(
+  "/uploads",
+  uploadsHeaderMiddleware,
+  express.static(path.join(__dirname, "uploads")),
+  missingUploadFallback
+);
 
 // ── API Routes ────────────────────────────────────────────────────
 app.use("/api/products",      productRoutes);

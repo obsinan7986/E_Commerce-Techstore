@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { FaShoppingCart, FaHeart, FaStar, FaMinus, FaPlus } from "react-icons/fa";
+import { FaShoppingCart, FaBolt, FaStar, FaMinus, FaPlus } from "react-icons/fa";
 
 import api from "../services/api";
 import ProductGallery from "../components/ProductGallery";
 import RelatedProducts from "../components/RelatedProducts";
 import ReviewSection from "../components/ReviewSection";
 import { addToCart } from "../services/cartService";
-import { addToWishlist } from "../services/wishlistService";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { toast } from "react-toastify";
@@ -40,11 +39,7 @@ const ProductPage = () => {
     } catch {}
     const token = user?.token || localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
-      if (actionType === "cart") {
-        toast.info("Please create an account to add items to your cart");
-      } else {
-        toast.info("Please create an account to save items to your wishlist");
-      }
+      toast.info("Please create an account to add items to your cart");
       navigate("/register", { state: { from: location.pathname, pendingProductId: product?._id || id } });
       return false;
     }
@@ -62,13 +57,14 @@ const ProductPage = () => {
     }
   };
 
-  const handleWishlist = async () => {
-    if (!checkAuth("wishlist")) return;
+  const handleBuyNow = async () => {
+    if (!checkAuth("cart")) return;
     try {
-      await addToWishlist(product._id);
-      toast.success("Added to wishlist!");
+      await addToCart(product._id, quantity);
+      await loadCartCount();
+      navigate("/checkout");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to add to wishlist.");
+      toast.error(err.response?.data?.message || "Failed to proceed to checkout.");
     }
   };
 
@@ -182,11 +178,12 @@ const ProductPage = () => {
             {/* Actions */}
             <div className="action-buttons">
               <button className="cart-button" onClick={handleAddToCart} disabled={!inStock}>
-                <FaShoppingCart size={16} />
+                <FaShoppingCart size={15} />
                 {inStock ? "Add to Cart" : "Out of Stock"}
               </button>
-              <button className="wishlist-button" onClick={handleWishlist} aria-label="Add to wishlist">
-                <FaHeart size={15} /> Wishlist
+              <button className="buy-now-button" onClick={handleBuyNow} disabled={!inStock}>
+                <FaBolt size={14} />
+                {inStock ? "⚡ Buy Now" : "Out of Stock"}
               </button>
             </div>
 

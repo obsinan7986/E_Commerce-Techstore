@@ -1,16 +1,15 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FaHeart, FaShoppingCart, FaStar } from "react-icons/fa";
+import { FaShoppingCart, FaStar } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { addToCart }     from "../services/cartService";
-import { addToWishlist } from "../services/wishlistService";
 import { useCart }       from "../context/CartContext";
 import { useCurrency }   from "../context/CurrencyContext";
 import { BASE_URL }      from "../services/api";
 import { handleImageError } from "../utils/imageFallback";
 import "../styles/productcard.css";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, badgeType }) => {
   const { t }             = useTranslation();
   const navigate          = useNavigate();
   const location          = useLocation();
@@ -24,11 +23,7 @@ const ProductCard = ({ product }) => {
     } catch {}
     const token = user?.token || localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
-      if (actionType === "cart") {
-        toast.info("Please create an account to add items to your cart");
-      } else {
-        toast.info("Please create an account to save items to your wishlist");
-      }
+      toast.info("Please create an account to add items to your cart");
       navigate("/register", { state: { from: location.pathname, pendingProductId: product?._id } });
       return false;
     }
@@ -43,16 +38,6 @@ const ProductCard = ({ product }) => {
       toast.success(t("cart.added") || "Added to cart!");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to add to cart");
-    }
-  };
-
-  const handleWishlist = async () => {
-    if (!checkAuth("wishlist")) return;
-    try {
-      await addToWishlist(product._id);
-      toast.success("Added to wishlist!");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to add to wishlist");
     }
   };
 
@@ -75,18 +60,19 @@ const ProductCard = ({ product }) => {
   return (
     <div className="product-card">
 
-      <div className="discount-badge">-20%</div>
+      {badgeType === "deals" ? (
+        <div className="discount-badge discount-badge--hot">🔥 -20% HOT</div>
+      ) : badgeType === "new" ? (
+        <div className="new-badge">✨ NEW</div>
+      ) : (
+        <div className="discount-badge">-20%</div>
+      )}
 
       {product.stock <= 9 && (
         <div className={`stock-badge ${stockCls}`}>
           {product.stock === 0 ? t("product.outOfStock") : "Low Stock"}
         </div>
       )}
-
-      <button className="wishlist-btn" onClick={handleWishlist}
-        aria-label={t("product.addToWishlist")} type="button">
-        <FaHeart />
-      </button>
 
       <Link to={`/product/${product._id}`} className="product-image">
         <img

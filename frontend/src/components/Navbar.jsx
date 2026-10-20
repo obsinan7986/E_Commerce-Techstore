@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -30,6 +30,18 @@ const Navbar = () => {
   const { cartCount } = useCart();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const currentFilter = searchParams.get("filter");
+  const currentPath = location.pathname;
+
+  const isHomeActive = currentPath === "/";
+  const isProductsActive = currentPath === "/products" && !currentFilter;
+  const isDealsActive = currentPath === "/deals" || (currentPath === "/products" && currentFilter === "deals");
+  const isNewArrivalsActive = currentPath === "/new-arrivals" || (currentPath === "/products" && currentFilter === "new-arrivals");
+  const isBrandsActive = currentPath === "/brands" || (currentPath === "/products" && currentFilter === "brands");
+  const isContactActive = currentPath === "/contact";
 
   // Instant Search Autocomplete Debounce
   useEffect(() => {
@@ -285,14 +297,14 @@ const Navbar = () => {
           </div>
 
           <div className="nav-links">
-            <Link to="/">{t("nav.home")}</Link>
-            <Link to="/products">{t("nav.products")}</Link>
-            <Link to="/products">
+            <Link to="/" className={isHomeActive ? "active nav-active" : ""}>{t("nav.home")}</Link>
+            <Link to="/products" className={isProductsActive ? "active nav-active" : ""}>{t("nav.products")}</Link>
+            <Link to="/products?filter=deals" className={isDealsActive ? "active nav-active" : ""}>
               {t("nav.deals")} <span className="nav-link-badge">HOT</span>
             </Link>
-            <Link to="/products">{t("nav.newArrivals")}</Link>
-            <Link to="/products">{t("nav.brands")}</Link>
-            <Link to="/contact">{t("nav.contact")}</Link>
+            <Link to="/products?filter=new-arrivals" className={isNewArrivalsActive ? "active nav-active" : ""}>{t("nav.newArrivals")}</Link>
+            <Link to="/products?filter=brands" className={isBrandsActive ? "active nav-active" : ""}>{t("nav.brands")}</Link>
+            <Link to="/contact" className={isContactActive ? "active nav-active" : ""}>{t("nav.contact")}</Link>
           </div>
 
         </div>

@@ -43,9 +43,9 @@ const Footer = () => {
             <h4>{t("nav.products")}</h4>
             <ul>
               <li><Link to="/products">{t("nav.products")}</Link></li>
-              <li><Link to="/products">{t("nav.deals")}</Link></li>
-              <li><Link to="/products">{t("nav.newArrivals")}</Link></li>
-              <li><Link to="/products">{t("nav.brands")}</Link></li>
+              <li><Link to="/products?filter=deals">{t("nav.deals")}</Link></li>
+              <li><Link to="/products?filter=new-arrivals">{t("nav.newArrivals")}</Link></li>
+              <li><Link to="/products?filter=brands">{t("nav.brands")}</Link></li>
             </ul>
           </div>
 

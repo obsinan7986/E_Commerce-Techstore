@@ -141,10 +141,16 @@
    NEW BADGE
    ============================================ */
 
+.discount-badge--hot {
+  background: linear-gradient(135deg, #DC2626 0%, #EA580C 100%) !important;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+}
+
 .new-badge {
   position: absolute;
 
-  top: 36px;
+  top: 10px;
   left: 10px;
 
   padding: 4px 8px;

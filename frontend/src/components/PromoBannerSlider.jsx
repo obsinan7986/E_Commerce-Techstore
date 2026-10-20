@@ -24,7 +24,10 @@ import "../styles/promoBannerSlider.css";
 const imgSrc = (path) => {
   if (!path) return "";
   if (path.startsWith("http")) return path;
-  return `${BASE_URL}${path}`;
+  if (path.startsWith("/oict-") || path.startsWith("/categories/") || path.startsWith("/placeholder")) {
+    return path;
+  }
+  return `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
 /* ── Static fallback slide (mirrors original HeroBanner) ──── */
@@ -34,7 +37,7 @@ const STATIC_SLIDE = {
   accent:      "Technology",
   subtitle:    "Discover the latest smartphones, laptops and accessories at the best prices.",
   productLink: "/products",
-  image:       "/uploads/Samsung-s25.jpg",
+  image:       "/oict-thumbnail.png",
   badge:       { top: "UP TO", number: "20%", unit: "OFF" },
 };
 

@@ -803,7 +803,8 @@
 }
 
 
-.nav-links a.nav-active {
+.nav-links a.nav-active,
+.nav-links a.active {
   color: var(--primary);
 
   font-weight: 700;

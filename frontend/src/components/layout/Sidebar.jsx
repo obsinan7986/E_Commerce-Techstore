@@ -78,14 +78,13 @@ export const getNavSections = (role, user) => {
         heading: "Store Management",
         items: [
           { label: "Admin Dashboard", path: "/admin/dashboard", icon: FiGrid },
-          { label: "Analytics & Reports", path: "/admin/analytics", icon: FiTrendingUp },
-          { label: "Order Fulfillment", path: "/admin/orders", icon: FiShoppingBag },
           { label: "Catalog Products", path: "/admin/products", icon: FiPackage },
           { label: "Product Approvals", path: "/admin/product-approvals", icon: FiCheckCircle },
-          { label: "Manual Payments", path: "/admin/manual-payments", icon: FiCreditCard },
+          { label: "Order Fulfillment", path: "/admin/orders", icon: FiShoppingBag },
+          { label: "User Management", path: "/admin/users", icon: FiUsers },
           { label: "Discount Coupons", path: "/admin/coupons", icon: FiTag },
-          { label: "Reviews Moderation", path: "/admin/reviews", icon: FiStar },
           { label: "Hero Banners", path: "/admin/banners", icon: FiImage },
+          { label: "Analytics & Reports", path: "/admin/analytics", icon: FiTrendingUp },
         ],
       },
       {
@@ -100,7 +99,6 @@ export const getNavSections = (role, user) => {
       {
         heading: "Settings",
         items: [
-          { label: "Payment Settings", path: "/admin/payment-settings", icon: FiSettings },
           { label: "Account Settings", path: "/account/settings", icon: FiUser },
         ],
       },
@@ -110,10 +108,11 @@ export const getNavSections = (role, user) => {
   if (role === "finance") {
     return [
       {
-        heading: "Financial Ledger",
+        heading: "Payment & Financial Management",
         items: [
           { label: "Finance Dashboard", path: "/finance/dashboard", icon: FiDollarSign },
-          { label: "All Payments & Splits", path: "/finance/payments", icon: FiCreditCard },
+          { label: "Payment Approvals & Verification", path: "/finance/payments?paymentStatus=Pending", icon: FiCheckCircle },
+          { label: "All Transactions & Splits", path: "/finance/payments", icon: FiCreditCard },
         ],
       },
       {

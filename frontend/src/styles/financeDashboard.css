@@ -33,15 +33,17 @@
 
 /* KPI Cards */
 .fd-kpis {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 14px; margin-bottom: 20px;
 }
 .fd-kpi {
   display: flex; align-items: center; gap: 14px;
-  padding: 16px 20px; background: #fff;
+  padding: 14px 16px; background: #fff;
   border: 1px solid #E5E7EB; border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   border-left: 4px solid #E5E7EB;
+  overflow: visible;
+  min-width: 0;
 }
 .fd-kpi--revenue    { border-left-color: #2563EB; }
 .fd-kpi--commission { border-left-color: #059669; }
@@ -50,8 +52,17 @@
 .fd-kpi--failed     { border-left-color: #DC2626; }
 .fd-kpi--refunded   { border-left-color: #6B7280; }
 
-.fd-kpi-icon { font-size: 28px; }
-.fd-kpi strong { display: block; font-size: 1.35rem; font-weight: 700; color: #111827; line-height: 1.1; }
+.fd-kpi-icon { font-size: 28px; flex-shrink: 0; }
+.fd-kpi > div { min-width: 0; overflow: visible; flex: 1; }
+.fd-kpi strong {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: visible;
+}
 .fd-kpi span   { display: block; font-size: 12.5px; color: #6B7280; }
 .fd-kpi small  { display: block; font-size: 11.5px; color: #9CA3AF; }
 

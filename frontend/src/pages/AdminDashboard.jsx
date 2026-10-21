@@ -8,7 +8,6 @@ import {
   FiUsers,
   FiCheckCircle,
   FiAlertTriangle,
-  FiArrowRight,
   FiTrendingUp,
   FiRefreshCw,
 } from "react-icons/fi";
@@ -18,32 +17,27 @@ import {
   getLowStockProducts,
 } from "../services/adminservice";
 import { toast } from "react-toastify";
-import api, { BASE_URL } from "../services/api";
 import "../styles/admin.css";
+import "../styles/adminDashboard.css";
 
 const AdminDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lowStock, setLowStock] = useState([]);
-  const [paymentSettings, setPaymentSettings] = useState(null);
 
   const loadDashboard = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const [result, lowData, pSettingsRes] = await Promise.all([
+      const [result, lowData] = await Promise.all([
         getAdminDashboard(),
         getLowStockProducts().catch(() => ({ products: [] })),
-        api.get("/payments/settings").catch(() => null),
       ]);
 
       setData(result);
       setLowStock(lowData.products || []);
-      if (pSettingsRes?.data?.settings) {
-        setPaymentSettings(pSettingsRes.data.settings);
-      }
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || "Unable to load admin dashboard.");
@@ -66,7 +60,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const fmt = (n) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const fmt = (n) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   if (loading) {
     return (
@@ -400,63 +394,6 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* 3. Full-Width Finance & Commission Ledger Panel */}
-        <div className="admin-card-panel" style={{ width: "100%" }}>
-          <div className="admin-panel-header">
-            <div>
-              <h2>Finance & Commission Ledger</h2>
-              <span style={{ fontSize: "0.82rem", color: "#64748B" }}>
-                Summary of platform gross merchandise volume, CEO commissions, and baseline rates
-              </span>
-            </div>
-            <Link to="/finance/dashboard">Split Ledger →</Link>
-          </div>
-          <div style={{ padding: 22 }}>
-            <div className="admin-finance-summary-grid">
-              <div className="admin-finance-stat-box">
-                <span className="admin-finance-stat-label">Platform Gross Volume</span>
-                <strong className="admin-finance-stat-value" style={{ color: "#0F172A" }}>
-                  ETB {fmt(paymentSettings?.platformTotalRevenue || stats.totalRevenue || 0)}
-                </strong>
-                <span className="admin-finance-stat-sub">Cumulative customer orders GMV</span>
-              </div>
-
-              <div className="admin-finance-stat-box">
-                <span className="admin-finance-stat-label">Platform Commission Debited</span>
-                <strong className="admin-finance-stat-value" style={{ color: "#059669" }}>
-                  ETB {fmt(paymentSettings?.platformTotalCommission || 0)}
-                </strong>
-                <span className="admin-finance-stat-sub">Retained revenue credited to CEO wallet</span>
-              </div>
-
-              <div className="admin-finance-stat-box">
-                <span className="admin-finance-stat-label">Global Baseline Rate</span>
-                <strong className="admin-finance-stat-value" style={{ color: "#2563EB" }}>
-                  {paymentSettings?.defaultCommissionRate || 10}%
-                </strong>
-                <span className="admin-finance-stat-sub">Default commission applied to seller orders</span>
-              </div>
-            </div>
-
-            <div style={{ borderTop: "1px solid #E2E8F0", marginTop: 18, paddingTop: 14 }}>
-              <Link
-                to="/finance/dashboard"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  color: "#2563EB",
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                }}
-              >
-                <span>Open Full Revenue Split Ledger</span>
-                <FiArrowRight />
-              </Link>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

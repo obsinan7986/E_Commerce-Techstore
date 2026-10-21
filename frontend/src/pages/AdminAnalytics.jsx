@@ -156,9 +156,6 @@ const AdminAnalytics = () => {
           </p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <Link to="/admin/manual-payments" className="ana-nav-link ana-nav-link--warn">
-            💳 Manual Payments
-          </Link>
           <Link to="/admin/orders" className="ana-nav-link">
             📋 All Orders
           </Link>

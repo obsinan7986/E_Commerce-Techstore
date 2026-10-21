@@ -19,7 +19,7 @@ import "../styles/financeDashboard.css";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const fmt  = (n) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const fmt  = (n) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtK = (n) => {
   n = Number(n || 0);
   return n >= 1_000_000 ? (n / 1_000_000).toFixed(1) + "M"
@@ -39,6 +39,7 @@ const FinanceDashboard = () => {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
+  const [pendingManualOrders, setPendingManualOrders] = useState([]);
   const [approvingId, setApprovingId] = useState(null);
   const [verifyingOrderId, setVerifyingOrderId] = useState(null);
   const [ledgerPage, setLedgerPage] = useState(1);
@@ -83,6 +84,7 @@ const FinanceDashboard = () => {
       toast.success(res.message || `Payment ${action === "verify" ? "approved & verified" : "rejected"} successfully.`);
       setRejectModalOrder(null);
       setRejectReason("");
+      setPendingManualOrders((prev) => prev.filter((o) => o._id !== orderId));
       await load();
     } catch (err) {
       toast.error(err.response?.data?.message || `Failed to ${action} payment.`);
@@ -168,6 +170,7 @@ const FinanceDashboard = () => {
       setError("");
       const res = await getFinanceDashboard();
       setData(res.dashboard);
+      setPendingManualOrders(res.dashboard?.pendingManualOrders || []);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load dashboard.");
     } finally {
@@ -186,7 +189,7 @@ const FinanceDashboard = () => {
 
   const d = data || {};
   const maxMonthly = Math.max(...(d.monthlyRevenue || []).map(m => m.total), 1);
-  const pendingOrders = d.pendingManualOrders || [];
+  const pendingOrders = pendingManualOrders;
 
   return (
     <div className="fd-page">
@@ -242,7 +245,7 @@ const FinanceDashboard = () => {
             onClick={handleExportCsv}
             disabled={isExporting}
           >
-            {isExporting ? "⏳ Exporting…" : "📊 Export to Excel (.csv)"}
+            {isExporting ? "⏳ Exporting…" : "📊 Export Daily Transactions to Excel (.csv)"}
           </button>
 
           <button className="fd-refresh-btn" onClick={load}>↻ Refresh</button>
@@ -291,15 +294,15 @@ const FinanceDashboard = () => {
         <div className="fd-card-header">
           <div>
             <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span>📋 Manual Payment Verification &amp; Approval</span>
-              {pendingOrders.length > 0 && (
+              <span>📋 Payment Approvals &amp; Verification</span>
+              {pendingManualOrders.length > 0 && (
                 <span className="fd-badge fd-badge--pending" style={{ fontSize: 12 }}>
-                  {pendingOrders.length} Pending Approval
+                  {pendingManualOrders.length} Pending Approval
                 </span>
               )}
             </h2>
             <span style={{ fontSize: "0.82rem", color: "#6B7280" }}>
-              Verify customer receipts from Telebirr, CBE Birr, Awash Bank, or M-Pesa. Approving sets status to Paid, confirms the order, and settles CEO commission.
+              Review manual receipts for Telebirr, CBE Birr, M-Pesa, and Awash Bank. Approving sets status to Paid, confirms the order, and settles CEO commission.
             </span>
           </div>
           <button className="fd-refresh-btn" onClick={load} style={{ fontSize: 12 }}>
@@ -307,7 +310,7 @@ const FinanceDashboard = () => {
           </button>
         </div>
 
-        {pendingOrders.length === 0 ? (
+        {pendingManualOrders.length === 0 ? (
           <div className="fd-empty" style={{ padding: "28px 20px" }}>
             <span style={{ fontSize: 26, display: "block", marginBottom: 6 }}>✅</span>
             No manual payments awaiting verification. All customer receipts are up to date!
@@ -327,7 +330,7 @@ const FinanceDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {pendingOrders.map((ord) => {
+                {pendingManualOrders.map((ord) => {
                   const cust = ord.user || {};
                   const isActing = verifyingOrderId === ord._id;
                   const screenshot = ord.manualPayment?.screenshotUrl;
@@ -605,7 +608,7 @@ const FinanceDashboard = () => {
       <div className="fd-card fd-card--recent">
         <div className="fd-card-header">
           <div>
-            <h2>Automated Commission &amp; Revenue Split Ledger</h2>
+            <h2>All Transactions &amp; Splits Ledger</h2>
             <span style={{ fontSize: "0.82rem", color: "#6B7280" }}>
               Live split: debits CEO commission from product price and credits platform finance ledger
             </span>

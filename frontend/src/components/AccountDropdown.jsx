@@ -35,7 +35,6 @@ const ADMIN_ITEMS = [
   { icon: "✅",              label: "Product Approvals",   to: "/admin/product-approvals"  },
   { icon: <FiUsers />,       label: "Users",               to: "/admin/users"              },
   { icon: <FiTag />,         label: "Coupons",             to: "/admin/coupons"            },
-  { icon: <FiCreditCard />,  label: "Payments",            to: "/admin/manual-payments"    },
   { icon: <FiMessageSquare />,label: "Customer Messages",  to: "/admin/messages"           },
 ];
 

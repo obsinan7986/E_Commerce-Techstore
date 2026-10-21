@@ -1,0 +1,36 @@
+/* ============================================================
+   ADMIN DASHBOARD CSS — adminDashboard.css
+   Used by AdminDashboard component
+   ============================================================ */
+
+/* KPI Cards Layout & Large Number Display */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  padding: 14px 16px;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-body {
+  min-width: 0;
+  overflow: visible;
+  flex: 1;
+}
+
+.stat-card strong {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111827;
+  display: block;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: visible;
+}

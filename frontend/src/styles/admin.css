@@ -71,7 +71,7 @@
 /* ── Stats grid ── */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -80,12 +80,13 @@
   background: #fff;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 14px 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,.04);
   transition: box-shadow .2s, transform .2s;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  overflow: visible;
 }
 .stat-card:hover {
   box-shadow: 0 4px 14px rgba(0,0,0,.08);
@@ -105,6 +106,8 @@
 
 .stat-body {
   min-width: 0;
+  overflow: visible;
+  flex: 1;
 }
 
 .stat-card span {
@@ -118,14 +121,13 @@
 }
 
 .stat-card strong {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #111827;
   display: block;
   letter-spacing: -.3px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
 }
 
 /* ── Vertical Executive Operations Sequence ── */

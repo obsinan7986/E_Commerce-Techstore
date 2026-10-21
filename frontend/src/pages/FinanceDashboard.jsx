@@ -40,6 +40,7 @@ const FinanceDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
   const [pendingManualOrders, setPendingManualOrders] = useState([]);
+  const [allTransactions, setAllTransactions] = useState([]);
   const [approvingId, setApprovingId] = useState(null);
   const [verifyingOrderId, setVerifyingOrderId] = useState(null);
   const [ledgerPage, setLedgerPage] = useState(1);
@@ -171,6 +172,7 @@ const FinanceDashboard = () => {
       const res = await getFinanceDashboard();
       setData(res.dashboard);
       setPendingManualOrders(res.dashboard?.pendingManualOrders || []);
+      setAllTransactions(res.dashboard?.ledgerTransactions || []);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load dashboard.");
     } finally {
@@ -190,6 +192,7 @@ const FinanceDashboard = () => {
   const d = data || {};
   const maxMonthly = Math.max(...(d.monthlyRevenue || []).map(m => m.total), 1);
   const pendingOrders = pendingManualOrders;
+  const ledgerList = allTransactions.length > 0 ? allTransactions : (d.ledgerTransactions || []);
 
   return (
     <div className="fd-page">
@@ -615,7 +618,7 @@ const FinanceDashboard = () => {
           </div>
           <Link to="/finance/payments" className="fd-view-all">View all payments →</Link>
         </div>
-        {!(d.ledgerTransactions?.length) ? (
+        {!(ledgerList?.length) ? (
           <div className="fd-empty">No transaction splits recorded yet</div>
         ) : (
           <>
@@ -635,7 +638,7 @@ const FinanceDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {(d.ledgerTransactions || []).slice((ledgerPage - 1) * ledgerLimit, ledgerPage * ledgerLimit).map((t) => {
+                {(ledgerList || []).slice((ledgerPage - 1) * ledgerLimit, ledgerPage * ledgerLimit).map((t) => {
                   const sellers = (t.orderItems || [])
                     .map((item) => item.seller?.fullName)
                     .filter(Boolean);
@@ -693,7 +696,7 @@ const FinanceDashboard = () => {
           </div>
           <Pagination
             currentPage={ledgerPage}
-            totalItems={d.ledgerTransactions?.length || 0}
+            totalItems={ledgerList.length}
             pageSize={ledgerLimit}
             onPageChange={setLedgerPage}
             onPageSizeChange={(newLim) => {

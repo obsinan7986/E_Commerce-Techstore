@@ -35,12 +35,12 @@ const payStatusCls = (s) => ({
 }[s] || "fd-badge");
 
 const FinanceDashboard = () => {
+  const [pendingManualOrders, setPendingManualOrders] = useState([]);
+  const [allTransactions, setAllTransactions] = useState([]);
   const { user } = useAuth();
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
-  const [pendingManualOrders, setPendingManualOrders] = useState([]);
-  const [allTransactions, setAllTransactions] = useState([]);
   const [approvingId, setApprovingId] = useState(null);
   const [verifyingOrderId, setVerifyingOrderId] = useState(null);
   const [ledgerPage, setLedgerPage] = useState(1);

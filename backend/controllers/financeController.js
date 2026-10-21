@@ -281,7 +281,8 @@ export const getFinanceOrderDetail = async (req, res) => {
 // ============================================================
 export const financeVerifyPayment = async (req, res) => {
   try {
-    const { action, adminNote } = req.body;
+    const action = req.body?.action || "verify";
+    const adminNote = req.body?.adminNote || "";
 
     if (!["verify", "reject"].includes(action)) {
       return res.status(400).json({ success: false, message: 'action must be "verify" or "reject".' });

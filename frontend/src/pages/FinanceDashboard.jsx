@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api, { BASE_URL } from '../services/api';
+import '../styles/financeDashboard.css';
 
 export default function FinanceDashboard() {
   // 1. Declare all necessary states cleanly so nothing is ever undefined
@@ -17,14 +19,27 @@ export default function FinanceDashboard() {
   const fetchFinanceData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const userObj = JSON.parse(localStorage.getItem('user') || '{}');
+      const token = localStorage.getItem('token') || userObj.token || '';
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      const res = await axios.get('/api/finance/dashboard', config);
-      
-      setStats(res.data.stats || { totalRevenue: 0, platformCommission: 0, pendingCount: 0 });
-      setPendingManualOrders(res.data.pendingManualOrders || res.data.manualOrders || []);
-      setAllTransactions(res.data.transactions || res.data.orders || []);
+      let res;
+      try {
+        res = await api.get('/finance/dashboard');
+      } catch {
+        res = await axios.get('/api/finance/dashboard', config);
+      }
+
+      const d = res.data?.dashboard || res.data || {};
+      setStats(
+        res.data.stats || {
+          totalRevenue: d.platformTotalRevenue || d.totalGrossSales || d.totalRevenue || 0,
+          platformCommission: d.platformTotalCommission || 0,
+          pendingCount: d.pendingCount || d.manualPending || (d.pendingManualOrders?.length || 0),
+        }
+      );
+      setPendingManualOrders(res.data.pendingManualOrders || res.data.manualOrders || d.pendingManualOrders || []);
+      setAllTransactions(res.data.transactions || res.data.orders || d.ledgerTransactions || []);
       setLoading(false);
     } catch (err) {
       console.error("Error loading finance dashboard:", err);
@@ -36,10 +51,19 @@ export default function FinanceDashboard() {
   // 3. Handle Payment Approval
   const handleApprovePayment = async (orderId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`/api/finance/orders/${orderId}/approve`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const userObj = JSON.parse(localStorage.getItem('user') || '{}');
+      const token = localStorage.getItem('token') || userObj.token || '';
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      try {
+        await api.put(`/finance/orders/${orderId}/approve`, { action: "verify" });
+      } catch {
+        try {
+          await api.put(`/finance/payments/${orderId}/verify`, { action: "verify" });
+        } catch {
+          await axios.put(`/api/finance/orders/${orderId}/approve`, {}, config);
+        }
+      }
       alert("Payment approved successfully! Commission split triggered.");
       fetchFinanceData(); // Refresh data
     } catch (err) {
@@ -56,7 +80,7 @@ export default function FinanceDashboard() {
 
     const headers = "Order ID,Date,Customer Name,Payment Method,Gross Amount (ETB),Platform Commission,Net Payout,Status\n";
     const rows = allTransactions.map(t => 
-      `"${t._id}","${new Date(t.createdAt).toLocaleDateString()}","${t.customer?.name || 'N/A'}","${t.paymentMethod || 'Manual'}","${t.totalPrice || 0}","${t.commissionAmount || 0}","${t.netSellerPayout || 0}","${t.paymentStatus || 'Pending'}"`
+      `"${t._id}","${new Date(t.createdAt).toLocaleDateString()}","${t.customer?.name || t.user?.fullName || 'N/A'}","${t.paymentMethod || 'Manual'}","${t.totalPrice || t.totalGrossItemsPrice || 0}","${t.commissionAmount || t.totalCommissionDebited || 0}","${t.netSellerPayout || t.totalSellerNetPayout || 0}","${t.paymentStatus || 'Pending'}"`
     ).join("\n");
 
     const blob = new Blob(["\uFEFF" + headers + rows], { type: 'text/csv;charset=utf-8;' });
@@ -67,6 +91,13 @@ export default function FinanceDashboard() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const getReceiptUrl = (order) => {
+    const img = order.receiptImage || order.manualPayment?.screenshotUrl;
+    if (!img) return null;
+    if (img.startsWith('http') || img.startsWith('data:')) return img;
+    return `${BASE_URL}${img.startsWith('/') ? img : `/${img}`}`;
   };
 
   if (loading) return <div className="p-8 text-center text-gray-600">Loading Finance Dashboard...</div>;
@@ -130,33 +161,36 @@ export default function FinanceDashboard() {
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
               {Array.isArray(pendingManualOrders) && pendingManualOrders.length > 0 ? (
-                pendingManualOrders.map((order) => (
-                  <tr key={order._id} className="hover:bg-gray-50/50">
-                    <td className="p-4 font-medium text-gray-900">#{order._id.slice(-6).toUpperCase()}</td>
-                    <td className="p-4 text-gray-700">{order.customer?.name || 'Guest User'}</td>
-                    <td className="p-4">
-                      <span className="font-semibold text-gray-800">{order.paymentMethod || 'Telebirr'}</span>
-                      <div className="text-xs text-gray-500">ETB {order.totalPrice?.toLocaleString()}</div>
-                    </td>
-                    <td className="p-4">
-                      {order.receiptImage ? (
-                        <a href={order.receiptImage} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs font-semibold">
-                          View Receipt
-                        </a>
-                      ) : (
-                        <span className="text-gray-400 text-xs">No receipt attached</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-right space-x-2">
-                      <button 
-                        onClick={() => handleApprovePayment(order._id)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm"
-                      >
-                        Approve Payment
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                pendingManualOrders.map((order) => {
+                  const receiptUrl = getReceiptUrl(order);
+                  return (
+                    <tr key={order._id} className="hover:bg-gray-50/50">
+                      <td className="p-4 font-medium text-gray-900">#{order._id.slice(-6).toUpperCase()}</td>
+                      <td className="p-4 text-gray-700">{order.customer?.name || order.user?.fullName || 'Guest User'}</td>
+                      <td className="p-4">
+                        <span className="font-semibold text-gray-800">{order.paymentMethod || 'Telebirr'}</span>
+                        <div className="text-xs text-gray-500">ETB {Number(order.totalPrice || 0).toLocaleString()}</div>
+                      </td>
+                      <td className="p-4">
+                        {receiptUrl ? (
+                          <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-xs font-semibold">
+                            View Receipt
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No receipt attached</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-right space-x-2">
+                        <button 
+                          onClick={() => handleApprovePayment(order._id)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm"
+                        >
+                          Approve Payment
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="5" className="p-8 text-center text-gray-400">

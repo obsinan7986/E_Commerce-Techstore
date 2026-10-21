@@ -26,6 +26,7 @@ router.patch( "/payouts/:id/approve",             ...financeOnly, validateObject
 router.put(   "/payouts/:id/status",              ...financeOnly, validateObjectId("id"), approveFinancePayout);
 router.get(   "/payments/:orderId",               ...financeOnly, validateObjectId("orderId"), getFinanceOrderDetail);
 router.put(   "/payments/:orderId/verify",        ...financeOnly, validateObjectId("orderId"), financeVerifyPayment);
+router.put(   "/orders/:orderId/approve",         ...financeOnly, validateObjectId("orderId"), financeVerifyPayment);
 router.patch( "/payments/:orderId/refund",        ...financeOnly, validateObjectId("orderId"), markRefund);
 
 export default router;

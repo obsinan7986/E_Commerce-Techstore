@@ -94,6 +94,11 @@ const orderSchema = new mongoose.Schema(
         "M-Pesa",
         "Awash Bank",
         "Cash On Delivery",
+        "CBE",
+        "Awash",
+        "manual",
+        "Manual",
+        "mpesa",
       ],
       default: "Cash On Delivery",
     },
@@ -105,6 +110,10 @@ const orderSchema = new mongoose.Schema(
         "Paid",
         "Failed",
         "Refunded",
+        "pending",
+        "paid",
+        "failed",
+        "refunded",
       ],
       default: "Pending",
     },
@@ -157,6 +166,14 @@ const orderSchema = new mongoose.Schema(
     },
 
     // ── Manual payment verification (CBE Birr, Bank Transfer) ──────
+    receiptImage: {
+      type: String,
+      default: "",
+      get: function (v) {
+        return v || this.manualPayment?.screenshotUrl || "";
+      },
+    },
+
     manualPayment: {
       screenshotUrl:    { type: String, default: "" },
       uploadedAt:       { type: Date },
@@ -210,8 +227,28 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true },
   }
 );
+
+orderSchema.virtual("customer", {
+  ref: "User",
+  localField: "user",
+  foreignField: "_id",
+  justOne: true,
+}).set(function (v) {
+  this.user = v;
+});
+
+orderSchema.pre("save", function () {
+  if (this.manualPayment?.screenshotUrl && !this.receiptImage) {
+    this.receiptImage = this.manualPayment.screenshotUrl;
+  } else if (this.receiptImage && (!this.manualPayment || !this.manualPayment.screenshotUrl)) {
+    if (!this.manualPayment) this.manualPayment = {};
+    this.manualPayment.screenshotUrl = this.receiptImage;
+  }
+});
 
 const Order = mongoose.model("Order", orderSchema);
 

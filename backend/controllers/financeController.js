@@ -24,71 +24,84 @@ const MANUAL_METHODS = ["CBE Birr", "Telebirr", "M-Pesa", "Awash Bank"];
 // ============================================================
 export const getFinanceDashboard = async (req, res) => {
   try {
+    const manualOrderFilter = {
+      paymentStatus: { $in: ["Pending", "pending"] },
+      $or: [
+        { paymentMethod: { $regex: /telebirr|cbe|awash|m-?pesa|manual/i } },
+        { receiptImage: { $exists: true, $nin: ["", null] } },
+        { "manualPayment.screenshotUrl": { $exists: true, $nin: ["", null] } },
+      ],
+    };
+
     const [
       totalRevenue,
+      commissionAgg,
       totalPaid,
       totalPending,
       totalFailed,
       totalRefunded,
       totalOrders,
-      manualPending,
       manualVerified,
       manualRejected,
       recentTransactions,
       monthlyRevenue,
       pSettings,
       sellerAgg,
-      ledgerTransactions,
       pendingPayouts,
       pendingPayoutsCount,
+      pendingManualOrders,
+      transactions,
     ] = await Promise.all([
       // Total revenue (all paid)
       Order.aggregate([
-        { $match: { paymentStatus: "Paid" } },
+        { $match: { paymentStatus: { $in: ["Paid", "paid"] } } },
         { $group: { _id: null, total: { $sum: "$totalPrice" } } },
       ]),
 
+      // Total commission debited (platform commission from paid orders)
+      Order.aggregate([
+        { $match: { paymentStatus: { $in: ["Paid", "paid"] } } },
+        { $group: { _id: null, total: { $sum: "$totalCommissionDebited" } } },
+      ]),
+
       // Count paid
-      Order.countDocuments({ paymentStatus: "Paid" }),
+      Order.countDocuments({ paymentStatus: { $in: ["Paid", "paid"] } }),
 
       // Count pending
-      Order.countDocuments({ paymentStatus: "Pending" }),
+      Order.countDocuments({ paymentStatus: { $in: ["Pending", "pending"] } }),
 
       // Count failed
-      Order.countDocuments({ paymentStatus: "Failed" }),
+      Order.countDocuments({ paymentStatus: { $in: ["Failed", "failed"] } }),
 
       // Count refunded
-      Order.countDocuments({ paymentStatus: "Refunded" }),
+      Order.countDocuments({ paymentStatus: { $in: ["Refunded", "refunded"] } }),
 
       // Total orders
       Order.countDocuments(),
 
       // Manual payment stats
       Order.countDocuments({
-        "manualPayment.verificationStatus": "Pending",
-        paymentMethod: { $in: MANUAL_METHODS },
-      }),
-      Order.countDocuments({
         "manualPayment.verificationStatus": "Verified",
-        paymentMethod: { $in: MANUAL_METHODS },
+        paymentMethod: { $regex: /telebirr|cbe|awash|m-?pesa|manual/i },
       }),
       Order.countDocuments({
         "manualPayment.verificationStatus": "Rejected",
-        paymentMethod: { $in: MANUAL_METHODS },
+        paymentMethod: { $regex: /telebirr|cbe|awash|m-?pesa|manual/i },
       }),
 
       // Recent 10 transactions
-      Order.find({ paymentStatus: { $ne: "Pending" } })
+      Order.find({ paymentStatus: { $nin: ["Pending", "pending"] } })
+        .populate("customer", "name email")
         .populate("user", "fullName email")
         .sort({ updatedAt: -1 })
         .limit(10)
-        .select("user totalPrice paymentStatus paymentMethod orderStatus paidAt createdAt"),
+        .select("user customer totalPrice paymentStatus paymentMethod orderStatus paidAt createdAt"),
 
       // Monthly revenue (last 6 months)
       Order.aggregate([
         {
           $match: {
-            paymentStatus: "Paid",
+            paymentStatus: { $in: ["Paid", "paid"] },
             createdAt: { $gte: new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000) },
           },
         },
@@ -118,14 +131,6 @@ export const getFinanceDashboard = async (req, res) => {
         },
       ]),
 
-      // Comprehensive ledger split transactions (last 25 orders)
-      Order.find()
-        .populate("user", "fullName email")
-        .populate("orderItems.seller", "fullName email")
-        .sort({ createdAt: -1 })
-        .limit(25)
-        .select("orderItems totalPrice totalGrossItemsPrice totalCommissionDebited totalSellerNetPayout isCommissionSettled paymentStatus paymentMethod orderStatus paidAt createdAt"),
-
       // Pending seller payout requests
       Payout.find({ status: "Pending" })
         .populate("seller", "fullName storeName email phone sellerCredits pendingSellerCredits payoutAccount")
@@ -135,50 +140,65 @@ export const getFinanceDashboard = async (req, res) => {
       Payout.countDocuments({ status: "Pending" }),
 
       // Pending manual payment orders for Finance direct approval
-      Order.find({
-        "manualPayment.verificationStatus": "Pending",
-        paymentMethod: { $in: MANUAL_METHODS },
-      })
+      Order.find(manualOrderFilter)
+        .populate("customer", "name email")
         .populate("user", "fullName email phone")
-        .sort({ createdAt: -1 })
-        .select("user totalPrice paymentMethod orderStatus manualPayment createdAt"),
+        .sort({ createdAt: -1 }),
+
+      // All transactions for CSV export
+      Order.find()
+        .populate("customer", "name email")
+        .populate("user", "fullName email")
+        .populate("orderItems.seller", "fullName email")
+        .sort({ createdAt: -1 }),
     ]);
 
     const revenue = totalRevenue[0]?.total || 0;
     const paymentSettings = pSettings || {};
+    const platformCommission = paymentSettings.platformTotalCommission || commissionAgg[0]?.total || 0;
     const sellerTotals = sellerAgg[0] || { totalSellerNetCredits: 0, totalPendingCredits: 0 };
 
     // Payment method breakdown
     const methodBreakdown = await Order.aggregate([
-      { $match: { paymentStatus: "Paid" } },
+      { $match: { paymentStatus: { $in: ["Paid", "paid"] } } },
       { $group: { _id: "$paymentMethod", count: { $sum: 1 }, total: { $sum: "$totalPrice" } } },
       { $sort: { total: -1 } },
     ]);
 
+    const stats = {
+      totalRevenue: revenue,
+      platformCommission,
+      pendingCount: pendingManualOrders.length,
+    };
+
     res.status(200).json({
       success: true,
+      stats,
+      pendingManualOrders: pendingManualOrders || [],
+      transactions: transactions || [],
       dashboard: {
         totalRevenue:            revenue,
         platformTotalRevenue:    paymentSettings.platformTotalRevenue || revenue,
-        platformTotalCommission: paymentSettings.platformTotalCommission || 0,
+        platformTotalCommission: platformCommission,
         totalGrossSales:         revenue,
         totalSellerNetCredits:   sellerTotals.totalSellerNetCredits || 0,
         pendingSellerCredits:    sellerTotals.totalPendingCredits || 0,
         totalOrders,
         paidCount:               totalPaid,
-        pendingCount:            totalPending,
+        pendingCount:            pendingManualOrders.length,
         failedCount:             totalFailed,
         refundedCount:           totalRefunded,
-        manualPending,
+        manualPending:           pendingManualOrders.length,
         manualVerified,
         manualRejected,
         pendingPayouts:          pendingPayouts || [],
         pendingPayoutsCount:     pendingPayoutsCount || 0,
         pendingManualOrders:     pendingManualOrders || [],
+        transactions:            transactions || [],
         methodBreakdown,
         monthlyRevenue,
         recentTransactions,
-        ledgerTransactions,
+        ledgerTransactions:      transactions.slice(0, 25),
       },
     });
   } catch (err) {
@@ -291,19 +311,27 @@ export const financeVerifyPayment = async (req, res) => {
     const order = await Order.findById(req.params.orderId);
     if (!order) return res.status(404).json({ success: false, message: "Order not found." });
 
-    if (!MANUAL_METHODS.includes(order.paymentMethod)) {
+    const isManual =
+      /telebirr|cbe|awash|m-?pesa|manual/i.test(order.paymentMethod || "") ||
+      Boolean(order.receiptImage) ||
+      Boolean(order.manualPayment?.screenshotUrl) ||
+      MANUAL_METHODS.includes(order.paymentMethod);
+
+    if (!isManual) {
       return res.status(400).json({
         success: false,
         message: "Only manual payment orders can be verified here.",
       });
     }
 
-    if (order.manualPayment?.verificationStatus !== "Pending") {
+    if (order.paymentStatus === "Paid" && order.isPaid) {
       return res.status(400).json({
         success: false,
-        message: "No pending screenshot to review for this order.",
+        message: "This order has already been verified and marked as Paid.",
       });
     }
+
+    if (!order.manualPayment) order.manualPayment = {};
 
     if (action === "verify") {
       order.manualPayment.verificationStatus = "Verified";

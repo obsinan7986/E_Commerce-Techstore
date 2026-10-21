@@ -185,12 +185,32 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
 // ── Sync isAdmin flag with role ──────────────────────────────
 userSchema.pre("save", function () {
   this.isAdmin = (this.role === "admin" || this.role === "owner");
+});
+
+userSchema.virtual("name").get(function () {
+  return this._doc?.name || this.fullName || "";
+}).set(function (v) {
+  this.fullName = v;
+});
+
+userSchema.pre("find", function () {
+  if (this.selectedInclusively()) {
+    this.select("fullName");
+  }
+});
+
+userSchema.pre("findOne", function () {
+  if (this.selectedInclusively()) {
+    this.select("fullName");
+  }
 });
 
 const User = mongoose.model("User", userSchema);

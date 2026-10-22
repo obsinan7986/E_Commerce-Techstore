@@ -1,14 +1,9 @@
 import { useState } from "react";
 import "../styles/ProductGallery.css";
-import { BASE_URL } from "../services/api";
-
-
-
-const resolve = (img) =>
-  img?.startsWith("http") ? img : `${BASE_URL}${img}`;
+import { resolveImageUrl, handleImageError, PRODUCT_FALLBACK_SVG } from "../utils/imageFallback";
 
 const ProductGallery = ({ product }) => {
-  const main = resolve(product.image);
+  const main = resolveImageUrl(product?.image, "product");
   // Real implementation uses only the one image the product has.
   // Thumbnails show the same image (duplicates removed visually).
   const images = [main];
@@ -20,9 +15,9 @@ const ProductGallery = ({ product }) => {
       {/* Main image */}
       <div className="gallery-main">
         <img
-          src={selected}
-          alt={product.name}
-          onError={(e) => { e.target.style.opacity = "0.2"; }}
+          src={selected || PRODUCT_FALLBACK_SVG}
+          alt={product?.name || "Product"}
+          onError={(e) => handleImageError(e, "product")}
         />
       </div>
 
@@ -37,7 +32,7 @@ const ProductGallery = ({ product }) => {
               onClick={() => setSelected(img)}
               aria-label={`View image ${i + 1}`}
             >
-              <img src={img} alt="" onError={(e) => { e.target.style.opacity = "0"; }} />
+              <img src={img} alt="" onError={(e) => handleImageError(e, "product")} />
             </button>
           ))}
         </div>

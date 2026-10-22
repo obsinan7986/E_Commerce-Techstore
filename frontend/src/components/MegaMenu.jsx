@@ -5,9 +5,7 @@ import {
   getCategoryProducts,
 } from "../services/categoryService";
 import "../styles/megamenu.css";
-import { BASE_URL } from "../services/api";
-
-
+import { resolveImageUrl, handleImageError } from "../utils/imageFallback";
 
 const MegaMenu = () => {
   const [categories, setCategories] = useState([]);
@@ -87,9 +85,9 @@ const MegaMenu = () => {
             >
               <div className="preview-image">
                 <img
-                  src={product.image?.startsWith("http") ? product.image : `${BASE_URL}${product.image}`}
+                  src={resolveImageUrl(product.image, "product")}
                   alt={product.name}
-                  onError={(e) => { e.target.src = "/placeholder.png"; }}
+                  onError={(e) => handleImageError(e, "product")}
                 />
               </div>
 

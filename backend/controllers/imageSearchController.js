@@ -63,8 +63,7 @@ export const imageSearch = async (req, res) => {
     }
 
     if (!ALLOWED_TYPES.includes(req.file.mimetype)) {
-      // Delete uploaded file
-      fs.unlink(req.file.path, () => {});
+      if (req.file.path) fs.unlink(req.file.path, () => {});
       return res.status(400).json({
         success: false,
         message: "Only JPG, PNG and WEBP images are supported.",
@@ -72,7 +71,7 @@ export const imageSearch = async (req, res) => {
     }
 
     if (req.file.size > MAX_SIZE_BYTES) {
-      fs.unlink(req.file.path, () => {});
+      if (req.file.path) fs.unlink(req.file.path, () => {});
       return res.status(400).json({
         success: false,
         message: "Image must be under 5MB.",
@@ -83,7 +82,7 @@ export const imageSearch = async (req, res) => {
     const { words, inferredCategory } = inferKeywords(req.file.originalname, req.file.mimetype);
 
     // ── Clean up uploaded file (not stored — only used for keywords) ──
-    fs.unlink(req.file.path, () => {});
+    if (req.file.path) fs.unlink(req.file.path, () => {});
 
     // ── Build search query ────────────────────────────────────
     const approvalFilter = {

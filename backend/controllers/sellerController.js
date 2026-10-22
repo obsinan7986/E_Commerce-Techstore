@@ -65,15 +65,31 @@ export const sellerCreateProduct = async (req, res) => {
       });
     }
 
-    const { name, description, brand, category, image, price, stock } = req.body;
-    if (!name || !description || !brand || !category || !price) {
+    const { name, description, brand, category, image, price, stock, compareAtPrice } = req.body;
+    if (!name || !description || !brand || !category || price === undefined) {
       return res.status(400).json({ success: false, message: "name, description, brand, category and price are required." });
+    }
+
+    if (Number(price) <= 0) {
+      return res.status(400).json({ success: false, message: "Price must be greater than zero." });
+    }
+
+    let parsedCompareAt = 0;
+    if (compareAtPrice !== undefined && compareAtPrice !== null && compareAtPrice !== "") {
+      parsedCompareAt = Number(compareAtPrice);
+      if (isNaN(parsedCompareAt) || (parsedCompareAt !== 0 && parsedCompareAt <= Number(price))) {
+        return res.status(400).json({
+          success: false,
+          message: "Original price must be higher than the selling price.",
+        });
+      }
     }
 
     const product = await Product.create({
       name, description, brand, category,
       image:          image || "",
       price:          Number(price),
+      compareAtPrice: parsedCompareAt,
       stock:          Number(stock) || 0,
       seller:         req.user._id,
       approvalStatus: "pending",   // always pending until admin approves
@@ -98,7 +114,34 @@ export const sellerUpdateProduct = async (req, res) => {
     const product = await Product.findOne({ _id: req.params.id, seller: req.user._id });
     if (!product) return res.status(404).json({ success: false, message: "Product not found or not yours." });
 
-    const { name, description, brand, category, image, price, stock } = req.body;
+    const { name, description, brand, category, image, price, stock, compareAtPrice } = req.body;
+    const targetPrice = price !== undefined ? Number(price) : product.price;
+
+    if (price !== undefined && Number(price) <= 0) {
+      return res.status(400).json({ success: false, message: "Price must be greater than zero." });
+    }
+
+    if (compareAtPrice !== undefined) {
+      let parsedCompareAt = 0;
+      if (compareAtPrice !== null && compareAtPrice !== "") {
+        parsedCompareAt = Number(compareAtPrice);
+      }
+      if (isNaN(parsedCompareAt) || (parsedCompareAt !== 0 && parsedCompareAt <= targetPrice)) {
+        return res.status(400).json({
+          success: false,
+          message: "Original price must be higher than the selling price.",
+        });
+      }
+      product.compareAtPrice = parsedCompareAt;
+    } else if (price !== undefined && product.compareAtPrice > 0) {
+      if (product.compareAtPrice <= targetPrice) {
+        return res.status(400).json({
+          success: false,
+          message: "Original price must be higher than the selling price.",
+        });
+      }
+    }
+
     if (name)        product.name        = name;
     if (description) product.description = description;
     if (brand)       product.brand       = brand;
@@ -450,7 +493,8 @@ export const sellerSubmitKYC = async (req, res) => {
       if (Array.isArray(req.files)) {
         for (const file of req.files) {
           const fn = file.fieldname;
-          const filePath = `/uploads/${file.filename}`;
+          const p = file.path || file.filename || "";
+          const filePath = p.startsWith("http") || p.startsWith("/uploads") ? p : `/uploads/${p}`;
           if (["idFront", "idFrontImage", "idDocumentImage", "front"].includes(fn)) {
             if (!idFront) idFront = filePath;
           } else if (["idBack", "idBackImage", "back"].includes(fn)) {
@@ -459,10 +503,12 @@ export const sellerSubmitKYC = async (req, res) => {
         }
         // Fallback: if not matched by fieldname, use position order
         if (!idFront && req.files[0]) {
-          idFront = `/uploads/${req.files[0].filename}`;
+          const p = req.files[0].path || req.files[0].filename || "";
+          idFront = p.startsWith("http") || p.startsWith("/uploads") ? p : `/uploads/${p}`;
         }
         if (!idBack && req.files[1]) {
-          idBack = `/uploads/${req.files[1].filename}`;
+          const p = req.files[1].path || req.files[1].filename || "";
+          idBack = p.startsWith("http") || p.startsWith("/uploads") ? p : `/uploads/${p}`;
         }
       } else if (typeof req.files === "object") {
         const front =
@@ -475,11 +521,18 @@ export const sellerSubmitKYC = async (req, res) => {
           req.files.idBackImage?.[0] ||
           req.files.back?.[0];
 
-        if (front) idFront = `/uploads/${front.filename}`;
-        if (back) idBack = `/uploads/${back.filename}`;
+        if (front) {
+          const p = front.path || front.filename || "";
+          idFront = p.startsWith("http") || p.startsWith("/uploads") ? p : `/uploads/${p}`;
+        }
+        if (back) {
+          const p = back.path || back.filename || "";
+          idBack = p.startsWith("http") || p.startsWith("/uploads") ? p : `/uploads/${p}`;
+        }
       }
     } else if (req.file) {
-      idFront = `/uploads/${req.file.filename}`;
+      const p = req.file.path || req.file.filename || "";
+      idFront = p.startsWith("http") || p.startsWith("/uploads") ? p : `/uploads/${p}`;
     }
 
     if (!idFront) {

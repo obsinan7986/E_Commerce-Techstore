@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import ProductCard from "../components/ProductCard";
+import { getDiscount } from "../utils/pricing";
 import "../styles/Products.css";
 
 const BRAND_CONFIG = [
@@ -99,6 +100,7 @@ const Products = ({ initialFilter = "" }) => {
 
   // Determine badge type for cards
   const badgeType = filterParam === "deals" ? "deals" : filterParam === "new-arrivals" ? "new" : null;
+  const discountedCount = useMemo(() => products.filter((p) => getDiscount(p).hasDiscount).length, [products]);
 
   return (
     <main className="products-page">
@@ -109,14 +111,13 @@ const Products = ({ initialFilter = "" }) => {
             <span className="filter-hero-pill">🔥 Flash Deals &amp; Discounts</span>
             <h1>Hot Deals &amp; Flash Discounts</h1>
             <p>
-              Save up to 30% OFF on premium tech, smartphones, laptops, and accessories.
-              All items backed by full warranty and free nationwide delivery!
+              Browse special offers and discounted prices across smartphones, laptops, and tech accessories.
             </p>
           </div>
           <div className="filter-hero-stats">
             <div className="filter-stat-box">
-              <span className="filter-stat-num">-20%</span>
-              <span className="filter-stat-lbl">Instant Discount</span>
+              <span className="filter-stat-num">{discountedCount}</span>
+              <span className="filter-stat-lbl">Products on sale</span>
             </div>
             <div className="filter-stat-box">
               <span className="filter-stat-num">{products.length}</span>

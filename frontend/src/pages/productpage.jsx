@@ -10,6 +10,7 @@ import { addToCart } from "../services/cartService";
 import { useCart } from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { toast } from "react-toastify";
+import { getDiscount } from "../utils/pricing";
 
 import "../styles/productpage.css";
 
@@ -88,9 +89,8 @@ const ProductPage = () => {
     );
   }
 
-  const oldPrice    = Math.round(product.price * 1.2);
+  const { hasDiscount, oldPrice, percent } = getDiscount(product);
   const inStock     = product.stock > 0;
-  const discountPct = 20;
 
   return (
     <>
@@ -129,8 +129,12 @@ const ProductPage = () => {
             {/* Price */}
             <div className="price-box">
               <span className="new-price">{formatPrice(product.price)}</span>
-              <span className="old-price">{formatPrice(oldPrice)}</span>
-              <span className="discount">-{discountPct}%</span>
+              {hasDiscount && (
+                <>
+                  <span className="old-price">{formatPrice(oldPrice)}</span>
+                  <span className="discount">-{percent}%</span>
+                </>
+              )}
             </div>
 
             {/* Meta */}

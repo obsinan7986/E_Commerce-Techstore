@@ -234,6 +234,7 @@ export const createProduct = async (req, res) => {
       image,
       price,
       stock,
+      compareAtPrice,
     } = req.body;
 
     if (!name || !description || !brand || !category || !image || price === undefined) {
@@ -250,6 +251,17 @@ export const createProduct = async (req, res) => {
       });
     }
 
+    let parsedCompareAt = 0;
+    if (compareAtPrice !== undefined && compareAtPrice !== null && compareAtPrice !== "") {
+      parsedCompareAt = Number(compareAtPrice);
+      if (isNaN(parsedCompareAt) || (parsedCompareAt !== 0 && parsedCompareAt <= Number(price))) {
+        return res.status(400).json({
+          success: false,
+          message: "Original price must be higher than the selling price.",
+        });
+      }
+    }
+
     if (stock !== undefined && Number(stock) < 0) {
       return res.status(400).json({
         success: false,
@@ -263,7 +275,8 @@ export const createProduct = async (req, res) => {
       brand,
       category,
       image,
-      price,
+      price: Number(price),
+      compareAtPrice: parsedCompareAt,
       stock: stock ?? 0,
       approvalStatus: "approved",   // admin/owner created products are pre-approved
     });
@@ -297,11 +310,34 @@ export const updateProduct = async (req, res) => {
       });
     }
 
+    const targetPrice = req.body.price !== undefined ? Number(req.body.price) : product.price;
+
     if (req.body.price !== undefined && Number(req.body.price) <= 0) {
       return res.status(400).json({
         success: false,
         message: "Price must be greater than zero.",
       });
+    }
+
+    if (req.body.compareAtPrice !== undefined) {
+      let parsedCompareAt = 0;
+      if (req.body.compareAtPrice !== null && req.body.compareAtPrice !== "") {
+        parsedCompareAt = Number(req.body.compareAtPrice);
+      }
+      if (isNaN(parsedCompareAt) || (parsedCompareAt !== 0 && parsedCompareAt <= targetPrice)) {
+        return res.status(400).json({
+          success: false,
+          message: "Original price must be higher than the selling price.",
+        });
+      }
+      product.compareAtPrice = parsedCompareAt;
+    } else if (req.body.price !== undefined && product.compareAtPrice > 0) {
+      if (product.compareAtPrice <= targetPrice) {
+        return res.status(400).json({
+          success: false,
+          message: "Original price must be higher than the selling price.",
+        });
+      }
     }
 
     if (req.body.stock !== undefined && Number(req.body.stock) < 0) {
@@ -316,8 +352,8 @@ export const updateProduct = async (req, res) => {
     product.brand = req.body.brand || product.brand;
     product.category = req.body.category || product.category;
     product.image = req.body.image || product.image;
-    product.price = req.body.price ?? product.price;
-    product.stock = req.body.stock ?? product.stock;
+    product.price = req.body.price !== undefined ? Number(req.body.price) : product.price;
+    product.stock = req.body.stock !== undefined ? Number(req.body.stock) : product.stock;
 
     const updatedProduct = await product.save();
 

@@ -11,8 +11,8 @@ import NotificationBell from "./NotificationBell";
 import LocaleSelector  from "./LocaleSelector";
 import { useCart }     from "../context/CartContext";
 import { useCurrency } from "../context/CurrencyContext";
-import api, { BASE_URL } from "../services/api";
-import { handleImageError } from "../utils/imageFallback";
+import api from "../services/api";
+import { handleImageError, resolveImageUrl } from "../utils/imageFallback";
 import oictLogo        from "../assets/OICT logo.jpg";
 import "../styles/navbar.css";
 
@@ -176,9 +176,7 @@ const Navbar = () => {
                     </div>
                     <ul className="search-dropdown-list">
                       {suggestions.map((p) => {
-                        const imgUrl = p.image?.startsWith("http")
-                          ? p.image
-                          : `${BASE_URL}${p.image?.startsWith("/") ? p.image : `/${p.image}`}`;
+                        const imgUrl = resolveImageUrl(p.image, "product");
                         return (
                           <li key={p._id}>
                             <Link

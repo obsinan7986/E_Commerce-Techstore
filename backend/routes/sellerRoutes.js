@@ -16,7 +16,7 @@ import {
   sellerUpdatePayoutAccount,
 } from "../controllers/sellerController.js";
 
-import upload from "../middleware/uploadMiddleware.js";
+import upload, { cloudifyUploads } from "../middleware/uploadMiddleware.js";
 
 const router    = express.Router();
 const sellerOnly = [protect, requireRole("seller", "owner")];
@@ -40,6 +40,7 @@ router.post(
   "/kyc",
   protect,
   upload.any(),
+  cloudifyUploads("oict_kyc"),
   sellerSubmitKYC
 );
 router.get(  "/payout-account", ...sellerOnly, sellerGetKYCStatus);
@@ -52,16 +53,18 @@ router.get(  "/payouts",        ...sellerOnly, sellerGetPayoutHistory);
 router.get( "/reviews", ...sellerOnly, sellerGetReviews);
 
 // Upload alias for seller
-router.post( "/upload", ...sellerOnly, upload.single("image"), (req, res) => {
+router.post( "/upload", ...sellerOnly, upload.single("image"), cloudifyUploads("oict_products"), (req, res) => {
   if (req.file) {
+    const imageUrl = req.file.path || req.file.filename;
     return res.status(200).json({
       success: true,
       message: "Image uploaded successfully",
-      image: `/uploads/${req.file.filename}`,
+      image: imageUrl,
+      filename: imageUrl,
     });
   }
   if (req.body?.image) {
-    return res.status(200).json({ success: true, image: req.body.image });
+    return res.status(200).json({ success: true, image: req.body.image, filename: req.body.image });
   }
   return res.status(400).json({ success: false, message: "No image file provided." });
 });

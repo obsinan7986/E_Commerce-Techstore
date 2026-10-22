@@ -330,7 +330,7 @@ const Checkout = () => {
                 </div>
                 {qrSettings?.bankQrCode && (
                   <div className="qr-code-block">
-                    <img src={`${BASE_URL}${qrSettings.bankQrCode}`} alt="Bank QR Code" className="qr-code-img" />
+                    <img src={qrSettings.bankQrCode.startsWith("http") ? qrSettings.bankQrCode : `${BASE_URL}${qrSettings.bankQrCode}`} alt="Bank QR Code" className="qr-code-img" />
                     <p className="qr-scan-hint">Scan to pay</p>
                   </div>
                 )}

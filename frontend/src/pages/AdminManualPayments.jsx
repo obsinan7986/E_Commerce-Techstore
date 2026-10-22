@@ -227,7 +227,7 @@ const AdminManualPayments = () => {
               const mp        = order.manualPayment || {};
               const customer  = order.user          || {};
               const isActing  = acting[order._id];
-              const screenshotFull = mp.screenshotUrl ? `${BASE_URL}${mp.screenshotUrl}` : null;
+              const screenshotFull = mp.screenshotUrl ? (mp.screenshotUrl.startsWith("http") ? mp.screenshotUrl : `${BASE_URL}${mp.screenshotUrl}`) : null;
 
               return (
                 <div className="amp-card" key={order._id}>

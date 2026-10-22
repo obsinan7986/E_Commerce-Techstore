@@ -18,7 +18,7 @@ import {
 import { protect } from "../middleware/authMiddleware.js";
 import { admin }   from "../middleware/adminMiddleware.js";
 import { requireRole } from "../middleware/roleMiddleware.js";
-import upload      from "../middleware/uploadMiddleware.js";
+import upload, { cloudifyUploads } from "../middleware/uploadMiddleware.js";
 import { validateObjectId } from "../utils/validateObjectId.js";
 
 const router = express.Router();
@@ -30,7 +30,7 @@ router.get( "/chapa/callback", chapaCallback);   // no protect — called by Cha
 
 // ── Payment settings (QR code) ───────────────────────────────────────
 router.get("/settings",                           getPaymentSettings);           // public
-router.put("/settings", protect, admin, upload.single("qrCode"), updatePaymentSettings);
+router.put("/settings", protect, admin, upload.single("qrCode"), cloudifyUploads("oict_settings"), updatePaymentSettings);
 
 // ── Manual payment screenshot ────────────────────────────────────────
 router.post(
@@ -38,6 +38,7 @@ router.post(
   protect,
   validateObjectId("orderId"),
   upload.single("screenshot"),
+  cloudifyUploads("oict_screenshots"),
   uploadPaymentScreenshot
 );
 

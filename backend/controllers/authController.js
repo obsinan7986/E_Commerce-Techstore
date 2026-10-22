@@ -255,12 +255,22 @@ export const updateUserProfile = async (req, res) => {
 
     const { fullName, phone, address, currentPassword, newPassword, avatar, profileImage } = req.body;
     const file = req.file || req.files?.[0] || req.files?.avatar?.[0] || req.files?.image?.[0];
-    if (file && fs.existsSync(file.path)) {
-      const buf = fs.readFileSync(file.path);
-      const mime = file.mimetype || "image/jpeg";
-      const b64 = "data:" + mime + ";base64," + buf.toString("base64");
-      user.avatar = b64;
-      user.profileImage = b64;
+    if (file) {
+      if (file.path && file.path.startsWith("http")) {
+        user.avatar = file.path;
+        user.profileImage = file.path;
+      } else if (file.buffer) {
+        const mime = file.mimetype || "image/jpeg";
+        const b64 = "data:" + mime + ";base64," + file.buffer.toString("base64");
+        user.avatar = b64;
+        user.profileImage = b64;
+      } else if (file.path && fs.existsSync(file.path)) {
+        const buf = fs.readFileSync(file.path);
+        const mime = file.mimetype || "image/jpeg";
+        const b64 = "data:" + mime + ";base64," + buf.toString("base64");
+        user.avatar = b64;
+        user.profileImage = b64;
+      }
     } else if (avatar) {
       user.avatar = avatar;
       user.profileImage = avatar;
@@ -434,10 +444,17 @@ export const uploadAvatar = async (req, res) => {
     let avatarBase64 = "";
     const file = req.file || req.files?.[0] || req.files?.avatar?.[0] || req.files?.image?.[0];
 
-    if (file && fs.existsSync(file.path)) {
-      const buf = fs.readFileSync(file.path);
-      const mime = file.mimetype || "image/jpeg";
-      avatarBase64 = "data:" + mime + ";base64," + buf.toString("base64");
+    if (file) {
+      if (file.path && file.path.startsWith("http")) {
+        avatarBase64 = file.path;
+      } else if (file.buffer) {
+        const mime = file.mimetype || "image/jpeg";
+        avatarBase64 = "data:" + mime + ";base64," + file.buffer.toString("base64");
+      } else if (file.path && fs.existsSync(file.path)) {
+        const buf = fs.readFileSync(file.path);
+        const mime = file.mimetype || "image/jpeg";
+        avatarBase64 = "data:" + mime + ";base64," + buf.toString("base64");
+      }
     } else if (req.body?.avatar && typeof req.body.avatar === "string") {
       avatarBase64 = req.body.avatar;
     } else if (req.body?.image && typeof req.body.image === "string") {

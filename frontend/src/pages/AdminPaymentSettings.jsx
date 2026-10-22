@@ -167,7 +167,7 @@ const AdminPaymentSettings = () => {
             {currentQr && !qrPreview && (
               <div className="aps-qr-current">
                 <p>Current QR:</p>
-                <img src={`${BASE_URL}${currentQr}`} alt="Current QR" className="aps-qr-img" />
+                <img src={currentQr.startsWith("http") ? currentQr : `${BASE_URL}${currentQr}`} alt="Current QR" className="aps-qr-img" />
               </div>
             )}
 

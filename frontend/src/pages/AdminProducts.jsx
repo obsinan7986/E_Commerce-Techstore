@@ -21,7 +21,7 @@ const CATEGORIES = [
 
 const BLANK = {
   name: "", description: "", brand: "",
-  category: "Smartphones", price: "", stock: "", image: "",
+  category: "Smartphones", price: "", compareAtPrice: "", stock: "", image: "",
 };
 
 /* ── Stock status helper ── */
@@ -126,7 +126,7 @@ const AdminProducts = () => {
   const openEdit   = (p)  => {
     setEditTarget(p._id);
     setForm({ name: p.name, description: p.description, brand: p.brand,
-               category: p.category, price: p.price, stock: p.stock, image: p.image || "" });
+               category: p.category, price: p.price, compareAtPrice: p.compareAtPrice ? String(p.compareAtPrice) : "", stock: p.stock, image: p.image || "" });
     setImagePreview(p.image?.startsWith("http") ? p.image : p.image ? `${BASE_URL}${p.image}` : "");
     setShowForm(true);
   };
@@ -144,7 +144,12 @@ const AdminProducts = () => {
 
     try {
       setFormLoading(true);
-      const payload = { ...form, price: Number(form.price), stock: Number(form.stock || 0) };
+      const payload = {
+        ...form,
+        price: Number(form.price),
+        compareAtPrice: Number(form.compareAtPrice) || 0,
+        stock: Number(form.stock || 0)
+      };
       if (editTarget) {
         await updateAdminProduct(editTarget, payload);
         flash("success", "Product updated.");
@@ -463,6 +468,19 @@ const AdminProducts = () => {
                         onChange={handleFormChange}
                       />
                     </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Original price (optional — enter a higher price to show a discount)</label>
+                    <input
+                      name="compareAtPrice"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={form.compareAtPrice}
+                      onChange={handleFormChange}
+                    />
                   </div>
 
                   <div className="form-group">

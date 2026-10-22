@@ -165,7 +165,7 @@ const PaymentHistory = () => {
               <div className="ph-bank-reminder-item" key={i}>
                 {qrSettings.bankQrCode && i === 0 && (
                   <img
-                    src={`${BASE_URL}${qrSettings.bankQrCode}`}
+                    src={qrSettings.bankQrCode.startsWith("http") ? qrSettings.bankQrCode : `${BASE_URL}${qrSettings.bankQrCode}`}
                     alt="QR"
                     className="ph-bank-qr"
                   />
@@ -192,7 +192,7 @@ const PaymentHistory = () => {
             {!qrSettings.bankAccounts?.length && qrSettings.accountNumber && (
               <div className="ph-bank-reminder-item">
                 {qrSettings.bankQrCode && (
-                  <img src={`${BASE_URL}${qrSettings.bankQrCode}`} alt="QR" className="ph-bank-qr" />
+                  <img src={qrSettings.bankQrCode.startsWith("http") ? qrSettings.bankQrCode : `${BASE_URL}${qrSettings.bankQrCode}`} alt="QR" className="ph-bank-qr" />
                 )}
                 <div>
                   {qrSettings.bankName      && <span className="ph-bank-name">{qrSettings.bankName}</span>}
@@ -240,7 +240,7 @@ const PaymentHistory = () => {
             const vs     = mp.verificationStatus || "None";
             const vcfg   = VERIFY_CFG[vs] || VERIFY_CFG.None;
             const pcfg   = PAY_CFG[order.paymentStatus] || PAY_CFG.Pending;
-            const scrFull = mp.screenshotUrl ? `${BASE_URL}${mp.screenshotUrl}` : null;
+            const scrFull = mp.screenshotUrl ? (mp.screenshotUrl.startsWith("http") ? mp.screenshotUrl : `${BASE_URL}${mp.screenshotUrl}`) : null;
 
             return (
               <div className="ph-card" key={order._id}>

@@ -17,7 +17,7 @@ import {
 } from "../controllers/addressController.js";
 import { protect }       from "../middleware/authMiddleware.js";
 import { sellerSubmitKYC } from "../controllers/sellerController.js";
-import upload           from "../middleware/uploadMiddleware.js";
+import upload, { cloudifyUploads } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -25,14 +25,15 @@ const router = express.Router();
 router.post("/register",         registerUser);
 router.post("/login",            loginUser);
 router.get( "/profile", protect, getUserProfile);
-router.put( "/profile", protect, upload.any(), updateUserProfile);
-router.post("/avatar",  protect, upload.any(), uploadAvatar);
+router.put( "/profile", protect, upload.any(), cloudifyUploads("oict_avatars"), updateUserProfile);
+router.post("/avatar",  protect, upload.any(), cloudifyUploads("oict_avatars"), uploadAvatar);
 router.post("/forgot-password",  forgotPassword);
 router.post("/reset-password",   resetPassword);
 router.post(
   "/become-seller",
   protect,
   upload.any(),
+  cloudifyUploads("oict_kyc"),
   sellerSubmitKYC
 );
 

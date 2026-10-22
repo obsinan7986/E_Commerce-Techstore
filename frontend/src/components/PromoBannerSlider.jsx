@@ -38,7 +38,6 @@ const STATIC_SLIDE = {
   subtitle:    "Discover the latest smartphones, laptops and accessories at the best prices.",
   productLink: "/products",
   image:       "/oict-banner.png",
-  badge:       { top: "UP TO", number: "20%", unit: "OFF" },
 };
 
 /* ── Component ────────────────────────────────────────────── */
@@ -176,15 +175,6 @@ const PromoBannerSlider = () => {
 
             {/* Content */}
             <div className="pbs-content">
-              {/* Discount badge — static slide only */}
-              {isS && (
-                <div className="hero-off-badge">
-                  <span className="off-label">{s.badge.top}</span>
-                  <span className="off-number">{s.badge.number}</span>
-                  <span className="off-pct">{s.badge.unit}</span>
-                </div>
-              )}
-
               {/* Text */}
               <div className="pbs-text">
                 {isS ? (

@@ -342,8 +342,8 @@ const OwnerUserManagement = () => {
                 <div key={label} className="od-kyc-doc">
                   <p className="od-kyc-doc-label">{label}</p>
                   {path ? (
-                    <a href={`${BASE_URL}${path}`} target="_blank" rel="noreferrer">
-                      <img src={`${BASE_URL}${path}`} alt={label} className="od-kyc-img" onError={(e) => { e.target.style.opacity = "0.3"; }} />
+                    <a href={path.startsWith("http") ? path : `${BASE_URL}${path}`} target="_blank" rel="noreferrer">
+                      <img src={path.startsWith("http") ? path : `${BASE_URL}${path}`} alt={label} className="od-kyc-img" onError={(e) => { e.target.style.opacity = "0.3"; }} />
                     </a>
                   ) : <div className="od-kyc-missing">Not uploaded</div>}
                 </div>

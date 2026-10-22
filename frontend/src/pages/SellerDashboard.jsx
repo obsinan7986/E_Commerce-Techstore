@@ -22,6 +22,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import api, { BASE_URL } from "../services/api";
+import { resolveImageUrl, handleImageError, PRODUCT_FALLBACK_SVG } from "../utils/imageFallback";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import Pagination from "../components/Pagination";
@@ -59,6 +60,7 @@ const EMPTY_FORM = {
   category: "Smartphones",
   image: "",
   price: "",
+  compareAtPrice: "",
   stock: "10",
 };
 
@@ -281,9 +283,10 @@ const SellerDashboard = () => {
       category: p.category || "Smartphones",
       image: p.image || "",
       price: String(p.price || ""),
+      compareAtPrice: p.compareAtPrice ? String(p.compareAtPrice) : "",
       stock: String(p.stock || "0"),
     });
-    setPreview(p.image ? `${BASE_URL}${p.image}` : "");
+    setPreview(p.image ? resolveImageUrl(p.image, "product") : "");
     setFormErr("");
     setFormSuccess("");
     setShowModal(true);
@@ -309,6 +312,7 @@ const SellerDashboard = () => {
       const payload = {
         ...form,
         price: Number(form.price),
+        compareAtPrice: Number(form.compareAtPrice) || 0,
         stock: Number(form.stock) || 0,
       };
 
@@ -629,10 +633,10 @@ const SellerDashboard = () => {
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             {sale.image ? (
                               <img
-                                src={sale.image.startsWith("http") ? sale.image : `${BASE_URL}${sale.image}`}
+                                src={resolveImageUrl(sale.image, "product")}
                                 alt={sale.productName}
                                 className="sd-prod-thumb"
-                                onError={(e) => { e.target.style.opacity = "0.3"; }}
+                                onError={(e) => handleImageError(e, "product")}
                               />
                             ) : (
                               <div className="sd-prod-ph">📦</div>
@@ -843,10 +847,10 @@ const SellerDashboard = () => {
                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             {p.image ? (
                               <img
-                                src={p.image.startsWith("http") ? p.image : `${BASE_URL}${p.image}`}
+                                src={resolveImageUrl(p.image, "product")}
                                 alt={p.name}
                                 className="sd-prod-thumb"
-                                onError={(e) => { e.target.style.opacity = "0.3"; }}
+                                onError={(e) => handleImageError(e, "product")}
                               />
                             ) : (
                               <div className="sd-prod-ph">📷</div>
@@ -1029,6 +1033,19 @@ const SellerDashboard = () => {
                 </div>
 
                 <div className="sd-field">
+                  <label>Original price (optional — enter a higher price to show a discount)</label>
+                  <input
+                    className="sd-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={form.compareAtPrice}
+                    onChange={(e) => setForm((f) => ({ ...f, compareAtPrice: e.target.value }))}
+                  />
+                </div>
+
+                <div className="sd-field">
                   <label>Product Description *</label>
                   <textarea
                     className="sd-input sd-textarea"
@@ -1074,14 +1091,14 @@ const SellerDashboard = () => {
                         src={preview}
                         alt="Product Preview"
                         style={{ width: "100%", height: 180, objectFit: "contain" }}
-                        onError={(e) => { e.target.src = "/placeholder.png"; }}
+                        onError={(e) => handleImageError(e, "product")}
                       />
                     ) : form.image ? (
                       <img
-                        src={form.image.startsWith("http") || form.image.startsWith("data:") ? form.image : `${BASE_URL}${form.image}`}
+                        src={resolveImageUrl(form.image, "product")}
                         alt="Product Preview"
                         style={{ width: "100%", height: 180, objectFit: "contain" }}
-                        onError={(e) => { e.target.src = "/placeholder.png"; }}
+                        onError={(e) => handleImageError(e, "product")}
                       />
                     ) : (
                       <div style={{ textAlign: "center", color: "#64748B", fontSize: "0.80rem" }}>
@@ -1612,6 +1629,19 @@ const SellerDashboard = () => {
                   </div>
 
                   <div className="sd-field">
+                    <label>Original price (optional — enter a higher price to show a discount)</label>
+                    <input
+                      className="sd-input"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={form.compareAtPrice}
+                      onChange={(e) => setForm((f) => ({ ...f, compareAtPrice: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="sd-field">
                     <label>Product Description *</label>
                     <textarea
                       className="sd-input sd-textarea"
@@ -1657,14 +1687,14 @@ const SellerDashboard = () => {
                           src={preview}
                           alt="Product Preview"
                           style={{ width: "100%", height: 180, objectFit: "contain" }}
-                          onError={(e) => { e.target.src = "/placeholder.png"; }}
+                          onError={(e) => handleImageError(e, "product")}
                         />
                       ) : form.image ? (
                         <img
-                          src={form.image.startsWith("http") || form.image.startsWith("data:") ? form.image : `${BASE_URL}${form.image}`}
+                          src={resolveImageUrl(form.image, "product")}
                           alt="Product Preview"
                           style={{ width: "100%", height: 180, objectFit: "contain" }}
-                          onError={(e) => { e.target.src = "/placeholder.png"; }}
+                          onError={(e) => handleImageError(e, "product")}
                         />
                       ) : (
                         <div style={{ textAlign: "center", color: "#64748B", fontSize: "0.80rem" }}>

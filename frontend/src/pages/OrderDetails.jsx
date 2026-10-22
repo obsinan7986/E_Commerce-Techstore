@@ -8,7 +8,7 @@ import { initializeChapaPayment,
          getPaymentSettings }              from "../services/paymentService";
 import { useAuth }                         from "../context/AuthContext";
 import "../styles/orderDetails.css";
-import { BASE_URL } from "../services/api";
+import { resolveImageUrl, handleImageError } from "../utils/imageFallback";
 
 
 const STEPS          = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered"];
@@ -243,9 +243,10 @@ const OrderDetails = () => {
           {qrSettings?.bankQrCode && (
             <div className="mp-qr-reminder">
               <img
-                src={`${BASE_URL}${qrSettings.bankQrCode}`}
+                src={resolveImageUrl(qrSettings.bankQrCode, "receipt")}
                 alt="Bank QR"
                 className="mp-qr-small"
+                onError={(e) => handleImageError(e, "receipt")}
               />
               <div>
                 {qrSettings.bankName      && <p><strong>{qrSettings.bankName}</strong></p>}
@@ -299,14 +300,15 @@ const OrderDetails = () => {
             <div className="mp-existing">
               <p>Previously submitted:</p>
               <a
-                href={`${BASE_URL}${order.manualPayment.screenshotUrl}`}
+                href={resolveImageUrl(order.manualPayment.screenshotUrl, "receipt")}
                 target="_blank"
                 rel="noreferrer"
               >
                 <img
-                  src={`${BASE_URL}${order.manualPayment.screenshotUrl}`}
+                  src={resolveImageUrl(order.manualPayment.screenshotUrl, "receipt")}
                   alt="Submitted"
                   className="mp-preview"
+                  onError={(e) => handleImageError(e, "receipt")}
                 />
               </a>
             </div>
@@ -355,9 +357,9 @@ const OrderDetails = () => {
               {order.orderItems?.map((item, i) => (
                 <div className="details-item" key={i}>
                   <img
-                    src={item.image?.startsWith("http") ? item.image : `${BASE_URL}${item.image}`}
+                    src={resolveImageUrl(item.image, "product")}
                     alt={item.name}
-                    onError={(e) => { e.target.src = "/placeholder.png"; }}
+                    onError={(e) => handleImageError(e, "product")}
                   />
                   <div className="details-item-info">
                     <h3>{item.name}</h3>

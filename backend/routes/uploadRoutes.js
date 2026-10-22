@@ -1,6 +1,5 @@
-import fs from "fs";
 import express from "express";
-import upload from "../middleware/uploadMiddleware.js";
+import upload, { cloudifyUploads } from "../middleware/uploadMiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -32,14 +31,15 @@ const multiUpload = (req, res, next) => {
  * POST /api/upload
  * Accessible by authenticated users (Sellers, Admins, Owners, Customers)
  */
-router.post("/", protect, multiUpload, (req, res) => {
+router.post("/", protect, multiUpload, cloudifyUploads("oict_uploads"), (req, res) => {
   // If file uploaded via multipart form data
   if (req.file) {
+    const secureUrl = req.file.path || req.file.filename;
     return res.status(200).json({
       success: true,
       message: "Image uploaded successfully",
-      image: `/uploads/${req.file.filename}`,
-      filename: req.file.filename,
+      image: secureUrl,
+      filename: secureUrl,
     });
   }
 
@@ -49,6 +49,7 @@ router.post("/", protect, multiUpload, (req, res) => {
       success: true,
       message: "Image registered successfully",
       image: req.body.image,
+      filename: req.body.image,
     });
   }
 

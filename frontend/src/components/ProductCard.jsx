@@ -5,8 +5,8 @@ import { toast } from "react-toastify";
 import { addToCart }     from "../services/cartService";
 import { useCart }       from "../context/CartContext";
 import { useCurrency }   from "../context/CurrencyContext";
-import { BASE_URL }      from "../services/api";
-import { handleImageError } from "../utils/imageFallback";
+import { handleImageError, resolveImageUrl } from "../utils/imageFallback";
+import { getDiscount } from "../utils/pricing";
 import "../styles/productcard.css";
 
 const ProductCard = ({ product, badgeType }) => {
@@ -41,11 +41,9 @@ const ProductCard = ({ product, badgeType }) => {
     }
   };
 
-  const oldPrice = Math.round(product.price * 1.2);
+  const { hasDiscount, oldPrice, percent } = getDiscount(product);
   const inStock  = product.stock > 0;
-  const imgSrc   = product.image?.startsWith("http")
-    ? product.image
-    : `${BASE_URL}${product.image}`;
+  const imgSrc   = resolveImageUrl(product.image, "product");
 
   const stockText = product.stock === 0
     ? t("product.outOfStock")
@@ -60,13 +58,15 @@ const ProductCard = ({ product, badgeType }) => {
   return (
     <div className="product-card">
 
-      {badgeType === "deals" ? (
-        <div className="discount-badge discount-badge--hot">🔥 -20% HOT</div>
-      ) : badgeType === "new" ? (
+      {badgeType === "new" ? (
         <div className="new-badge">✨ NEW</div>
-      ) : (
-        <div className="discount-badge">-20%</div>
-      )}
+      ) : hasDiscount ? (
+        badgeType === "deals" ? (
+          <div className="discount-badge discount-badge--hot">🔥 -{percent}% HOT</div>
+        ) : (
+          <div className="discount-badge">-{percent}%</div>
+        )
+      ) : null}
 
       {product.stock <= 9 && (
         <div className={`stock-badge ${stockCls}`}>
@@ -98,7 +98,7 @@ const ProductCard = ({ product, badgeType }) => {
 
         <div className="price-box">
           <span className="new-price">{formatPrice(product.price)}</span>
-          <span className="old-price">{formatPrice(oldPrice)}</span>
+          {hasDiscount && <span className="old-price">{formatPrice(oldPrice)}</span>}
         </div>
 
         <div className={`stock ${inStock ? "in-stock" : "out-stock"}`} style={{ fontSize: 12 }}>

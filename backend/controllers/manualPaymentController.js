@@ -55,7 +55,7 @@ export const updatePaymentSettings = async (req, res) => {
     }
 
     if (req.file) {
-      settings.bankQrCode = `/uploads/${req.file.filename}`;
+      settings.bankQrCode = req.file.path || req.file.filename;
     }
 
     settings.updatedBy = req.user._id;
@@ -100,7 +100,7 @@ export const uploadPaymentScreenshot = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please upload a payment screenshot." });
     }
 
-    order.manualPayment.screenshotUrl          = `/uploads/${req.file.filename}`;
+    order.manualPayment.screenshotUrl          = req.file.path || req.file.filename;
     order.manualPayment.uploadedAt             = new Date();
     order.manualPayment.verificationStatus     = "Pending";
     order.manualPayment.adminNote              = "";

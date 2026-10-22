@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import Pagination from "../components/Pagination";
 import "../styles/orders.css";
-import { BASE_URL } from "../services/api";
+import { resolveImageUrl, handleImageError } from "../utils/imageFallback";
 
 
 
@@ -167,9 +167,9 @@ const Orders = () => {
                 {order.orderItems.map((item) => (
                   <div className="order-product" key={item.product}>
                     <img
-                      src={item.image?.startsWith("http") ? item.image : `${BASE_URL}${item.image}`}
+                      src={resolveImageUrl(item.image, "product")}
                       alt={item.name}
-                      onError={(e) => { e.target.src = "/placeholder.png"; }}
+                      onError={(e) => handleImageError(e, "product")}
                     />
                     <div className="order-product-info">
                       <h3>{item.name}</h3>

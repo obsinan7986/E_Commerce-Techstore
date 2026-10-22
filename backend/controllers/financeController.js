@@ -33,6 +33,8 @@ export const getFinanceDashboard = async (req, res) => {
       ],
     };
 
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+
     const [
       totalRevenue,
       commissionAgg,
@@ -51,6 +53,7 @@ export const getFinanceDashboard = async (req, res) => {
       pendingPayoutsCount,
       pendingManualOrders,
       transactions,
+      unconfirmedOnlineOrders,
     ] = await Promise.all([
       // Total revenue (all paid)
       Order.aggregate([
@@ -89,13 +92,13 @@ export const getFinanceDashboard = async (req, res) => {
         paymentMethod: { $regex: /telebirr|cbe|awash|m-?pesa|manual/i },
       }),
 
-      // Recent 10 transactions
-      Order.find({ paymentStatus: { $nin: ["Pending", "pending"] } })
+      // Recent 25 paid transactions
+      Order.find({ paymentStatus: { $in: ["Paid", "paid"] } })
         .populate("customer", "name email")
         .populate("user", "fullName email")
-        .sort({ updatedAt: -1 })
-        .limit(10)
-        .select("user customer totalPrice paymentStatus paymentMethod orderStatus paidAt createdAt"),
+        .sort({ createdAt: -1 })
+        .limit(25)
+        .select("user customer totalPrice totalCommissionDebited totalSellerNetPayout paymentStatus paymentMethod orderStatus paidAt createdAt"),
 
       // Monthly revenue (last 6 months)
       Order.aggregate([
@@ -145,12 +148,24 @@ export const getFinanceDashboard = async (req, res) => {
         .populate("user", "fullName email phone")
         .sort({ createdAt: -1 }),
 
-      // All transactions for CSV export
+      // Latest 100 transactions
       Order.find()
         .populate("customer", "name email")
         .populate("user", "fullName email")
         .populate("orderItems.seller", "fullName email")
-        .sort({ createdAt: -1 }),
+        .sort({ createdAt: -1 })
+        .limit(100),
+
+      // Unconfirmed online orders (Chapa stuck on Pending > 15m, latest 25)
+      Order.find({
+        paymentStatus: { $in: ["Pending", "pending"] },
+        paymentMethod: "Chapa",
+        createdAt: { $lt: fifteenMinutesAgo },
+      })
+        .populate("customer", "name email")
+        .populate("user", "fullName email")
+        .sort({ createdAt: -1 })
+        .limit(25),
     ]);
 
     const revenue = totalRevenue[0]?.total || 0;
@@ -169,12 +184,18 @@ export const getFinanceDashboard = async (req, res) => {
       totalRevenue: revenue,
       platformCommission,
       pendingCount: pendingManualOrders.length,
+      paidCount: totalPaid,
     };
+
+    const paidTransactions = (transactions || []).filter((t) =>
+      ["Paid", "paid"].includes(t.paymentStatus)
+    );
 
     res.status(200).json({
       success: true,
       stats,
       pendingManualOrders: pendingManualOrders || [],
+      unconfirmedOnlineOrders: unconfirmedOnlineOrders || [],
       transactions: transactions || [],
       dashboard: {
         totalRevenue:            revenue,
@@ -194,11 +215,12 @@ export const getFinanceDashboard = async (req, res) => {
         pendingPayouts:          pendingPayouts || [],
         pendingPayoutsCount:     pendingPayoutsCount || 0,
         pendingManualOrders:     pendingManualOrders || [],
+        unconfirmedOnlineOrders: unconfirmedOnlineOrders || [],
         transactions:            transactions || [],
         methodBreakdown,
         monthlyRevenue,
-        recentTransactions,
-        ledgerTransactions:      transactions.slice(0, 25),
+        recentTransactions:      recentTransactions || [],
+        ledgerTransactions:      paidTransactions.slice(0, 25),
       },
     });
   } catch (err) {

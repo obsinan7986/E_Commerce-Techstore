@@ -7,6 +7,7 @@ import {
 } from "../services/adminservice";
 import { formatCurrency, formatDate, shortOrderId } from "../utils/formatters";
 import Pagination from "../components/Pagination";
+import { useConfirm } from "../context/ConfirmContext";
 import "../styles/admin.css";
 
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
@@ -21,6 +22,7 @@ const STATUS_NEXT = {
 };
 
 const AdminOrders = () => {
+  const confirm = useConfirm();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -94,7 +96,13 @@ const AdminOrders = () => {
   };
 
   const handleCancel = async (id) => {
-    if (!window.confirm("Cancel this order? This will restore product stock.")) return;
+    const ok = await confirm({
+      title: "Cancel Order",
+      message: "Are you sure you want to cancel this order? This will restore product stock.",
+      confirmLabel: "Cancel Order",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       setActionLoading(true);
       await adminCancelOrder(id);

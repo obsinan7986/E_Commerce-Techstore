@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link }                              from "react-router-dom";
 import { FaStar }                            from "react-icons/fa";
 import { useAuth }                           from "../context/AuthContext";
+import { useConfirm }                        from "../context/ConfirmContext";
 import {
   getReviews,
   createReview,
@@ -120,6 +121,7 @@ const ReviewForm = ({ productId, existing, onDone, onCancel }) => {
 /* ── Main component ── */
 const ReviewSection = ({ productId }) => {
   const { user, isAdmin } = useAuth();
+  const confirm = useConfirm();
 
   const [reviews,       setReviews]       = useState([]);
   const [breakdown,     setBreakdown]     = useState([]);
@@ -173,7 +175,13 @@ const ReviewSection = ({ productId }) => {
 
   /* ── Delete review ── */
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this review?")) return;
+    const ok = await confirm({
+      title: "Delete Review",
+      message: "Are you sure you want to delete this review? This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       setDeletingId(id);
       await deleteReview(id);

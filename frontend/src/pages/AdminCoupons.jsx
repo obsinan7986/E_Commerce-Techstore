@@ -9,6 +9,7 @@ import {
   updateAdminCoupon,
   deleteAdminCoupon,
 } from "../services/couponService";
+import { useConfirm } from "../context/ConfirmContext";
 import "../styles/adminCoupons.css";
 
 /* ── Helpers ── */
@@ -129,6 +130,7 @@ const CouponForm = ({ initial, onSave, onClose, loading, error }) => {
 
 /* ── Main Page ── */
 const AdminCoupons = () => {
+  const confirm = useConfirm();
   const [coupons,  setCoupons]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [search,   setSearch]   = useState("");
@@ -215,7 +217,13 @@ const AdminCoupons = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this coupon? This cannot be undone.")) return;
+    const ok = await confirm({
+      title: "Delete Coupon",
+      message: "Are you sure you want to delete this coupon? This cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       await deleteAdminCoupon(id);
       flash("success", "Coupon deleted.");

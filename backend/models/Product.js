@@ -117,6 +117,8 @@ productSchema.virtual("estimatedSellerNet").get(function () {
 // Index for fast "show approved products" queries
 productSchema.index({ approvalStatus: 1 });
 productSchema.index({ seller: 1, approvalStatus: 1 });
+productSchema.index({ approvalStatus: 1, createdAt: -1 });
+productSchema.index({ category: 1, approvalStatus: 1 });
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;

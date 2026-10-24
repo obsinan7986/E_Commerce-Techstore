@@ -18,12 +18,14 @@ import {
   clearCart,
 } from "../services/cartService";
 import { toast } from "react-toastify";
+import { useConfirm } from "../context/ConfirmContext";
 
 import "../styles/cart.css";
 import { BASE_URL } from "../services/api";
 import { useCurrency } from "../context/CurrencyContext";
 
 const Cart = () => {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { formatPrice } = useCurrency();
@@ -86,7 +88,13 @@ const Cart = () => {
   };
 
   const handleClearCart = async () => {
-    if (!window.confirm("Are you sure you want to clear your cart?")) return;
+    const ok = await confirm({
+      title: "Clear Cart",
+      message: "Are you sure you want to clear your cart? All items will be removed.",
+      confirmLabel: "Clear Cart",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       await clearCart();
       await loadCart();

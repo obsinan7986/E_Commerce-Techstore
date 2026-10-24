@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ── i18n — must be imported before any component that uses useTranslation ──
 import "./i18n/index.js";
@@ -13,6 +14,7 @@ import { CartProvider }              from "./context/CartContext";
 import { NotificationProvider }      from "./context/NotificationContext";
 import { AdminNotificationProvider } from "./context/AdminNotificationContext";
 import { CurrencyProvider }          from "./context/CurrencyContext";
+import { ConfirmProvider }           from "./context/ConfirmContext";
 import {
   PRODUCT_FALLBACK_SVG,
   AVATAR_FALLBACK_SVG,
@@ -48,20 +50,33 @@ if (typeof window !== "undefined") {
   );
 }
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <CurrencyProvider>
-          <CartProvider>
-            <NotificationProvider>
-              <AdminNotificationProvider>
-                <App />
-              </AdminNotificationProvider>
-            </NotificationProvider>
-          </CartProvider>
-        </CurrencyProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <CurrencyProvider>
+            <CartProvider>
+              <NotificationProvider>
+                <AdminNotificationProvider>
+                  <ConfirmProvider>
+                    <App />
+                  </ConfirmProvider>
+                </AdminNotificationProvider>
+              </NotificationProvider>
+            </CartProvider>
+          </CurrencyProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   </React.StrictMode>
 );

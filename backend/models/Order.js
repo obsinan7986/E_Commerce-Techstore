@@ -250,6 +250,11 @@ orderSchema.pre("save", function () {
   }
 });
 
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ paymentStatus: 1, createdAt: -1 });
+orderSchema.index({ orderStatus: 1, createdAt: -1 });
+orderSchema.index({ "orderItems.seller": 1 });
+
 const Order = mongoose.model("Order", orderSchema);
 
 export default Order;

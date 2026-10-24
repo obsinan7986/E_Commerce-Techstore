@@ -106,4 +106,16 @@ export const resolveImageUrl = (path, type = "product") => {
   return `${BASE_URL}${cleanPath}`;
 };
 
+/**
+ * Optimizes Cloudinary image URLs by inserting transformation parameters (e.g. f_auto,q_auto,w_600)
+ */
+export const optimizeCloudinaryUrl = (url, transform = "f_auto,q_auto,w_600") => {
+  if (!url || typeof url !== "string") return url;
+  if (url.includes("res.cloudinary.com") && url.includes("/upload/")) {
+    if (url.includes(`/upload/${transform}/`)) return url;
+    return url.replace("/upload/", `/upload/${transform}/`);
+  }
+  return url;
+};
+
 export default handleImageError;

@@ -7,9 +7,11 @@ import {
 import { formatDate } from "../utils/formatters";
 import { useAuth } from "../context/AuthContext";
 import Pagination from "../components/Pagination";
+import { useConfirm } from "../context/ConfirmContext";
 import "../styles/admin.css";
 
 const AdminUsers = () => {
+  const confirm = useConfirm();
   const { user: currentAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,13 @@ const AdminUsers = () => {
   const handleToggleAdmin = async (u) => {
     const newRole = u.role === "admin" ? "customer" : "admin";
     const label = newRole === "admin" ? "promote to Admin" : "demote to Customer";
-    if (!window.confirm(`${label} for ${u.fullName}?`)) return;
+    const ok = await confirm({
+      title: "Update User Role",
+      message: `Are you sure you want to ${label} for ${u.fullName}?`,
+      confirmLabel: "Confirm",
+      variant: newRole === "admin" ? "primary" : "danger",
+    });
+    if (!ok) return;
     try {
       setActionLoading(u._id);
       await updateAdminUser(u._id, newRole);
@@ -66,7 +74,13 @@ const AdminUsers = () => {
       showFeedback("error", "You cannot delete your own account.");
       return;
     }
-    if (!window.confirm(`Delete user "${u.fullName}"? This cannot be undone.`)) return;
+    const ok = await confirm({
+      title: "Delete User",
+      message: `Are you sure you want to delete user "${u.fullName}"? This cannot be undone.`,
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       setActionLoading(u._id);
       await deleteAdminUser(u._id);

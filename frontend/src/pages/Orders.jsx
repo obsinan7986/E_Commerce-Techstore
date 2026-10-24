@@ -4,6 +4,7 @@ import { getMyOrders, cancelOrder } from "../services/orderService";
 import { initializeChapaPayment } from "../services/paymentService";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
+import { useConfirm } from "../context/ConfirmContext";
 import Pagination from "../components/Pagination";
 import "../styles/orders.css";
 import { resolveImageUrl, handleImageError } from "../utils/imageFallback";
@@ -12,6 +13,7 @@ import { resolveImageUrl, handleImageError } from "../utils/imageFallback";
 
 const Orders = () => {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [orders,     setOrders]     = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState("");
@@ -35,7 +37,13 @@ const Orders = () => {
   useEffect(() => { load(); }, []);
 
   const handleCancel = async (id) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    const ok = await confirm({
+      title: "Cancel Order",
+      message: "Are you sure you want to cancel this order?",
+      confirmLabel: "Cancel Order",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       await cancelOrder(id);
       await load();

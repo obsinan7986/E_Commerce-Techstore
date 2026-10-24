@@ -241,7 +241,7 @@ export const getDashboardStats = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const page    = Math.max(Number(req.query.page)  || 1, 1);
-    const limit   = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
     const keyword = (req.query.keyword || "").trim();
     const { role } = req.query;
 
@@ -369,19 +369,35 @@ export const getLowStockProducts = async (req, res) => {
 // ======================================
 export const getSalesReport = async (req, res) => {
   try {
-    const orders = await Order.find();
-    const totalRevenue = orders
-      .filter((o) => o.paymentStatus === "Paid")
-      .reduce((s, o) => s + o.totalPrice, 0);
+    const [
+      totalOrders,
+      paidOrders,
+      pendingOrders,
+      deliveredOrders,
+      cancelledOrders,
+      revenueAgg,
+    ] = await Promise.all([
+      Order.countDocuments(),
+      Order.countDocuments({ paymentStatus: "Paid" }),
+      Order.countDocuments({ orderStatus: "Pending" }),
+      Order.countDocuments({ orderStatus: "Delivered" }),
+      Order.countDocuments({ orderStatus: "Cancelled" }),
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid" } },
+        { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      ]),
+    ]);
+
+    const totalRevenue = revenueAgg[0]?.total || 0;
 
     res.status(200).json({
       success: true,
       report: {
-        totalOrders:     orders.length,
-        paidOrders:      orders.filter((o) => o.paymentStatus === "Paid").length,
-        pendingOrders:   orders.filter((o) => o.orderStatus === "Pending").length,
-        deliveredOrders: orders.filter((o) => o.orderStatus === "Delivered").length,
-        cancelledOrders: orders.filter((o) => o.orderStatus === "Cancelled").length,
+        totalOrders,
+        paidOrders,
+        pendingOrders,
+        deliveredOrders,
+        cancelledOrders,
         totalRevenue,
       },
     });
@@ -445,7 +461,7 @@ export const getProductStatistics = async (req, res) => {
 export const getAdminCustomers = async (req, res) => {
   try {
     const page    = Math.max(Number(req.query.page)  || 1, 1);
-    const limit   = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
     const keyword = (req.query.keyword || "").trim();
 
     const filter = { role: "customer" };
@@ -504,7 +520,7 @@ export const getAdminCustomers = async (req, res) => {
 export const getAdminPayments = async (req, res) => {
   try {
     const page    = Math.max(Number(req.query.page)  || 1, 1);
-    const limit   = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
     const keyword = (req.query.keyword || "").trim();
     const { paymentStatus, paymentMethod } = req.query;
 
@@ -602,7 +618,7 @@ export const getAdminCategories = async (req, res) => {
 export const getAllOrders = async (req, res) => {
   try {
     const page    = Math.max(Number(req.query.page)  || 1, 1);
-    const limit   = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
     const keyword = (req.query.keyword || "").trim();
     const { orderStatus, paymentStatus, paymentMethod, sort } = req.query;
 
@@ -634,10 +650,12 @@ export const getAllOrders = async (req, res) => {
 
     const total  = await Order.countDocuments(filter);
     const orders = await Order.find(filter)
+      .select("user orderItems totalPrice itemsPrice shippingPrice paymentMethod paymentStatus isPaid orderStatus createdAt updatedAt manualPayment")
       .populate("user", "fullName email phone")
       .sort(SORT_MAP[sort] || SORT_MAP.newest)
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -701,6 +719,16 @@ export const approveProduct = async (req, res) => {
     product.reviewedAt      = new Date();
     await product.save();
 
+    if (product.seller) {
+      await createNotification({
+        userId: product.seller,
+        type: "product_approved",
+        title: "Product Approved",
+        message: `Your product "${product.name}" has been approved and is now live in the store.`,
+        link: "/seller/dashboard",
+      });
+    }
+
     res.status(200).json({ success: true, message: "Product approved and now visible in the store.", product });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -727,6 +755,16 @@ export const rejectProduct = async (req, res) => {
     product.reviewedBy      = req.user._id;
     product.reviewedAt      = new Date();
     await product.save();
+
+    if (product.seller) {
+      await createNotification({
+        userId: product.seller,
+        type: "product_rejected",
+        title: "Product Rejected",
+        message: `Your product "${product.name}" was rejected. Reason: ${reason.trim()}`,
+        link: "/seller/dashboard",
+      });
+    }
 
     res.status(200).json({ success: true, message: "Product rejected.", product });
   } catch (err) {

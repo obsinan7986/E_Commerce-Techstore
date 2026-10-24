@@ -15,7 +15,10 @@ import { imageSearch } from "../controllers/imageSearchController.js";
 
 const router = express.Router();
 
-router.get("/", getProducts);
+router.get("/", (req, res, next) => {
+  res.setHeader("Cache-Control", "public, max-age=60");
+  next();
+}, getProducts);
 router.get("/categories", getCategories);
 router.get("/category/:category", getProductsByCategory);
 router.get("/search/:keyword", searchProducts);

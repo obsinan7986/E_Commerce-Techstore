@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
+import api from "../../services/api";
 import {
   FiGrid,
   FiShoppingBag,
@@ -195,6 +197,15 @@ const Sidebar = ({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) => 
   const role = user?.role || "customer";
   const badge = ROLE_BADGE_MAP[role] || ROLE_BADGE_MAP.customer;
   const sections = getNavSections(role, user);
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
+
+  useEffect(() => {
+    if (role === "admin" || role === "owner") {
+      api.get("/admin/product-approvals", { params: { status: "pending", limit: 1 } })
+        .then((res) => setPendingApprovalsCount(res.data?.total || 0))
+        .catch(() => {});
+    }
+  }, [role, location.pathname]);
 
   const isItemActive = (itemPath, defaultActive) => {
     if (itemPath.includes("?")) {
@@ -267,6 +278,25 @@ const Sidebar = ({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) => 
                     <Icon />
                   </span>
                   <span className="dash-nav-label">{item.label}</span>
+                  {item.path === "/admin/product-approvals" && pendingApprovalsCount > 0 && !collapsed && (
+                    <span
+                      className="dash-nav-badge"
+                      style={{
+                        marginLeft: "auto",
+                        backgroundColor: "#EF4444",
+                        color: "#FFFFFF",
+                        fontSize: "0.72rem",
+                        fontWeight: 700,
+                        borderRadius: "9999px",
+                        padding: "2px 7px",
+                        minWidth: "18px",
+                        textAlign: "center",
+                        lineHeight: "14px",
+                      }}
+                    >
+                      {pendingApprovalsCount}
+                    </span>
+                  )}
                 </NavLink>
               );
             })}

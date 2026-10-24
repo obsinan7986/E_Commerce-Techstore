@@ -19,6 +19,7 @@ import {
   FiExternalLink,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import { useConfirm } from "../context/ConfirmContext";
 import { useNotifications } from "../context/NotificationContext";
 import { getWishlist } from "../services/wishlistService";
 import api, { BASE_URL } from "../services/api";
@@ -28,6 +29,7 @@ import "../styles/profile.css";
 const EMPTY_ADDR = { label: "Home", fullName: "", phone: "", address: "", city: "", subCity: "" };
 
 const AddressBook = () => {
+  const confirm = useConfirm();
   const [addresses, setAddresses] = useState([]);
   const [showForm,  setShowForm]  = useState(false);
   const [editId,    setEditId]    = useState(null);
@@ -72,7 +74,13 @@ const AddressBook = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this address?")) return;
+    const ok = await confirm({
+      title: "Delete Address",
+      message: "Are you sure you want to delete this address?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     await api.delete(`/auth/addresses/${id}`).catch(() => {});
     await load();
   };
@@ -183,6 +191,42 @@ const Profile = () => {
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file must be under 5MB");
+      e.target.value = "";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      setUploadingAvatar(true);
+      const res = await api.post("/auth/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const url = res.data.avatar || res.data.profileImage;
+      updateUser({ ...user, avatar: url, profileImage: url });
+      toast.success("Profile picture updated successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update profile picture.");
+    } finally {
+      e.target.value = "";
+      setUploadingAvatar(false);
+    }
+  };
 
   // Active tab: 'profile' | 'become-seller'
   const initialTab = searchParams.get("tab") === "become-seller" ? "become-seller" : "profile";
@@ -746,7 +790,7 @@ const Profile = () => {
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                               <img
                                 src={
-                                  (user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage).startsWith("http")
+                                  (user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage)?.startsWith("http")
                                     ? (user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage)
                                     : `${BASE_URL}${user.idFrontImage || user.kycDocs?.idFront || user.idDocumentImage}`
                                 }
@@ -799,7 +843,7 @@ const Profile = () => {
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                               <img
                                 src={
-                                  (user.idBackImage || user.kycDocs?.idBack).startsWith("http")
+                                  (user.idBackImage || user.kycDocs?.idBack)?.startsWith("http")
                                     ? (user.idBackImage || user.kycDocs?.idBack)
                                     : `${BASE_URL}${user.idBackImage || user.kycDocs?.idBack}`
                                 }

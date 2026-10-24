@@ -16,7 +16,10 @@ import Order   from "../models/Order.js";
 import User    from "../models/User.js";
 import Review  from "../models/Review.js";
 import Payout  from "../models/Payout.js";
+import Cart    from "../models/Cart.js";
+import Wishlist from "../models/Wishlist.js";
 import Notification from "../models/Notification.js";
+import createAdminNotification from "../utils/createAdminNotification.js";
 
 // ============================================================
 // GET OWN PRODUCTS  –  GET /api/seller/products
@@ -95,6 +98,13 @@ export const sellerCreateProduct = async (req, res) => {
       approvalStatus: "pending",   // always pending until admin approves
     });
 
+    createAdminNotification({
+      type: "product_pending",
+      title: "New Product Pending Approval",
+      message: `Seller submitted product "${product.name}" for approval.`,
+      link: "/admin/product-approvals",
+    });
+
     res.status(201).json({
       success: true,
       message: "Product submitted for review. It will be visible once approved.",
@@ -142,22 +152,41 @@ export const sellerUpdateProduct = async (req, res) => {
       }
     }
 
-    if (name)        product.name        = name;
-    if (description) product.description = description;
-    if (brand)       product.brand       = brand;
-    if (category)    product.category    = category;
-    if (image)       product.image       = image;
-    if (price  !== undefined) product.price = Number(price);
-    if (stock  !== undefined) product.stock = Number(stock);
+    const contentChanged =
+      (name !== undefined && name !== product.name) ||
+      (description !== undefined && description !== product.description) ||
+      (brand !== undefined && brand !== product.brand) ||
+      (category !== undefined && category !== product.category) ||
+      (image !== undefined && image !== product.image);
 
-    // Reset to pending — admin must re-approve any edited product
-    product.approvalStatus  = "pending";
-    product.rejectionReason = "";
-    product.reviewedBy      = null;
-    product.reviewedAt      = null;
+    if (name !== undefined)        product.name        = name;
+    if (description !== undefined) product.description = description;
+    if (brand !== undefined)       product.brand       = brand;
+    if (category !== undefined)    product.category    = category;
+    if (image !== undefined)       product.image       = image;
+    if (price !== undefined)       product.price       = Number(price);
+    if (stock !== undefined)       product.stock       = Number(stock);
+
+    let message = "Product updated successfully.";
+
+    if (contentChanged) {
+      // Reset to pending ONLY when details/image changed — admin must re-approve
+      product.approvalStatus  = "pending";
+      product.rejectionReason = "";
+      product.reviewedBy      = null;
+      product.reviewedAt      = null;
+      message = "Product details updated and re-submitted for review.";
+
+      createAdminNotification({
+        type: "product_pending",
+        title: "Product Resubmitted for Approval",
+        message: `Seller updated details for "${product.name}". Re-approval required.`,
+        link: "/admin/product-approvals",
+      });
+    }
 
     await product.save();
-    res.status(200).json({ success: true, message: "Product updated and re-submitted for review.", product });
+    res.status(200).json({ success: true, message, product });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -171,7 +200,25 @@ export const sellerDeleteProduct = async (req, res) => {
     const product = await Product.findOne({ _id: req.params.id, seller: req.user._id });
     if (!product) return res.status(404).json({ success: false, message: "Product not found or not yours." });
 
+    const orderReferences = await Order.countDocuments({
+      "orderItems.product": req.params.id,
+    });
+
+    if (orderReferences > 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This product is referenced in existing orders and cannot be deleted. Order history is preserved.",
+      });
+    }
+
     await product.deleteOne();
+
+    await Promise.all([
+      Cart.updateMany({}, { $pull: { items: { product: product._id } } }),
+      Wishlist.updateMany({}, { $pull: { products: product._id } }),
+    ]);
+
     res.status(200).json({ success: true, message: "Product deleted." });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

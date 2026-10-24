@@ -88,27 +88,34 @@ const DashboardHeader = ({ onToggleMobile }) => {
   const handleDashAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image file must be under 5MB");
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      e.target.value = "";
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result;
-      try {
-        setUploadingAvatar(true);
-        const res = await api.post("/auth/avatar", { avatar: base64 });
-        if (updateUser) {
-          updateUser({ avatar: res.data.avatar, profileImage: res.data.avatar });
-        }
-        toast.success("Profile picture updated successfully!");
-      } catch (err) {
-        toast.error(err.response?.data?.message || "Failed to update profile picture.");
-      } finally {
-        setUploadingAvatar(false);
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file must be under 5MB");
+      e.target.value = "";
+      return;
+    }
+    const formData = new FormData();
+    formData.append("avatar", file);
+    try {
+      setUploadingAvatar(true);
+      const res = await api.post("/auth/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const url = res.data.avatar || res.data.profileImage;
+      if (updateUser) {
+        updateUser({ avatar: url, profileImage: url });
       }
-    };
-    reader.readAsDataURL(file);
+      toast.success("Profile picture updated successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update profile picture.");
+    } finally {
+      e.target.value = "";
+      setUploadingAvatar(false);
+    }
   };
 
 

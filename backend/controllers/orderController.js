@@ -395,21 +395,28 @@ export const getOrderById = async (req, res) => {
 
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find()
-      .populate(
-        "user",
-        "fullName email phone"
-      )
-      .sort({
-        createdAt: -1,
-      });
+    const page  = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+
+    const [total, orders] = await Promise.all([
+      Order.countDocuments(),
+      Order.find()
+        .populate("user", "fullName email phone")
+        .select("user orderItems totalPrice itemsPrice shippingPrice paymentMethod paymentStatus isPaid orderStatus createdAt")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+    ]);
 
     return res.status(200).json({
       success: true,
       count: orders.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
       orders,
     });
-
   } catch (error) {
     console.error("Get all orders error:", error);
 

@@ -7,7 +7,7 @@ import { useAuth } from "./AuthContext";
 import { getAdminUnreadNotifCount, markAllAdminNotifsRead } from "../services/adminNotificationService";
 
 const AdminNotificationContext = createContext(null);
-const POLL_INTERVAL = 30_000;
+const POLL_INTERVAL = 60_000;
 
 export const AdminNotificationProvider = ({ children }) => {
   const { user, isAdmin } = useAuth();
@@ -22,11 +22,37 @@ export const AdminNotificationProvider = ({ children }) => {
     } catch { /* silent */ }
   }, [user, isAdmin]);
 
+  // Poll while logged in as admin, paused when document is hidden
   useEffect(() => {
     if (!user || !isAdmin) { setUnreadCount(0); return; }
+
     refreshCount();
-    timerRef.current = setInterval(refreshCount, POLL_INTERVAL);
-    return () => clearInterval(timerRef.current);
+
+    const startPolling = () => {
+      clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        if (!document.hidden) {
+          refreshCount();
+        }
+      }, POLL_INTERVAL);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshCount();
+        startPolling();
+      } else {
+        clearInterval(timerRef.current);
+      }
+    };
+
+    startPolling();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(timerRef.current);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [user, isAdmin, refreshCount]);
 
   const markAllRead = useCallback(async () => {

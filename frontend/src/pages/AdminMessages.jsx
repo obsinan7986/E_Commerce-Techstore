@@ -13,6 +13,7 @@ import {
   getMessageSettings,
   toggleMessageCenter,
 } from "../services/messageService";
+import { useConfirm } from "../context/ConfirmContext";
 import "../styles/messageCenter.css";
 
 /* ── helpers ── */
@@ -53,6 +54,7 @@ const DateDivider = ({ date }) => (
 
 /* ── Main component ── */
 const AdminMessages = () => {
+  const confirm = useConfirm();
   const messagesEndRef = useRef(null);
   const textareaRef    = useRef(null);
 
@@ -109,10 +111,29 @@ const AdminMessages = () => {
 
   useEffect(() => { loadList(); }, [loadList]);
 
-  // Poll list every 20 s
+  // Poll list every 20 s (paused when tab is hidden)
   useEffect(() => {
-    const id = setInterval(loadList, 20000);
-    return () => clearInterval(id);
+    let id = null;
+    const start = () => {
+      clearInterval(id);
+      id = setInterval(() => {
+        if (!document.hidden) loadList();
+      }, 20000);
+    };
+    const onVis = () => {
+      if (!document.hidden) {
+        loadList();
+        start();
+      } else {
+        clearInterval(id);
+      }
+    };
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [loadList]);
 
   // Scroll to bottom on new messages
@@ -182,7 +203,14 @@ const AdminMessages = () => {
 
   /* ── Delete conversation ── */
   const handleDelete = async () => {
-    if (!selected || !window.confirm("Delete this conversation? This cannot be undone.")) return;
+    if (!selected) return;
+    const ok = await confirm({
+      title: "Delete Conversation",
+      message: "Are you sure you want to delete this conversation? This cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       await deleteConversation(selected._id);
       setSelected(null);

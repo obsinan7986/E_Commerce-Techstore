@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate }                       from "react-router-dom";
 import { useAdminNotifications }             from "../context/AdminNotificationContext";
+import { useConfirm }                        from "../context/ConfirmContext";
 import {
   getAdminNotifications,
   markAdminNotifAsRead,
@@ -36,6 +37,7 @@ const timeAgo = (d) => {
 };
 
 const AdminNotificationsPage = () => {
+  const confirm = useConfirm();
   const navigate                                        = useNavigate();
   const { refreshCount, setUnreadCount }                = useAdminNotifications();
 
@@ -92,7 +94,13 @@ const AdminNotificationsPage = () => {
   };
 
   const handleClear = async () => {
-    if (!window.confirm("Delete all admin notifications?")) return;
+    const ok = await confirm({
+      title: "Clear All Notifications",
+      message: "Are you sure you want to delete all admin notifications? This cannot be undone.",
+      confirmLabel: "Delete All",
+      variant: "danger",
+    });
+    if (!ok) return;
     await clearAllAdminNotifs().catch(() => {});
     setItems([]);
     setTotal(0);

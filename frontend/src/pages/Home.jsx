@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api from "../services/api";
@@ -13,16 +14,17 @@ const Home = () => {
   const location   = useLocation();
   const justRegistered = location.state?.registered === true;
 
-  const [products,   setProducts]   = useState([]);
-  const [loading,    setLoading]    = useState(true);
   const [showBanner, setShowBanner] = useState(justRegistered);
 
-  useEffect(() => {
-    api.get("/products?limit=12&sort=newest")
-      .then(({ data }) => setProducts(data.products || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: homeData, isLoading: loading } = useQuery({
+    queryKey: ["home-new-arrivals"],
+    queryFn: async () => {
+      const { data } = await api.get("/products?limit=12&sort=newest");
+      return data;
+    },
+    staleTime: 60000,
+  });
+  const products = homeData?.products || [];
 
   useEffect(() => {
     if (!showBanner) return;
@@ -51,7 +53,7 @@ const Home = () => {
 
       <section className="latest-products">
         <div className="section-title-block">
-          <h2>{t("product.featuredProducts")}</h2>
+          <h2>{t("nav.newArrivals") || "New Arrivals"}</h2>
           <Link to="/products">{t("product.viewAll")}</Link>
         </div>
 

@@ -90,10 +90,29 @@ const MessageCenter = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  // Poll every 15 s for new admin replies
+  // Poll every 15 s for new admin replies (paused when tab is hidden)
   useEffect(() => {
-    const id = setInterval(load, 15000);
-    return () => clearInterval(id);
+    let id = null;
+    const start = () => {
+      clearInterval(id);
+      id = setInterval(() => {
+        if (!document.hidden) load();
+      }, 15000);
+    };
+    const onVis = () => {
+      if (!document.hidden) {
+        load();
+        start();
+      } else {
+        clearInterval(id);
+      }
+    };
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [load]);
 
   // Scroll to bottom when messages change

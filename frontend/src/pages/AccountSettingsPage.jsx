@@ -16,6 +16,7 @@ import {
   FiArrowRight,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import { useConfirm } from "../context/ConfirmContext";
 import api from "../services/api";
 import "../styles/accountSettings.css";
 
@@ -23,6 +24,7 @@ const EMPTY_ADDR = { label: "Home", fullName: "", phone: "", address: "", city: 
 
 const AccountSettingsPage = () => {
   const { user, updateUser, login } = useAuth();
+  const confirm = useConfirm();
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "profile";
@@ -30,27 +32,36 @@ const AccountSettingsPage = () => {
   const handleAccAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image file must be under 5MB");
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      e.target.value = "";
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result;
-      try {
-        setUploadingAvatar(true);
-        const res = await api.post("/auth/avatar", { avatar: base64 });
-        if (updateUser) {
-          updateUser({ avatar: res.data.avatar, profileImage: res.data.avatar });
-        }
-        toast.success("Profile picture updated successfully!");
-      } catch (err) {
-        toast.error(err.response?.data?.message || "Failed to update profile picture.");
-      } finally {
-        setUploadingAvatar(false);
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file must be under 5MB");
+      e.target.value = "";
+      return;
+    }
+    const formData = new FormData();
+    formData.append("avatar", file);
+    try {
+      setUploadingAvatar(true);
+      const res = await api.post("/auth/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const url = res.data.avatar || res.data.profileImage;
+      if (updateUser) {
+        updateUser({ avatar: url, profileImage: url });
+      } else if (login) {
+        login({ ...user, avatar: url, profileImage: url });
       }
-    };
-    reader.readAsDataURL(file);
+      toast.success("Profile picture updated successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update profile picture.");
+    } finally {
+      e.target.value = "";
+      setUploadingAvatar(false);
+    }
   };
 
 
@@ -200,7 +211,13 @@ const AccountSettingsPage = () => {
   };
 
   const handleDeleteAddress = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this address?")) return;
+    const ok = await confirm({
+      title: "Delete Address",
+      message: "Are you sure you want to delete this address?",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       await api.delete(`/auth/addresses/${id}`);
       await loadAddresses();

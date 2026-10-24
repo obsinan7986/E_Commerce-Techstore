@@ -10,7 +10,7 @@ import { getUnreadCount, markAllAsRead } from "../services/notificationService";
 
 const NotificationContext = createContext(null);
 
-const POLL_INTERVAL = 30_000; // 30 seconds
+const POLL_INTERVAL = 60_000; // 60 seconds
 
 export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
@@ -27,14 +27,37 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Poll while logged in
+  // Poll while logged in, paused when document is hidden
   useEffect(() => {
     if (!user) { setUnreadCount(0); return; }
 
-    refreshCount();                            // immediate fetch
-    timerRef.current = setInterval(refreshCount, POLL_INTERVAL);
+    refreshCount(); // immediate fetch
 
-    return () => clearInterval(timerRef.current);
+    const startPolling = () => {
+      clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        if (!document.hidden) {
+          refreshCount();
+        }
+      }, POLL_INTERVAL);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshCount();
+        startPolling();
+      } else {
+        clearInterval(timerRef.current);
+      }
+    };
+
+    startPolling();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(timerRef.current);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [user, refreshCount]);
 
   const markAllRead = useCallback(async () => {

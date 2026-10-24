@@ -14,6 +14,7 @@
  *  - No flicker, no layout shift, no image distortion
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { FaArrowRight, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { getActiveBanners } from "../services/adminservice";
@@ -51,17 +52,19 @@ const PromoBannerSlider = () => {
   const timerRef   = useRef(null);
   const animRef    = useRef(null);
 
-  /* fetch active banners once on mount */
+  /* fetch active banners with TanStack Query (staleTime 60s) */
+  const { data: bannerData, isSuccess } = useQuery({
+    queryKey: ["active-banners"],
+    queryFn: getActiveBanners,
+    staleTime: 60000,
+  });
+
   useEffect(() => {
-    getActiveBanners()
-      .then(({ banners }) => {
-        setSlides(banners?.length ? banners : [STATIC_SLIDE]);
-      })
-      .catch(() => {
-        setSlides([STATIC_SLIDE]);
-      })
-      .finally(() => setLoaded(true));
-  }, []);
+    if (isSuccess && bannerData) {
+      setSlides(bannerData.banners?.length ? bannerData.banners : [STATIC_SLIDE]);
+      setLoaded(true);
+    }
+  }, [isSuccess, bannerData]);
 
   /* ── Navigate with direction awareness ─────────────────── */
   const goTo = useCallback((idx, dir) => {

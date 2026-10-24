@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import ProductCard from "../components/ProductCard";
@@ -24,11 +25,14 @@ const Products = ({ initialFilter = "" }) => {
   const [searchParams] = useSearchParams();
   const filterParam = searchParams.get("filter") || initialFilter || "";
 
-  const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(1);
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState(filterParam === "new-arrivals" ? "newest" : "");
   const [selectedBrand, setSelectedBrand] = useState("");
-  const [loading, setLoading] = useState(true);
+
+  const keyword = searchParams.get("keyword") || "";
+  const minPrice = searchParams.get("minPrice") || "";
+  const maxPrice = searchParams.get("maxPrice") || "";
 
   const categories = [
     "Smartphones",
@@ -47,6 +51,7 @@ const Products = ({ initialFilter = "" }) => {
   useEffect(() => {
     setSelectedBrand("");
     setCategory("");
+    setPage(1);
     if (filterParam === "new-arrivals") {
       setSort("newest");
     } else {
@@ -54,37 +59,43 @@ const Products = ({ initialFilter = "" }) => {
     }
   }, [filterParam]);
 
+  // Reset page when any filter criteria changes
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
+    setPage(1);
+  }, [category, sort, selectedBrand, keyword, minPrice, maxPrice]);
 
-        const params = { limit: 100 };
+  const queryParams = {
+    page,
+    limit: 12,
+    category,
+    sort,
+    filterParam,
+    selectedBrand,
+    keyword,
+    minPrice,
+    maxPrice,
+  };
 
-        if (category) params.category = category;
-        if (sort) params.sort = sort;
-        if (filterParam === "new-arrivals" && !sort) params.sort = "newest";
-        if (selectedBrand) params.brand = selectedBrand;
+  const { data: prodData, isLoading: loading } = useQuery({
+    queryKey: ["products", queryParams],
+    queryFn: async () => {
+      const params = { page, limit: 12 };
+      if (category) params.category = category;
+      if (sort) params.sort = sort;
+      if (filterParam === "new-arrivals" && !sort) params.sort = "newest";
+      if (selectedBrand) params.brand = selectedBrand;
+      if (keyword) params.keyword = keyword;
+      if (minPrice) params.minPrice = minPrice;
+      if (maxPrice) params.maxPrice = maxPrice;
+      const res = await api.get("/products", { params });
+      return res.data;
+    },
+    staleTime: 60000,
+  });
 
-        const { data } = await api.get("/products", { params });
-        let list = data.products || [];
-
-        // In deals mode, ensure products represent active promotions / discounts
-        if (filterParam === "deals") {
-          list = [...list].sort((a, b) => (a.price || 0) - (b.price || 0));
-        }
-
-        setProducts(list);
-      } catch (error) {
-        console.error("Failed to load products:", error);
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [category, sort, filterParam, selectedBrand]);
+  const products = prodData?.products || [];
+  const totalProducts = prodData?.totalProducts || 0;
+  const pages = prodData?.pages || 1;
 
   // Compute brand counts dynamically from products
   const brandCounts = useMemo(() => {
@@ -226,7 +237,7 @@ const Products = ({ initialFilter = "" }) => {
             <p>Discover our latest technology products.</p>
           </div>
           <div className="products-count">
-            {products.length} Products
+            {totalProducts} Products
           </div>
         </div>
       )}
@@ -281,15 +292,78 @@ const Products = ({ initialFilter = "" }) => {
           No products found matching the criteria.
         </div>
       ) : (
-        <div className="products-grid">
-          {products.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-              badgeType={badgeType}
-            />
-          ))}
-        </div>
+        <>
+          <div className="products-grid">
+            {products.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                badgeType={badgeType}
+              />
+            ))}
+          </div>
+
+          {pages > 1 && (
+            <div
+              className="pagination-bar"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "12px",
+                marginTop: "2.5rem",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                style={{
+                  padding: "8px 18px",
+                  borderRadius: "8px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: page <= 1 ? "#f8fafc" : "#ffffff",
+                  color: page <= 1 ? "#94a3b8" : "#1e293b",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                  cursor: page <= 1 ? "not-allowed" : "pointer",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                }}
+              >
+                Previous
+              </button>
+              <span
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#475569",
+                  fontWeight: 500,
+                  padding: "0 8px",
+                }}
+              >
+                Page <strong>{page}</strong> of <strong>{pages}</strong> ({totalProducts} items)
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                disabled={page >= pages}
+                style={{
+                  padding: "8px 18px",
+                  borderRadius: "8px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: page >= pages ? "#f8fafc" : "#ffffff",
+                  color: page >= pages ? "#94a3b8" : "#1e293b",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                  cursor: page >= pages ? "not-allowed" : "pointer",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                }}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </main>
   );

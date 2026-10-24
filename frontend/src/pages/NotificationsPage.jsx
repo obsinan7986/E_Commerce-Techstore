@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate }                       from "react-router-dom";
 import { useNotifications }                  from "../context/NotificationContext";
+import { useConfirm }                         from "../context/ConfirmContext";
 import {
   getNotifications,
   markAsRead,
@@ -39,6 +40,7 @@ const timeAgo = (dateStr) => {
 };
 
 const NotificationsPage = () => {
+  const confirm = useConfirm();
   const navigate                          = useNavigate();
   const { refreshCount, setUnreadCount }  = useNotifications();
 
@@ -99,7 +101,13 @@ const NotificationsPage = () => {
 
   /* Clear all */
   const handleClear = async () => {
-    if (!window.confirm("Delete all notifications?")) return;
+    const ok = await confirm({
+      title: "Clear All Notifications",
+      message: "Are you sure you want to delete all notifications? This cannot be undone.",
+      confirmLabel: "Delete All",
+      variant: "danger",
+    });
+    if (!ok) return;
     await clearAllNotifications().catch(() => {});
     setItems([]);
     setTotal(0);

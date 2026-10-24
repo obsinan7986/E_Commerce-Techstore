@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express          from "express";
+import compression      from "compression";
 import cors             from "cors";
 import dotenv           from "dotenv";
 import path             from "path";
@@ -72,6 +73,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(compression());
 
 
 // ── Static uploads — with CORS headers & fallback placeholder for missing files ──
@@ -126,6 +128,10 @@ app.use("/api/meetings",       meetingRoutes);
 app.use("/api/announcements",  announcementRoutes);
 
 // ── Health check ──────────────────────────────────────────────────
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 app.get("/", (req, res) => {
   res.send("Tech E-commerce API is running...");
 });

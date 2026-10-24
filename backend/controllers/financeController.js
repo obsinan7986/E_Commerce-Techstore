@@ -148,13 +148,14 @@ export const getFinanceDashboard = async (req, res) => {
         .populate("user", "fullName email phone")
         .sort({ createdAt: -1 }),
 
-      // Latest 100 transactions
+      // Latest transactions
       Order.find()
         .populate("customer", "name email")
         .populate("user", "fullName email")
         .populate("orderItems.seller", "fullName email")
         .sort({ createdAt: -1 })
-        .limit(100),
+        .limit(50)
+        .lean(),
 
       // Unconfirmed online orders (Chapa stuck on Pending > 15m, latest 25)
       Order.find({
@@ -236,7 +237,7 @@ export const getFinanceDashboard = async (req, res) => {
 export const getFinancePayments = async (req, res) => {
   try {
     const page    = Math.max(Number(req.query.page)  || 1, 1);
-    const limit   = Math.min(Math.max(Number(req.query.limit) || 15, 1), 100);
+    const limit   = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
     const { paymentStatus, paymentMethod, keyword } = req.query;
     const sort    = req.query.sort === "oldest" ? { createdAt: 1 } : { createdAt: -1 };
 
@@ -267,7 +268,8 @@ export const getFinancePayments = async (req, res) => {
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
-        .select("user orderItems totalPrice totalGrossItemsPrice totalCommissionDebited totalSellerNetPayout isCommissionSettled paymentStatus paymentMethod orderStatus paymentResult manualPayment paidAt createdAt"),
+        .select("user orderItems totalPrice totalGrossItemsPrice totalCommissionDebited totalSellerNetPayout isCommissionSettled paymentStatus paymentMethod orderStatus paymentResult manualPayment paidAt createdAt")
+        .lean(),
     ]);
 
     const payments = orders.map((o) => ({

@@ -11,6 +11,8 @@ import { formatCurrency }      from "../utils/formatters";
 import "../styles/admin.css";
 import api, { BASE_URL } from "../services/api";
 import Pagination from "../components/Pagination";
+import { toast } from "react-toastify";
+import { useConfirm } from "../context/ConfirmContext";
 
 
 
@@ -32,6 +34,7 @@ const stockInfo = (s) => {
 };
 
 const AdminProducts = () => {
+  const confirm = useConfirm();
   const [products,     setProducts]     = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState("");
@@ -166,15 +169,39 @@ const AdminProducts = () => {
     }
   };
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  const handleDelete = async (idOrProduct, fallbackName) => {
+    const id = typeof idOrProduct === "object" ? idOrProduct._id : idOrProduct;
+    const prod = typeof idOrProduct === "object" ? idOrProduct : products.find((x) => x._id === id);
+    const name = prod?.name || fallbackName || "Product";
+    const image = prod?.image || "";
+
+    const ok = await confirm({
+      title: "Delete Product",
+      productName: name,
+      productImage: image,
+      message: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
+
     try {
       setDeleteLoading(id);
       await deleteAdminProduct(id);
-      flash("success", "Product deleted.");
+      flash("success", "Product deleted successfully.");
+      toast.success("Product deleted successfully.");
       load();
     } catch (err) {
-      flash("error", err.response?.data?.message || "Failed to delete product.");
+      const msg = err.response?.data?.message || "";
+      if (err.response?.status === 400 && msg.toLowerCase().includes("referenced in existing orders")) {
+        const errorText = `${msg} Reject/hide it instead.`;
+        flash("error", errorText);
+        toast.error(errorText);
+      } else {
+        const errorText = msg || "Failed to delete product.";
+        flash("error", errorText);
+        toast.error(errorText);
+      }
     } finally {
       setDeleteLoading(null);
     }
@@ -365,7 +392,7 @@ const AdminProducts = () => {
                           <button className="admin-btn-sm-primary" onClick={() => openEdit(p)}>Edit</button>
                           <button
                             className="admin-btn-sm-danger"
-                            onClick={() => handleDelete(p._id, p.name)}
+                            onClick={() => handleDelete(p)}
                             disabled={deleteLoading === p._id}
                           >
                             {deleteLoading === p._id ? "…" : "Delete"}

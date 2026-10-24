@@ -10,6 +10,7 @@ import {
   deleteAdminReview,
 } from "../services/adminservice";
 import { toast } from "react-toastify";
+import { useConfirm } from "../context/ConfirmContext";
 import { BASE_URL } from "../services/api";
 import "../styles/adminReviews.css";
 
@@ -27,6 +28,7 @@ const imgSrc = (path) => {
 };
 
 const AdminReviews = () => {
+  const confirm = useConfirm();
   const [reviews,  setReviews]  = useState([]);
   const [stats,    setStats]    = useState(null);
   const [total,    setTotal]    = useState(0);
@@ -63,7 +65,13 @@ const AdminReviews = () => {
   useEffect(() => { load(); }, [page, keyword, rating, verified]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Remove this review? This cannot be undone.")) return;
+    const ok = await confirm({
+      title: "Remove Review",
+      message: "Are you sure you want to remove this review? This cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       setDeleting(id);
       await deleteAdminReview(id);

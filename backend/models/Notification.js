@@ -59,6 +59,10 @@ const notificationSchema = new mongoose.Schema(
         "commission_settled",
         "seller_credit_added",
         "finance_revenue_credit",
+        // ── Product approval notifications ───────────────────
+        "product_pending",
+        "product_approved",
+        "product_rejected",
       ],
       required: true,
     },

@@ -42,7 +42,7 @@ const CATEGORIES = [
 ];
 
 const STATUS_LABEL = {
-  pending: "Pending Review",
+  pending: "Pending review",
   approved: "Approved",
   rejected: "Rejected",
 };
@@ -317,11 +317,17 @@ const SellerDashboard = () => {
       };
 
       if (editId) {
-        await api.put(`/seller/products/${editId}`, payload);
-        setFormSuccess("Product updated and re-submitted for review.");
+        const res = await api.put(`/seller/products/${editId}`, payload);
+        const msg = res.data?.message?.includes("re-submitted")
+          ? "Submitted - it will appear in the store after admin approval."
+          : (res.data?.message || "Product updated successfully.");
+        setFormSuccess(msg);
+        toast.success(msg);
       } else {
         await api.post("/seller/products", payload);
-        setFormSuccess("Product successfully listed and submitted for review!");
+        const msg = "Submitted - it will appear in the store after admin approval.";
+        setFormSuccess(msg);
+        toast.success(msg);
         setForm(EMPTY_FORM);
         setPreview("");
       }
@@ -347,7 +353,12 @@ const SellerDashboard = () => {
       await loadProducts();
       await loadDashboardData();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Delete failed.");
+      const msg = err.response?.data?.message || "";
+      if (err.response?.status === 400 && msg.toLowerCase().includes("referenced in existing orders")) {
+        toast.error(`${msg} Reject/hide it instead.`);
+      } else {
+        toast.error(msg || "Delete failed.");
+      }
     }
   };
 

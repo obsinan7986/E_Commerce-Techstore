@@ -15,7 +15,8 @@ export const AuthProvider = ({ children }) => {
 
   // true while the profile refresh is in-flight on mount
   // AdminRoute and ProtectedRoute wait for this before rendering
-  const [loading, setLoading] = useState(true);
+  // Render public pages immediately; refresh /auth/profile in the background
+  const [loading, setLoading] = useState(false);
 
   const login = (userData) => {
     setUser(userData);
@@ -66,9 +67,7 @@ export const AuthProvider = ({ children }) => {
    * If the token is expired/invalid we clear the stale session.
    */
   useEffect(() => {
-    refreshProfile().finally(() => {
-      setLoading(false);
-    });
+    refreshProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -6,6 +6,17 @@ import generateToken  from "../utils/generateToken.js";
 import { sendTemplate } from "../utils/emailService.js";
 import { welcomeEmail, passwordResetEmail } from "../utils/emailTemplates.js";
 import createAdminNotification from "../utils/createAdminNotification.js";
+import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
+
+const sanitizeAvatarUrl = async (input) => {
+  if (!input || typeof input !== "string") return "";
+  if (input.startsWith("data:")) {
+    const base64Data = input.includes(",") ? input.split(",")[1] : input;
+    const buffer = Buffer.from(base64Data, "base64");
+    return await uploadToCloudinary(buffer, "oict_avatars");
+  }
+  return input;
+};
 
 // ============================================================
 // REGISTER USER
@@ -260,23 +271,27 @@ export const updateUserProfile = async (req, res) => {
         user.avatar = file.path;
         user.profileImage = file.path;
       } else if (file.buffer) {
-        const mime = file.mimetype || "image/jpeg";
-        const b64 = "data:" + mime + ";base64," + file.buffer.toString("base64");
-        user.avatar = b64;
-        user.profileImage = b64;
+        const uploaded = await uploadToCloudinary(file.buffer, "oict_avatars");
+        user.avatar = uploaded;
+        user.profileImage = uploaded;
       } else if (file.path && fs.existsSync(file.path)) {
         const buf = fs.readFileSync(file.path);
-        const mime = file.mimetype || "image/jpeg";
-        const b64 = "data:" + mime + ";base64," + buf.toString("base64");
-        user.avatar = b64;
-        user.profileImage = b64;
+        const uploaded = await uploadToCloudinary(buf, "oict_avatars");
+        user.avatar = uploaded;
+        user.profileImage = uploaded;
       }
     } else if (avatar) {
-      user.avatar = avatar;
-      user.profileImage = avatar;
+      const sanitized = await sanitizeAvatarUrl(avatar);
+      if (sanitized) {
+        user.avatar = sanitized;
+        user.profileImage = sanitized;
+      }
     } else if (profileImage) {
-      user.avatar = profileImage;
-      user.profileImage = profileImage;
+      const sanitized = await sanitizeAvatarUrl(profileImage);
+      if (sanitized) {
+        user.avatar = sanitized;
+        user.profileImage = sanitized;
+      }
     }
 
     if (fullName !== undefined) user.fullName = fullName.trim();
@@ -441,32 +456,30 @@ export const uploadAvatar = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    let avatarBase64 = "";
+    let avatarUrl = "";
     const file = req.file || req.files?.[0] || req.files?.avatar?.[0] || req.files?.image?.[0];
 
     if (file) {
       if (file.path && file.path.startsWith("http")) {
-        avatarBase64 = file.path;
+        avatarUrl = file.path;
       } else if (file.buffer) {
-        const mime = file.mimetype || "image/jpeg";
-        avatarBase64 = "data:" + mime + ";base64," + file.buffer.toString("base64");
+        avatarUrl = await uploadToCloudinary(file.buffer, "oict_avatars");
       } else if (file.path && fs.existsSync(file.path)) {
         const buf = fs.readFileSync(file.path);
-        const mime = file.mimetype || "image/jpeg";
-        avatarBase64 = "data:" + mime + ";base64," + buf.toString("base64");
+        avatarUrl = await uploadToCloudinary(buf, "oict_avatars");
       }
     } else if (req.body?.avatar && typeof req.body.avatar === "string") {
-      avatarBase64 = req.body.avatar;
+      avatarUrl = await sanitizeAvatarUrl(req.body.avatar);
     } else if (req.body?.image && typeof req.body.image === "string") {
-      avatarBase64 = req.body.image;
+      avatarUrl = await sanitizeAvatarUrl(req.body.image);
     }
 
-    if (!avatarBase64) {
+    if (!avatarUrl) {
       return res.status(400).json({ success: false, message: "No avatar image provided." });
     }
 
-    user.avatar = avatarBase64;
-    user.profileImage = avatarBase64;
+    user.avatar = avatarUrl;
+    user.profileImage = avatarUrl;
     await user.save();
 
     return res.status(200).json({

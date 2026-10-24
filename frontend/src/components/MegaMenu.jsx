@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   getCategories,
@@ -12,27 +13,23 @@ const MegaMenu = () => {
   const [products, setProducts] = useState([]);
   const [activeCategory, setActiveCategory] = useState("");
 
+  const { data: catData } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+    staleTime: 60000,
+  });
+
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const data = await getCategories();
-
-        const categoryList = Array.isArray(data)
-          ? data
-          : data.categories || [];
-
-        setCategories(categoryList);
-
-        if (categoryList.length > 0) {
-          loadProducts(categoryList[0]);
-        }
-      } catch (error) {
-        console.error("Failed to load categories:", error);
+    if (catData) {
+      const categoryList = Array.isArray(catData)
+        ? catData
+        : catData.categories || [];
+      setCategories(categoryList);
+      if (categoryList.length > 0 && !activeCategory) {
+        loadProducts(categoryList[0]);
       }
-    };
-
-    loadCategories();
-  }, []);
+    }
+  }, [catData]);
 
   const loadProducts = async (category) => {
     try {

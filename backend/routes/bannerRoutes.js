@@ -16,7 +16,10 @@ const adminOnly = [protect, admin];
 
 // ── Public ────────────────────────────────────────────────
 // GET /api/banners  — homepage slider (active + in-date-range only)
-router.get("/", getActiveBanners);
+router.get("/", (req, res, next) => {
+  res.setHeader("Cache-Control", "public, max-age=60");
+  next();
+}, getActiveBanners);
 
 // ── Admin ─────────────────────────────────────────────────
 // All banner management is also reachable under /api/admin/banners

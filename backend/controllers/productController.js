@@ -1,5 +1,7 @@
 import Product from "../models/Product.js";
 import Order   from "../models/Order.js";
+import Cart    from "../models/Cart.js";
+import Wishlist from "../models/Wishlist.js";
 
 
 // ==========================================
@@ -399,6 +401,11 @@ export const deleteProduct = async (req, res) => {
 
     await product.deleteOne();
 
+    await Promise.all([
+      Cart.updateMany({}, { $pull: { items: { product: product._id } } }),
+      Wishlist.updateMany({}, { $pull: { products: product._id } }),
+    ]);
+
     res.status(200).json({
       success: true,
       message: "Product deleted successfully.",
@@ -461,29 +468,45 @@ export const getRelatedProducts = async (req, res) => {
 
 export const getFeaturedProducts = async (req, res) => {
   try {
-
-    const featuredProducts = await Product.find({
+    const approvalFilter = {
       $or: [
         { approvalStatus: "approved" },
         { approvalStatus: { $exists: false } },
       ],
+    };
+
+    // First find rated products (rating > 0)
+    let featuredProducts = await Product.find({
+      ...approvalFilter,
+      rating: { $gt: 0 },
     })
-      .sort({ rating: -1, numReviews: -1 })
+      .sort({ rating: -1, numReviews: -1, createdAt: -1 })
       .limit(8);
+
+    // If fewer than 8 rated products exist, fill the rest with newest approved products
+    if (featuredProducts.length < 8) {
+      const existingIds = featuredProducts.map((p) => p._id);
+      const remainingCount = 8 - featuredProducts.length;
+      const newestProducts = await Product.find({
+        ...approvalFilter,
+        _id: { $nin: existingIds },
+      })
+        .sort({ createdAt: -1 })
+        .limit(remainingCount);
+
+      featuredProducts = [...featuredProducts, ...newestProducts];
+    }
 
     res.status(200).json({
       success: true,
       count: featuredProducts.length,
       products: featuredProducts,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 

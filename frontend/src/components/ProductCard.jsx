@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { addToCart }     from "../services/cartService";
 import { useCart }       from "../context/CartContext";
 import { useCurrency }   from "../context/CurrencyContext";
-import { handleImageError, resolveImageUrl } from "../utils/imageFallback";
+import { handleImageError, resolveImageUrl, optimizeCloudinaryUrl } from "../utils/imageFallback";
 import { getDiscount } from "../utils/pricing";
 import "../styles/productcard.css";
 
@@ -43,7 +43,8 @@ const ProductCard = ({ product, badgeType }) => {
 
   const { hasDiscount, oldPrice, percent } = getDiscount(product);
   const inStock  = product.stock > 0;
-  const imgSrc   = resolveImageUrl(product.image, "product");
+  const rawSrc   = resolveImageUrl(product.image, "product");
+  const imgSrc   = optimizeCloudinaryUrl(rawSrc, "f_auto,q_auto,w_600");
 
   const stockText = product.stock === 0
     ? t("product.outOfStock")
@@ -78,6 +79,9 @@ const ProductCard = ({ product, badgeType }) => {
         <img
           src={imgSrc}
           alt={product.name}
+          loading="lazy"
+          width="300"
+          height="300"
           onError={(e) => handleImageError(e, "product")}
           style={!inStock ? { opacity: 0.45, filter: "grayscale(40%)" } : undefined}
         />

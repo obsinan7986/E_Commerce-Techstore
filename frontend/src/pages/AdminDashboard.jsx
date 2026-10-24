@@ -17,6 +17,7 @@ import {
   getLowStockProducts,
 } from "../services/adminservice";
 import { toast } from "react-toastify";
+import { formatCurrency, formatCompactCurrency } from "../utils/formatters";
 import "../styles/admin.css";
 import "../styles/adminDashboard.css";
 
@@ -115,14 +116,17 @@ const AdminDashboard = () => {
 
       {/* Upgraded 6 KPI Cards with Subtle Icons & Auto-fit Grid */}
       <div className="stats-grid">
-        <div className="stat-card">
+        <div className="stat-card stat-card--revenue">
           <div className="stat-icon" style={{ background: "#EFF6FF", color: "#2563EB" }}>
             <FiDollarSign />
           </div>
           <div className="stat-body">
             <span>Total Revenue</span>
-            <strong title={`ETB ${fmt(stats.totalRevenue || stats.revenue || 0)}`}>
-              ETB {fmt(stats.totalRevenue || stats.revenue || 0)}
+            <strong
+              className="stat-value stat-value--revenue"
+              title={formatCurrency(stats.totalRevenue || stats.revenue || 0)}
+            >
+              {formatCompactCurrency(stats.totalRevenue || stats.revenue || 0)}
             </strong>
           </div>
         </div>

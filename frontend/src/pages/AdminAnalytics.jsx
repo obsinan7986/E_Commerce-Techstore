@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { Link }                from "react-router-dom";
 import { getAnalytics }        from "../services/adminservice";
+import { formatCurrency, formatCompactCurrency } from "../utils/formatters";
 import "../styles/adminAnalytics.css";
 import { BASE_URL } from "../services/api";
 
@@ -20,12 +21,14 @@ const pctColor = (v) => (v === null || v === undefined) ? "" : Number(v) >= 0 ? 
 const pctSign  = (v) => (v === null || v === undefined) ? "—" : `${Number(v) >= 0 ? "+" : ""}${v}%`;
 
 /* ─── KPI Card ─────────────────────────────────────────────── */
-const KpiCard = ({ icon, label, value, sub, pct, color }) => (
+const KpiCard = ({ icon, label, value, sub, pct, color, title }) => (
   <div className="ana-kpi" style={{ "--kpi-color": color }}>
     <div className="ana-kpi-icon">{icon}</div>
     <div className="ana-kpi-body">
       <span className="ana-kpi-label">{label}</span>
-      <strong className="ana-kpi-value">{value}</strong>
+      <strong className="ana-kpi-value" title={title || (typeof value === "string" ? value : undefined)}>
+        {value}
+      </strong>
       <div className="ana-kpi-foot">
         <span className="ana-kpi-sub">{sub}</span>
         {pct !== undefined && (
@@ -168,7 +171,8 @@ const AdminAnalytics = () => {
         <KpiCard
           icon="💰"
           label="Total Revenue"
-          value={`ETB ${fmt(kpi.totalRevenue)}`}
+          value={formatCompactCurrency(kpi.totalRevenue)}
+          title={formatCurrency(kpi.totalRevenue)}
           sub={`This month: ETB ${fmtK(kpi.revenueThisMonth)}`}
           pct={kpi.pctRevenue}
           color="#2563EB"

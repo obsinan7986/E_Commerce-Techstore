@@ -13,24 +13,32 @@
 
 .stat-card {
   padding: 14px 16px;
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .stat-body {
   min-width: 0;
-  overflow: visible;
+  overflow: hidden;
   flex: 1;
 }
 
 .stat-card strong {
-  font-size: 1.25rem;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
   font-weight: 800;
   color: #111827;
   display: block;
   letter-spacing: -0.3px;
   white-space: nowrap;
-  overflow: visible;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.stat-value--revenue {
+  font-size: clamp(0.95rem, 1.8vw, 1.25rem) !important;
+  letter-spacing: -0.4px !important;
 }

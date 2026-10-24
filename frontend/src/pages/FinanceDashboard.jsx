@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api, { BASE_URL } from '../services/api';
+import { formatCurrency, formatCompactCurrency } from '../utils/formatters';
 import '../styles/financeDashboard.css';
 
 export default function FinanceDashboard() {
@@ -166,14 +167,20 @@ export default function FinanceDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-w-0">
           <p className="text-sm text-gray-500 font-medium">Gross Revenue</p>
-          <h3 className="text-2xl font-bold text-gray-900 mt-1 truncate" style={{ whiteSpace: 'nowrap' }}>
-            ETB {Number(stats.totalRevenue || 0).toLocaleString()}
+          <h3
+            className="text-2xl font-bold text-gray-900 mt-1 truncate"
+            title={formatCurrency(stats.totalRevenue || 0)}
+          >
+            {formatCompactCurrency(stats.totalRevenue || 0)}
           </h3>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-w-0">
           <p className="text-sm text-gray-500 font-medium">Platform Commission (CEO)</p>
-          <h3 className="text-2xl font-bold text-blue-600 mt-1 truncate" style={{ whiteSpace: 'nowrap' }}>
-            ETB {Number(stats.platformCommission || 0).toLocaleString()}
+          <h3
+            className="text-2xl font-bold text-blue-600 mt-1 truncate"
+            title={formatCurrency(stats.platformCommission || 0)}
+          >
+            {formatCompactCurrency(stats.platformCommission || 0)}
           </h3>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-w-0">

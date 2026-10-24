@@ -86,7 +86,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  overflow: visible;
+  overflow: hidden;
+  min-width: 0;
 }
 .stat-card:hover {
   box-shadow: 0 4px 14px rgba(0,0,0,.08);
@@ -106,7 +107,7 @@
 
 .stat-body {
   min-width: 0;
-  overflow: visible;
+  overflow: hidden;
   flex: 1;
 }
 
@@ -121,13 +122,20 @@
 }
 
 .stat-card strong {
-  font-size: 1.25rem;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
   font-weight: 800;
   color: #111827;
   display: block;
   letter-spacing: -.3px;
   white-space: nowrap;
-  overflow: visible;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.stat-value--revenue {
+  font-size: clamp(0.95rem, 1.8vw, 1.25rem) !important;
+  letter-spacing: -.4px !important;
 }
 
 /* ── Vertical Executive Operations Sequence ── */
@@ -627,7 +635,8 @@
   .admin-modal { padding: 18px; }
 }
 @media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+  .stat-card strong { font-size: 1.15rem; }
 }
 
 /* ── Inventory stock status badges ── */

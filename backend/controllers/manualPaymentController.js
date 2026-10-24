@@ -55,7 +55,7 @@ export const updatePaymentSettings = async (req, res) => {
     }
 
     if (req.file) {
-      settings.bankQrCode = req.file.path || req.file.filename;
+      settings.bankQrCode = req.file.path || req.file.filename || req.file.secure_url || req.file.url;
     }
 
     settings.updatedBy = req.user._id;
@@ -100,7 +100,9 @@ export const uploadPaymentScreenshot = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please upload a payment screenshot." });
     }
 
-    order.manualPayment.screenshotUrl          = req.file.path || req.file.filename;
+    const screenshotUrl =
+      req.file.path || req.file.filename || req.file.secure_url || req.file.url;
+    order.manualPayment.screenshotUrl          = screenshotUrl;
     order.manualPayment.uploadedAt             = new Date();
     order.manualPayment.verificationStatus     = "Pending";
     order.manualPayment.adminNote              = "";
@@ -122,6 +124,10 @@ export const uploadPaymentScreenshot = async (req, res) => {
       success: true,
       message: "Payment screenshot uploaded. Waiting for admin verification.",
       order,
+      screenshotUrl,
+      image: screenshotUrl,
+      imageUrl: screenshotUrl,
+      url: screenshotUrl,
     });
   } catch (err) {
     console.error("[uploadPaymentScreenshot]", err.message);

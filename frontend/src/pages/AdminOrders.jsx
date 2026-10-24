@@ -273,12 +273,12 @@ const AdminOrders = () => {
                       Payment Screenshot
                     </p>
                     <a
-                      href={`${import.meta.env.VITE_API_URL?.replace("/api","") || "https://e-commerce-techstore-y26d.onrender.com/api"}${selectedOrder.manualPayment.screenshotUrl}`}
+                      href={selectedOrder.manualPayment.screenshotUrl?.startsWith("http") ? selectedOrder.manualPayment.screenshotUrl : `${(import.meta.env.VITE_API_URL?.replace("/api","") || "https://e-commerce-techstore-y26d.onrender.com")}${selectedOrder.manualPayment.screenshotUrl?.startsWith("/") ? "" : "/"}${selectedOrder.manualPayment.screenshotUrl}`}
                       target="_blank"
                       rel="noreferrer"
                     >
                       <img
-                        src={`${import.meta.env.VITE_API_URL?.replace("/api","") || "https://e-commerce-techstore-y26d.onrender.com/api"}${selectedOrder.manualPayment.screenshotUrl}`}
+                        src={selectedOrder.manualPayment.screenshotUrl?.startsWith("http") ? selectedOrder.manualPayment.screenshotUrl : `${(import.meta.env.VITE_API_URL?.replace("/api","") || "https://e-commerce-techstore-y26d.onrender.com")}${selectedOrder.manualPayment.screenshotUrl?.startsWith("/") ? "" : "/"}${selectedOrder.manualPayment.screenshotUrl}`}
                         alt="Payment screenshot"
                         style={{ maxWidth: "100%", maxHeight: 200, objectFit: "contain", borderRadius: 8, border: "1px solid #E5E7EB", display: "block" }}
                       />

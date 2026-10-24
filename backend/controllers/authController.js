@@ -13,7 +13,7 @@ const sanitizeAvatarUrl = async (input) => {
   if (input.startsWith("data:")) {
     const base64Data = input.includes(",") ? input.split(",")[1] : input;
     const buffer = Buffer.from(base64Data, "base64");
-    return await uploadToCloudinary(buffer, "oict_avatars");
+    return await uploadToCloudinary(buffer, "oict_avatars", "avatar.jpg");
   }
   return input;
 };
@@ -267,16 +267,17 @@ export const updateUserProfile = async (req, res) => {
     const { fullName, phone, address, currentPassword, newPassword, avatar, profileImage } = req.body;
     const file = req.file || req.files?.[0] || req.files?.avatar?.[0] || req.files?.image?.[0];
     if (file) {
-      if (file.path && file.path.startsWith("http")) {
-        user.avatar = file.path;
-        user.profileImage = file.path;
+      const fileUrl = file.secure_url || file.path || file.filename || file.url;
+      if (fileUrl && (fileUrl.startsWith("http") || fileUrl.startsWith("/uploads"))) {
+        user.avatar = fileUrl;
+        user.profileImage = fileUrl;
       } else if (file.buffer) {
-        const uploaded = await uploadToCloudinary(file.buffer, "oict_avatars");
+        const uploaded = await uploadToCloudinary(file.buffer, "oict_avatars", file.originalname);
         user.avatar = uploaded;
         user.profileImage = uploaded;
       } else if (file.path && fs.existsSync(file.path)) {
         const buf = fs.readFileSync(file.path);
-        const uploaded = await uploadToCloudinary(buf, "oict_avatars");
+        const uploaded = await uploadToCloudinary(buf, "oict_avatars", file.originalname);
         user.avatar = uploaded;
         user.profileImage = uploaded;
       }
@@ -460,13 +461,14 @@ export const uploadAvatar = async (req, res) => {
     const file = req.file || req.files?.[0] || req.files?.avatar?.[0] || req.files?.image?.[0];
 
     if (file) {
-      if (file.path && file.path.startsWith("http")) {
-        avatarUrl = file.path;
+      const fileUrl = file.secure_url || file.path || file.filename || file.url;
+      if (fileUrl && (fileUrl.startsWith("http") || fileUrl.startsWith("/uploads"))) {
+        avatarUrl = fileUrl;
       } else if (file.buffer) {
-        avatarUrl = await uploadToCloudinary(file.buffer, "oict_avatars");
+        avatarUrl = await uploadToCloudinary(file.buffer, "oict_avatars", file.originalname);
       } else if (file.path && fs.existsSync(file.path)) {
         const buf = fs.readFileSync(file.path);
-        avatarUrl = await uploadToCloudinary(buf, "oict_avatars");
+        avatarUrl = await uploadToCloudinary(buf, "oict_avatars", file.originalname);
       }
     } else if (req.body?.avatar && typeof req.body.avatar === "string") {
       avatarUrl = await sanitizeAvatarUrl(req.body.avatar);

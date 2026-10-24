@@ -55,16 +55,26 @@ router.get( "/reviews", ...sellerOnly, sellerGetReviews);
 // Upload alias for seller
 router.post( "/upload", ...sellerOnly, upload.single("image"), cloudifyUploads("oict_products"), (req, res) => {
   if (req.file) {
-    const imageUrl = req.file.path || req.file.filename;
+    const imageUrl = req.file.path || req.file.filename || req.file.secure_url || req.file.url;
     return res.status(200).json({
       success: true,
       message: "Image uploaded successfully",
       image: imageUrl,
+      imageUrl,
+      url: imageUrl,
       filename: imageUrl,
+      path: imageUrl,
     });
   }
   if (req.body?.image) {
-    return res.status(200).json({ success: true, image: req.body.image, filename: req.body.image });
+    return res.status(200).json({
+      success: true,
+      image: req.body.image,
+      imageUrl: req.body.image,
+      url: req.body.image,
+      filename: req.body.image,
+      path: req.body.image,
+    });
   }
   return res.status(400).json({ success: false, message: "No image file provided." });
 });

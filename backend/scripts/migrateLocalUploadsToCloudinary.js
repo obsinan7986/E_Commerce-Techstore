@@ -15,6 +15,7 @@
  *   node backend/scripts/migrateLocalUploadsToCloudinary.js --apply  (Write to DB)
  */
 
+import "dotenv/config";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";

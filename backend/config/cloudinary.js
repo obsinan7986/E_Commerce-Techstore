@@ -15,9 +15,9 @@ export const isCloudinaryConfigured = () => {
     name &&
     key &&
     secret &&
-    name !== "zjl9ucvl" &&
-    key !== "757522142929719" &&
-    secret !== "wYMKh7UTFQrGj9Bi1FOxsm8EiKo"
+    name !== "your_cloud_name" &&
+    key !== "your_api_key" &&
+    secret !== "your_api_secret"
   );
 
   const hasValidUrl = Boolean(

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate }        from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useLocation }    from "react-router-dom";
 
 import { getCart }                                from "../services/cartService";
 import { createOrder }                            from "../services/orderService";
@@ -29,6 +29,8 @@ const paymentMethods = [
 
 const Checkout = () => {
   const navigate          = useNavigate();
+  const location          = useLocation();
+  const autoApplyAttempted = useRef(false);
   const { loadCartCount } = useCart();
   const { user }          = useAuth();
   const { formatPrice }   = useCurrency();
@@ -124,6 +126,28 @@ const Checkout = () => {
         ? `${firstOrderCoupon.discount}% First Order Discount`
         : `ETB ${firstOrderCoupon.discount} off`)
     : "";
+
+  // Auto-apply first order discount if navigated from cart or requested
+  useEffect(() => {
+    if (
+      location.state?.autoApplyFirstOrder &&
+      firstOrderEligible &&
+      firstOrderCoupon &&
+      subtotal > 0 &&
+      !couponApplied &&
+      !autoApplyAttempted.current &&
+      !isBelowMin
+    ) {
+      autoApplyAttempted.current = true;
+      setCouponInput(firstOrderCoupon.code);
+      applyCoupon(firstOrderCoupon.code, subtotal)
+        .then((data) => {
+          setCouponApplied(data);
+          setUseFirstOrder(true);
+        })
+        .catch(() => {});
+    }
+  }, [location.state, firstOrderEligible, firstOrderCoupon, subtotal, couponApplied, isBelowMin]);
 
   // ── Recalculate applied coupon discount when subtotal changes ────
   useEffect(() => {

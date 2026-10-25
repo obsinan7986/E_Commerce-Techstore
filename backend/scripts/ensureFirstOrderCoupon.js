@@ -19,9 +19,13 @@ async function run() {
     await mongoose.connect(mongoUri);
     console.log("Connected to MongoDB.");
 
-    const existing = await Coupon.findOne({ isFirstOrderOnly: true });
+    const existing = await Coupon.findOne({
+      isFirstOrderOnly: true,
+      isActive: true,
+      expiresAt: { $gt: new Date() },
+    });
     if (existing) {
-      console.log(`First-order coupon "${existing.code}" already exists.`);
+      console.log(`Active first-order coupon "${existing.code}" already exists.`);
       process.exit(0);
     }
 

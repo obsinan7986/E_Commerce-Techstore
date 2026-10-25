@@ -23,12 +23,19 @@ import { useConfirm } from "../context/ConfirmContext";
 import "../styles/cart.css";
 import { BASE_URL } from "../services/api";
 import { useCurrency } from "../context/CurrencyContext";
+import { useAuth } from "../context/AuthContext";
+import { checkFirstOrderDiscount } from "../services/couponService";
+import FirstOrderBanner from "../components/FirstOrderBanner";
 
 const Cart = () => {
   const confirm = useConfirm();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { formatPrice } = useCurrency();
+  const { user } = useAuth();
+
+  const [firstOrderEligible, setFirstOrderEligible] = useState(false);
+  const [firstOrderCoupon, setFirstOrderCoupon]     = useState(null);
 
   const [cart, setCart] = useState({ items: [] });
   const [totalPrice, setTotalPrice] = useState(0);
@@ -54,6 +61,16 @@ const Cart = () => {
   useEffect(() => {
     loadCart();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    checkFirstOrderDiscount()
+      .then((d) => {
+        setFirstOrderEligible(Boolean(d?.eligible));
+        setFirstOrderCoupon(d?.coupon || null);
+      })
+      .catch(() => {});
+  }, [user]);
 
   const increaseQty = async (productId, quantity) => {
     try {
@@ -158,6 +175,8 @@ const Cart = () => {
             <FaTrash /> Clear Cart
           </button>
         </div>
+
+        <FirstOrderBanner />
 
         {/* 2-Column Desktop Grid / 1-Column Mobile Stack */}
         <div className="cart-content">
@@ -275,6 +294,42 @@ const Cart = () => {
               <strong className="free">FREE</strong>
             </div>
 
+            {/* First-Order Discount Available Notice */}
+            {firstOrderEligible && firstOrderCoupon && (
+              <div
+                className="cart-first-order-box"
+                style={{
+                  background: "#ECFDF5",
+                  border: "1.5px solid #86EFAC",
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  margin: "12px 0 4px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#166534" }}>
+                    🎉 {firstOrderCoupon.type === "percentage" ? `${firstOrderCoupon.discount}% First Order Discount` : `ETB ${firstOrderCoupon.discount} off`}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "monospace",
+                      background: "#D1FAE5",
+                      padding: "2px 6px",
+                      borderRadius: 4,
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: "#047857",
+                    }}
+                  >
+                    {firstOrderCoupon.code}
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: "#15803D", lineHeight: 1.4 }}>
+                  Applies automatically when you proceed to checkout!
+                </p>
+              </div>
+            )}
+
             <div className="summary-divider" />
 
             <div className="summary-total">
@@ -285,7 +340,7 @@ const Cart = () => {
             <button
               type="button"
               className="checkout-btn"
-              onClick={() => navigate("/checkout")}
+              onClick={() => navigate("/checkout", { state: { autoApplyFirstOrder: true } })}
             >
               <span>{t("cart.checkout") || "Proceed to Checkout"}</span>
               <FaArrowRight />

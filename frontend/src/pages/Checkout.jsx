@@ -71,9 +71,9 @@ const Checkout = () => {
   const [couponLoading, setCouponLoading] = useState(false);
 
   // First-order discount
-  const [firstOrderEligible,  setFirstOrderEligible]  = useState(false);
-  const [useFirstOrder,       setUseFirstOrder]        = useState(false);
-  const [firstOrderDiscount,  setFirstOrderDiscount]   = useState(0);
+  const [firstOrderEligible, setFirstOrderEligible] = useState(false);
+  const [firstOrderCoupon,   setFirstOrderCoupon]   = useState(null);
+  const [useFirstOrder,      setUseFirstOrder]      = useState(false);
 
   const [shipping, setShipping] = useState({
     fullName: "", phone: "", email: "", address: "", city: "", country: "Ethiopia",
@@ -105,19 +105,58 @@ const Checkout = () => {
   useEffect(() => {
     if (!user) return;
     checkFirstOrderDiscount()
-      .then((d) => setFirstOrderEligible(d.eligible))
+      .then((d) => {
+        setFirstOrderEligible(Boolean(d.eligible));
+        setFirstOrderCoupon(d.coupon || null);
+      })
       .catch(() => {});
   }, [user]);
 
-  // ── Recalculate first-order discount when subtotal changes ────
+  // Derived minimum order check for first-order offer
+  const isBelowMin = Boolean(
+    firstOrderCoupon &&
+    firstOrderCoupon.minOrderAmount > 0 &&
+    subtotal < firstOrderCoupon.minOrderAmount
+  );
+  const minDiff = isBelowMin ? firstOrderCoupon.minOrderAmount - subtotal : 0;
+  const firstOrderLabel = firstOrderCoupon
+    ? (firstOrderCoupon.type === "percentage"
+        ? `${firstOrderCoupon.discount}% First Order Discount`
+        : `ETB ${firstOrderCoupon.discount} off`)
+    : "";
+
+  // ── Recalculate applied coupon discount when subtotal changes ────
   useEffect(() => {
-    setFirstOrderDiscount(useFirstOrder && firstOrderEligible ? Math.round(subtotal * 0.10 * 100) / 100 : 0);
-  }, [useFirstOrder, firstOrderEligible, subtotal]);
+    if (!couponApplied?.code || subtotal <= 0) return;
+    applyCoupon(couponApplied.code, subtotal)
+      .then((data) => {
+        setCouponApplied(data);
+        setCouponError("");
+      })
+      .catch((err) => {
+        setCouponApplied(null);
+        setCouponError(err.response?.data?.message || "Coupon no longer valid for this total.");
+        if (firstOrderCoupon && couponApplied.code === firstOrderCoupon.code) {
+          setUseFirstOrder(false);
+        }
+      });
+  }, [subtotal]);
+
+  // If subtotal drops below minOrderAmount, turn off toggle & clear
+  useEffect(() => {
+    if (useFirstOrder && isBelowMin) {
+      setUseFirstOrder(false);
+      if (couponApplied?.code === firstOrderCoupon?.code) {
+        setCouponApplied(null);
+        setCouponInput("");
+      }
+    }
+  }, [isBelowMin, useFirstOrder]);
 
   // ── Derived totals ─────────────────────────────────────────────
   const tax           = Math.round(itemsPrice * 0.15 * 100) / 100;
   const shippingPrice = itemsPrice >= 5000 ? 0 : 200;
-  const discountAmt   = couponApplied ? couponApplied.discountAmount : firstOrderDiscount;
+  const discountAmt   = couponApplied ? couponApplied.discountAmount : 0;
   const finalTotal    = Math.max(0, itemsPrice + shippingPrice + tax - discountAmt);
 
   const handleShippingChange = (e) =>
@@ -131,10 +170,17 @@ const Checkout = () => {
       setCouponError("");
       const data = await applyCoupon(couponInput.trim(), subtotal);
       setCouponApplied(data);
-      setUseFirstOrder(false);  // coupon overrides first-order
+      if (firstOrderCoupon && data.code === firstOrderCoupon.code) {
+        setUseFirstOrder(true);
+      } else {
+        setUseFirstOrder(false);
+      }
     } catch (err) {
       setCouponError(err.response?.data?.message || "Invalid coupon.");
       setCouponApplied(null);
+      if (firstOrderCoupon && couponInput.trim().toUpperCase() === firstOrderCoupon.code) {
+        setUseFirstOrder(false);
+      }
     } finally {
       setCouponLoading(false);
     }
@@ -144,12 +190,37 @@ const Checkout = () => {
     setCouponApplied(null);
     setCouponInput("");
     setCouponError("");
+    setUseFirstOrder(false);
   };
 
   // ── Toggle first-order discount ────────────────────────────────
-  const toggleFirstOrder = () => {
-    if (!useFirstOrder) setCouponApplied(null); // clear coupon if enabling first-order
-    setUseFirstOrder((p) => !p);
+  const handleToggleFirstOrder = async (e) => {
+    if (isBelowMin) return;
+    const checked = e.target.checked;
+    if (checked) {
+      if (!firstOrderCoupon?.code) return;
+      setCouponInput(firstOrderCoupon.code);
+      try {
+        setCouponLoading(true);
+        setCouponError("");
+        const data = await applyCoupon(firstOrderCoupon.code, subtotal);
+        setCouponApplied(data);
+        setUseFirstOrder(true);
+      } catch (err) {
+        setCouponError(err.response?.data?.message || "Failed to apply discount.");
+        setCouponApplied(null);
+        setUseFirstOrder(false);
+      } finally {
+        setCouponLoading(false);
+      }
+    } else {
+      setUseFirstOrder(false);
+      if (couponApplied?.code === firstOrderCoupon?.code) {
+        setCouponApplied(null);
+        setCouponInput("");
+        setCouponError("");
+      }
+    }
   };
 
   // ── Place order ────────────────────────────────────────────────
@@ -171,8 +242,7 @@ const Checkout = () => {
           country:  shipping.country,
         },
         paymentMethod,
-        couponCode:           couponApplied?.code || "",
-        useFirstOrderDiscount: useFirstOrder && firstOrderEligible && !couponApplied,
+        couponCode: couponApplied?.code || "",
       });
 
       const order = response.order;
@@ -402,20 +472,29 @@ const Checkout = () => {
           <div className="summary-row"><span>Tax (15%)</span><span>{formatPrice(Number(tax))}</span></div>
 
           {/* First-order discount banner */}
-          {firstOrderEligible && !couponApplied && (
+          {firstOrderEligible && firstOrderCoupon && (
             <div className="co-first-order-banner">
               <div className="co-first-order-top">
-                <span>🎉 <strong>10% First Order Discount</strong></span>
-                <label className="co-toggle">
-                  <input type="checkbox" checked={useFirstOrder} onChange={toggleFirstOrder} />
+                <span>🎉 <strong>{firstOrderLabel}</strong></span>
+                <label className="co-toggle" style={isBelowMin ? { opacity: 0.55, cursor: "not-allowed" } : {}}>
+                  <input
+                    type="checkbox"
+                    checked={useFirstOrder}
+                    disabled={isBelowMin}
+                    onChange={handleToggleFirstOrder}
+                  />
                   <span className="co-toggle-slider" />
                 </label>
               </div>
-              {useFirstOrder && (
-                <span className="co-first-order-saving">
-                  You save {formatPrice(firstOrderDiscount)}!
+              {isBelowMin ? (
+                <span style={{ fontSize: 12, color: "#DC2626", marginTop: 4, display: "block" }}>
+                  Add ETB {minDiff.toLocaleString()} more to use this offer
                 </span>
-              )}
+              ) : useFirstOrder && couponApplied ? (
+                <span className="co-first-order-saving">
+                  You save {formatPrice(couponApplied.discountAmount)}!
+                </span>
+              ) : null}
             </div>
           )}
 
@@ -442,10 +521,7 @@ const Checkout = () => {
             <div className="co-coupon-applied">
               <div className="co-coupon-applied-info">
                 <span className="co-coupon-tag">🏷 {couponApplied.code}</span>
-                {couponApplied.type === "percentage"
-                  ? <span>{couponApplied.discount}% off</span>
-                  : <span>{formatPrice(couponApplied.discount)} off</span>
-                }
+                <span>You save {formatPrice(couponApplied.discountAmount)}</span>
               </div>
               <button className="co-coupon-remove" onClick={handleRemoveCoupon} aria-label="Remove coupon">✕</button>
             </div>
@@ -456,10 +532,9 @@ const Checkout = () => {
           {discountAmt > 0 && (
             <div className="summary-row co-discount-row">
               <span>
-                Discount
-                {couponApplied ? ` (${couponApplied.code})` : useFirstOrder ? " (First Order)" : ""}
+                Discount ({couponApplied.code})
               </span>
-              <span className="co-discount-val">− {formatPrice(Number(discountAmt).toLocaleString())}</span>
+              <span className="co-discount-val">− {formatPrice(Number(discountAmt))}</span>
             </div>
           )}
 

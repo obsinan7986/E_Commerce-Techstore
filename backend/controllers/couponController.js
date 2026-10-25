@@ -2,13 +2,27 @@ import Coupon from "../models/Coupon.js";
 import Order  from "../models/Order.js";
 import User   from "../models/User.js";
 
-const FIRST_ORDER_CODE = "FIRST10"; // auto-applied code name
-
 /* ── Calculate discount amount ── */
 const calcDiscount = (type, discount, subtotal) => {
   if (type === "percentage") return Math.round((subtotal * discount) / 100 * 100) / 100;
   if (type === "fixed")      return Math.min(discount, subtotal); // can't exceed subtotal
   return 0;
+};
+
+/* ── Find the newest active first-order coupon ── */
+export const getActiveFirstOrderCoupon = async () => {
+  const now = new Date();
+  return Coupon.findOne({
+    isFirstOrderOnly: true,
+    isActive: true,
+    expiresAt: { $gt: now },
+    $or: [
+      { usageLimit: 0 },
+      { usageLimit: null },
+      { usageLimit: { $exists: false } },
+      { $expr: { $lt: ["$usedCount", "$usageLimit"] } },
+    ],
+  }).sort({ createdAt: -1 });
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -48,11 +62,12 @@ export const applyCoupon = async (req, res) => {
 
     // First-order-only check
     if (coupon.isFirstOrderOnly) {
+      const dbUser = await User.findById(req.user._id);
       const hasOrder = await Order.exists({
         user:        req.user._id,
         orderStatus: { $ne: "Cancelled" },
       });
-      if (hasOrder) {
+      if (hasOrder || dbUser?.firstOrderDiscountUsed) {
         return res.status(400).json({ success: false, message: "This coupon is only valid on your first order." });
       }
     }
@@ -86,18 +101,52 @@ export const applyCoupon = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 // GET /api/coupons/first-order-check  (protected — customer)
 // Returns whether the user qualifies for the first-order discount
+// and the current active first-order coupon
 // ─────────────────────────────────────────────────────────────────
 export const checkFirstOrderDiscount = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    if (user.firstOrderDiscountUsed) {
-      return res.status(200).json({ eligible: false });
+    const activeCoupon = await getActiveFirstOrderCoupon();
+    if (!activeCoupon) {
+      return res.status(200).json({ eligible: false, coupon: null });
     }
+
+    const user = await User.findById(req.user._id);
+    if (user?.firstOrderDiscountUsed) {
+      return res.status(200).json({
+        eligible: false,
+        coupon: {
+          code:           activeCoupon.code,
+          type:           activeCoupon.type,
+          discount:       activeCoupon.discount,
+          minOrderAmount: activeCoupon.minOrderAmount,
+          description:    activeCoupon.description,
+          expiresAt:      activeCoupon.expiresAt,
+        },
+      });
+    }
+
     const hasOrder = await Order.exists({
       user:        req.user._id,
       orderStatus: { $ne: "Cancelled" },
     });
-    return res.status(200).json({ eligible: !hasOrder });
+
+    const hasUsedCoupon = activeCoupon.usedBy?.some(
+      (uid) => uid.toString() === req.user._id.toString()
+    );
+
+    const eligible = !hasOrder && !hasUsedCoupon;
+
+    return res.status(200).json({
+      eligible,
+      coupon: {
+        code:           activeCoupon.code,
+        type:           activeCoupon.type,
+        discount:       activeCoupon.discount,
+        minOrderAmount: activeCoupon.minOrderAmount,
+        description:    activeCoupon.description,
+        expiresAt:      activeCoupon.expiresAt,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -112,10 +161,15 @@ export const createCoupon = async (req, res) => {
       code, description = "", type = "percentage",
       discount, minOrderAmount = 0, expiresAt,
       usageLimit = 0, isFirstOrderOnly = false,
+      isActive = true,
     } = req.body;
 
     if (!code?.trim() || !discount || !expiresAt) {
       return res.status(400).json({ success: false, message: "code, discount and expiresAt are required." });
+    }
+
+    if (new Date(expiresAt) <= new Date()) {
+      return res.status(400).json({ success: false, message: "Expiry date must be in the future." });
     }
 
     if (type === "percentage" && (discount < 1 || discount > 100)) {
@@ -138,9 +192,35 @@ export const createCoupon = async (req, res) => {
       expiresAt: new Date(expiresAt),
       usageLimit: Number(usageLimit),
       isFirstOrderOnly: Boolean(isFirstOrderOnly),
+      isActive: Boolean(isActive),
     });
 
-    return res.status(201).json({ success: true, message: "Coupon created.", coupon });
+    let warning;
+    if (coupon.isActive && coupon.isFirstOrderOnly) {
+      const now = new Date();
+      const otherActiveFirstOrder = await Coupon.findOne({
+        _id: { $ne: coupon._id },
+        isFirstOrderOnly: true,
+        isActive: true,
+        expiresAt: { $gt: now },
+        $or: [
+          { usageLimit: 0 },
+          { usageLimit: null },
+          { usageLimit: { $exists: false } },
+          { $expr: { $lt: ["$usedCount", "$usageLimit"] } },
+        ],
+      });
+      if (otherActiveFirstOrder) {
+        warning = `Another active first-order coupon (${otherActiveFirstOrder.code}) exists. Customers will be offered the newest one.`;
+      }
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Coupon created.",
+      coupon,
+      ...(warning ? { warning } : {}),
+    });
   } catch (err) {
     if (err.code === 11000) return res.status(400).json({ success: false, message: "Coupon code already exists." });
     res.status(500).json({ success: false, message: err.message });
@@ -189,17 +269,49 @@ export const updateCoupon = async (req, res) => {
       expiresAt, usageLimit, isFirstOrderOnly, isActive,
     } = req.body;
 
-    if (description  !== undefined) coupon.description      = description.trim();
-    if (type         !== undefined) coupon.type             = type;
-    if (discount     !== undefined) coupon.discount         = Number(discount);
-    if (minOrderAmount !== undefined) coupon.minOrderAmount = Number(minOrderAmount);
-    if (expiresAt    !== undefined) coupon.expiresAt        = new Date(expiresAt);
-    if (usageLimit   !== undefined) coupon.usageLimit       = Number(usageLimit);
+    if (description    !== undefined) coupon.description      = description.trim();
+    if (type           !== undefined) coupon.type             = type;
+    if (discount       !== undefined) coupon.discount         = Number(discount);
+    if (minOrderAmount !== undefined) coupon.minOrderAmount   = Number(minOrderAmount);
+    if (expiresAt      !== undefined) {
+      const expDate = new Date(expiresAt);
+      if (isNaN(expDate.getTime()) || expDate <= new Date()) {
+        return res.status(400).json({ success: false, message: "Expiry date must be in the future." });
+      }
+      coupon.expiresAt = expDate;
+    }
+    if (usageLimit     !== undefined) coupon.usageLimit       = Number(usageLimit);
     if (isFirstOrderOnly !== undefined) coupon.isFirstOrderOnly = Boolean(isFirstOrderOnly);
-    if (isActive     !== undefined) coupon.isActive         = Boolean(isActive);
+    if (isActive       !== undefined) coupon.isActive         = Boolean(isActive);
 
     await coupon.save();
-    return res.status(200).json({ success: true, message: "Coupon updated.", coupon });
+
+    let warning;
+    if (coupon.isActive && coupon.isFirstOrderOnly) {
+      const now = new Date();
+      const otherActiveFirstOrder = await Coupon.findOne({
+        _id: { $ne: coupon._id },
+        isFirstOrderOnly: true,
+        isActive: true,
+        expiresAt: { $gt: now },
+        $or: [
+          { usageLimit: 0 },
+          { usageLimit: null },
+          { usageLimit: { $exists: false } },
+          { $expr: { $lt: ["$usedCount", "$usageLimit"] } },
+        ],
+      });
+      if (otherActiveFirstOrder) {
+        warning = `Another active first-order coupon (${otherActiveFirstOrder.code}) exists. Customers will be offered the newest one.`;
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Coupon updated.",
+      coupon,
+      ...(warning ? { warning } : {}),
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

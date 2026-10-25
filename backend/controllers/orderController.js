@@ -157,22 +157,13 @@ export const createOrder = async (req, res) => {
     const taxPrice      = itemsPrice * 0.15;
     const preTaxSubtotal = itemsPrice + shippingPrice;
 
-    // ── Coupon / First-order discount ─────────────────────────────
+    // ── Coupon discount ───────────────────────────────────────────
     let discountAmount = 0;
     let couponDoc      = null;
     let couponSnapshot = { code: "", type: "", discount: 0, discountAmount: 0 };
+    let couponReserved = false;
 
-    // 10% first-order discount
-    if (useFirstOrderDiscount) {
-      const dbUser   = await User.findById(req.user._id);
-      const hasOrder = await Order.exists({ user: req.user._id, orderStatus: { $ne: "Cancelled" } });
-      if (!dbUser.firstOrderDiscountUsed && !hasOrder) {
-        discountAmount = Math.round(preTaxSubtotal * 0.10 * 100) / 100;
-        couponSnapshot = { code: "FIRST10", type: "percentage", discount: 10, discountAmount };
-      }
-    }
-
-    // Named coupon (takes precedence over first-order if both sent)
+    // First-order and general discounts apply strictly through couponCode (already validated server-side)
     if (couponCode?.trim()) {
       couponDoc = await Coupon.findOne({ code: couponCode.trim().toUpperCase() });
 
@@ -184,8 +175,11 @@ export const createOrder = async (req, res) => {
       if (couponDoc.usedBy.some((u) => u.toString() === req.user._id.toString()))
         throw { status: 400, message: "You have already used this coupon." };
       if (couponDoc.isFirstOrderOnly) {
+        const dbUser = await User.findById(req.user._id);
         const hasOrder = await Order.exists({ user: req.user._id, orderStatus: { $ne: "Cancelled" } });
-        if (hasOrder) throw { status: 400, message: "This coupon is only valid on your first order." };
+        if (hasOrder || dbUser?.firstOrderDiscountUsed) {
+          throw { status: 400, message: "This coupon is only valid on your first order." };
+        }
       }
       if (couponDoc.minOrderAmount > 0 && preTaxSubtotal < couponDoc.minOrderAmount)
         throw { status: 400, message: `Minimum order of ETB ${couponDoc.minOrderAmount.toLocaleString()} required.` };
@@ -201,6 +195,31 @@ export const createOrder = async (req, res) => {
         discount:       couponDoc.discount,
         discountAmount,
       };
+
+      // Atomic commit to reserve coupon usage and ensure race safety
+      const couponQuery = {
+        _id: couponDoc._id,
+        isActive: true,
+        expiresAt: { $gt: new Date() },
+        usedBy: { $ne: req.user._id },
+      };
+      if (couponDoc.usageLimit > 0) {
+        couponQuery.usedCount = { $lt: couponDoc.usageLimit };
+      }
+
+      const updatedCoupon = await Coupon.findOneAndUpdate(
+        couponQuery,
+        {
+          $inc: { usedCount: 1 },
+          $push: { usedBy: req.user._id },
+        },
+        { returnDocument: 'after', new: true }
+      );
+
+      if (!updatedCoupon) {
+        throw { status: 400, message: "Coupon has reached its usage limit or has already been used by you." };
+      }
+      couponReserved = true;
     }
 
     const totalPrice = Math.max(0, itemsPrice + shippingPrice + taxPrice - discountAmount);
@@ -232,12 +251,9 @@ export const createOrder = async (req, res) => {
     });
 
     // ── Commit coupon usage ───────────────────────────────────────
-    if (couponDoc) {
-      couponDoc.usedCount += 1;
-      couponDoc.usedBy.push(req.user._id);
-      await couponDoc.save();
-    }
-    if (useFirstOrderDiscount && couponSnapshot.code === "FIRST10") {
+    // Usage was already atomically committed via findOneAndUpdate.
+    // If a coupon with isFirstOrderOnly was used, mark User.firstOrderDiscountUsed = true.
+    if (couponDoc?.isFirstOrderOnly) {
       await User.findByIdAndUpdate(req.user._id, { firstOrderDiscountUsed: true });
     }
 
@@ -299,6 +315,12 @@ export const createOrder = async (req, res) => {
     });
 
   } catch (error) {
+    if (couponReserved && couponDoc) {
+      await Coupon.findByIdAndUpdate(couponDoc._id, {
+        $inc: { usedCount: -1 },
+        $pull: { usedBy: req.user._id },
+      }).catch(() => {});
+    }
     console.error("Create order error:", error);
     const status = error.status || 500;
     return res.status(status).json({

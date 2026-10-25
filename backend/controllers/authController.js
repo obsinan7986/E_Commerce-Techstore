@@ -6,6 +6,8 @@ import generateToken  from "../utils/generateToken.js";
 import { sendTemplate } from "../utils/emailService.js";
 import { welcomeEmail, passwordResetEmail } from "../utils/emailTemplates.js";
 import createAdminNotification from "../utils/createAdminNotification.js";
+import createNotification from "../utils/createNotification.js";
+import { getActiveFirstOrderCoupon } from "./couponController.js";
 import { uploadToCloudinary } from "../middleware/uploadMiddleware.js";
 
 const sanitizeAvatarUrl = async (input) => {
@@ -94,11 +96,32 @@ export const registerUser = async (req, res) => {
       `[register] New user created: ${user.email} (role: ${user.role}, id: ${user._id})`
     );
 
+    // Check if an active first-order coupon exists and notify new user (never blocks registration)
+    let firstOrderCoupon = null;
+    try {
+      firstOrderCoupon = await getActiveFirstOrderCoupon();
+      if (firstOrderCoupon) {
+        const discountText = firstOrderCoupon.type === "percentage"
+          ? `${firstOrderCoupon.discount}%`
+          : `ETB ${firstOrderCoupon.discount}`;
+        await createNotification({
+          userId: user._id,
+          type: "welcome_gift",
+          title: "Welcome Gift",
+          message: `Welcome gift: use code ${firstOrderCoupon.code} for ${discountText} off your first order`,
+          link: "/checkout",
+        });
+      }
+    } catch (couponErr) {
+      console.error("[register] First order notification/coupon error:", couponErr.message);
+    }
+
     // Send welcome email (fire-and-forget)
     sendTemplate(user.email, welcomeEmail({
       fullName:    user.fullName,
       email:       user.email,
       frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+      firstOrderCoupon,
     })).catch(() => {});
 
     // Notify admins of new registration (fire-and-forget)

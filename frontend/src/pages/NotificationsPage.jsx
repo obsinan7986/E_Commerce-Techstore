@@ -17,6 +17,7 @@ import {
 import "../styles/notification.css";
 
 const TYPE_ICON = {
+  welcome_gift:      "🎁",
   order_placed:      "🛍️",
   payment_verified:  "✅",
   payment_rejected:  "❌",

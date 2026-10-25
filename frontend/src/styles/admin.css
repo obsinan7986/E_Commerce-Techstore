@@ -66,6 +66,7 @@
   margin-bottom: 20px;
 }
 .admin-feedback--success { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+.admin-feedback--warning { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
 .admin-feedback--error   { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
 
 /* ── Stats grid ── */

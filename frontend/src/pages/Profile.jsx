@@ -23,6 +23,7 @@ import { useConfirm } from "../context/ConfirmContext";
 import { useNotifications } from "../context/NotificationContext";
 import { getWishlist } from "../services/wishlistService";
 import api, { BASE_URL } from "../services/api";
+import FirstOrderBanner from "../components/FirstOrderBanner";
 import "../styles/profile.css";
 
 /* ── Address Book Component ───────────────────────────────── */
@@ -603,6 +604,7 @@ const Profile = () => {
             COLUMN 2: Right Content Workspace
            ══════════════════════════════════════════════════════════ */}
         <main className="cust-workspace">
+          <FirstOrderBanner />
 
           {/* ──────────────────────────────────────────────────────
               TAB A: "Become a Seller" Content

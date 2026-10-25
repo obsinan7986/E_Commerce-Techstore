@@ -111,7 +111,7 @@ const CouponForm = ({ initial, onSave, onClose, loading, error }) => {
               <label className="acp-check-label" style={{ marginTop: 6 }}>
                 <input type="checkbox" checked={form.isFirstOrderOnly}
                   onChange={(e) => set("isFirstOrderOnly", e.target.checked)} />
-                First order only
+                First-order offer (shown automatically to new customers)
               </label>
             </div>
           </div>
@@ -141,6 +141,10 @@ const AdminCoupons = () => {
   const [formErr,  setFormErr]  = useState("");
 
   const [msg,      setMsg]      = useState({ type: "", text: "" });
+
+  const activeFirstOrderCount = coupons.filter(
+    (c) => c.isFirstOrderOnly && c.isActive && !isExpired(c.expiresAt) && (c.usageLimit === 0 || c.usedCount < c.usageLimit)
+  ).length;
 
   const flash = (type, text) => {
     setMsg({ type, text });
@@ -190,12 +194,16 @@ const AdminCoupons = () => {
         isActive:         form.isActive,
       };
 
+      let res;
       if (editing?._id) {
-        await updateAdminCoupon(editing._id, payload);
-        flash("success", "Coupon updated.");
+        res = await updateAdminCoupon(editing._id, payload);
       } else {
-        await createAdminCoupon(payload);
-        flash("success", "Coupon created.");
+        res = await createAdminCoupon(payload);
+      }
+      if (res?.warning) {
+        flash("warning", `${res.message || "Coupon saved."} Note: ${res.warning}`);
+      } else {
+        flash("success", res?.message || (editing?._id ? "Coupon updated." : "Coupon created."));
       }
       setShowForm(false);
       load();
@@ -208,8 +216,12 @@ const AdminCoupons = () => {
 
   const handleToggle = async (coupon) => {
     try {
-      await updateAdminCoupon(coupon._id, { isActive: !coupon.isActive });
-      flash("success", `Coupon ${coupon.isActive ? "deactivated" : "activated"}.`);
+      const res = await updateAdminCoupon(coupon._id, { isActive: !coupon.isActive });
+      if (res?.warning) {
+        flash("warning", `${res.message || "Coupon status updated."} Note: ${res.warning}`);
+      } else {
+        flash("success", `Coupon ${coupon.isActive ? "deactivated" : "activated"}.`);
+      }
       load();
     } catch (err) {
       flash("error", err.response?.data?.message || "Failed to toggle.");
@@ -248,6 +260,12 @@ const AdminCoupons = () => {
         <div className={`admin-feedback admin-feedback--${msg.type}`}>{msg.text}</div>
       )}
 
+      {activeFirstOrderCount > 1 && (
+        <div className="admin-feedback admin-feedback--warning" style={{ marginBottom: 14 }}>
+          ⚠️ Notice: {activeFirstOrderCount} first-order offer coupons are active simultaneously. Customers will automatically see the newest one.
+        </div>
+      )}
+
       {/* Search */}
       <div className="admin-filters">
         <input className="admin-search" type="text" placeholder="Search by code…"
@@ -275,7 +293,7 @@ const AdminCoupons = () => {
                 <th>Type</th>
                 <th>Discount</th>
                 <th>Min Order</th>
-                <th>Usage</th>
+                <th>Used / Limit</th>
                 <th>Expires</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -286,10 +304,24 @@ const AdminCoupons = () => {
                 <tr key={c._id}>
                   <td>
                     <div className="acp-code-cell">
-                      <span className="acp-code">{c.code}</span>
-                      {c.isFirstOrderOnly && (
-                        <span className="acp-first-badge">1st order</span>
-                      )}
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                        <span className="acp-code">{c.code}</span>
+                        {c.isFirstOrderOnly && (
+                          <span className="acp-first-badge">1st order</span>
+                        )}
+                        {c.isFirstOrderOnly && !c.isActive && (
+                          <span className="acp-warning-badge" title="First-order offer is inactive">⚠️ Inactive</span>
+                        )}
+                        {c.isFirstOrderOnly && c.isActive && isExpired(c.expiresAt) && (
+                          <span className="acp-warning-badge" title="First-order offer has expired">⚠️ Expired</span>
+                        )}
+                        {c.isFirstOrderOnly && c.isActive && !isExpired(c.expiresAt) && c.usageLimit > 0 && c.usedCount >= c.usageLimit && (
+                          <span className="acp-warning-badge" title="First-order offer limit reached">⚠️ Exhausted</span>
+                        )}
+                        {c.isFirstOrderOnly && c.isActive && !isExpired(c.expiresAt) && (c.usageLimit === 0 || c.usedCount < c.usageLimit) && activeFirstOrderCount > 1 && (
+                          <span className="acp-warning-badge" title="More than one first-order coupon is currently active. Customers receive the newest one.">⚠️ Multiple Active</span>
+                        )}
+                      </div>
                       {c.description && <small>{c.description}</small>}
                     </div>
                   </td>

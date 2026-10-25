@@ -136,30 +136,41 @@ const orderItemsTable = (items, BASE_URL = "") => {
 /* ══════════════════════════════════════════════════════════════════
    1. WELCOME EMAIL
    ══════════════════════════════════════════════════════════════════ */
-export const welcomeEmail = ({ fullName, email, frontendUrl = "" }) => ({
-  subject: `Welcome to ${BRAND}! Your account is ready 🎉`,
-  html: wrap(`
-    ${heading(`Welcome to ${BRAND}, ${fullName}! 🎉`)}
-    ${para(`Your account has been created successfully. You're now part of Ethiopia's premier tech marketplace.`)}
+export const welcomeEmail = ({ fullName, email, frontendUrl = "", firstOrderCoupon = null }) => {
+  const discountText = firstOrderCoupon
+    ? (firstOrderCoupon.type === "percentage" ? `${firstOrderCoupon.discount}%` : `ETB ${firstOrderCoupon.discount}`)
+    : "";
 
-    ${infoTable(
-      infoRow("Name",  fullName) +
-      infoRow("Email", email) +
-      infoRow("Joined", new Date().toLocaleDateString("en-US", { dateStyle: "long" }))
-    )}
-
+  const couponSection = firstOrderCoupon
+    ? `
     <div style="background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:12px;padding:18px 20px;margin-bottom:20px;">
-      <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#166534;">🎁 First Order Bonus</p>
+      <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#166534;">🎁 Welcome Gift</p>
       <p style="margin:0;font-size:13.5px;color:#166534;line-height:1.6;">
-        As a new member, you get <strong>10% off your first order!</strong> The discount will be automatically applied at checkout.
+        As a welcome gift, use code <strong style="font-family:monospace;background:#DCFCE7;padding:2px 6px;border-radius:4px;font-size:14px;">${firstOrderCoupon.code}</strong> for <strong>${discountText} off</strong> your first order!
       </p>
-    </div>
+    </div>`
+    : "";
 
-    ${btn("Start Shopping", `${frontendUrl}/products`)}
-    ${divider()}
-    ${para("If you didn't create this account, please ignore this email.", GREY)}
-  `),
-});
+  return {
+    subject: `Welcome to ${BRAND}! Your account is ready 🎉`,
+    html: wrap(`
+      ${heading(`Welcome to ${BRAND}, ${fullName}! 🎉`)}
+      ${para(`Your account has been created successfully. You're now part of Ethiopia's premier tech marketplace.`)}
+
+      ${infoTable(
+        infoRow("Name",  fullName) +
+        infoRow("Email", email) +
+        infoRow("Joined", new Date().toLocaleDateString("en-US", { dateStyle: "long" }))
+      )}
+
+      ${couponSection}
+
+      ${btn("Start Shopping", `${frontendUrl}/products`)}
+      ${divider()}
+      ${para("If you didn't create this account, please ignore this email.", GREY)}
+    `),
+  };
+};
 
 /* ══════════════════════════════════════════════════════════════════
    2. ORDER CONFIRMATION

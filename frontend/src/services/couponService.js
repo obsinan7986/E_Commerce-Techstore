@@ -6,7 +6,7 @@ export const applyCoupon = async (code, subtotal) => {
   return data;
 };
 
-/** GET /api/coupons/first-order-check — is this user eligible for 10% first-order discount? */
+/** GET /api/coupons/first-order-check — returns { eligible, coupon } */
 export const checkFirstOrderDiscount = async () => {
   const { data } = await api.get("/coupons/first-order-check");
   return data;

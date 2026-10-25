@@ -35,6 +35,7 @@ const notificationSchema = new mongoose.Schema(
       type: String,
       enum: [
         // ── Customer notifications ──────────────────────────
+        "welcome_gift",
         "order_placed",
         "payment_verified",
         "payment_rejected",

@@ -69,6 +69,8 @@
 }
 
 .acp-badge--active   { background: #DCFCE7; color: #15803D; }
+.acp-badge--warning  { background: #FEF3C7; color: #B45309; border: 1px solid #FCD34D; }
+.acp-warning-badge   { display: inline-flex; align-items: center; padding: 2px 8px; background: #FEF3C7; color: #B45309; border: 1px solid #FCD34D; border-radius: 20px; font-size: 10px; font-weight: 700; width: fit-content; }
 .acp-badge--inactive { background: #F3F4F6; color: #6B7280; }
 .acp-badge--expired  { background: #FEE2E2; color: #B91C1C; }
 .acp-badge--used     { background: #FEF3C7; color: #B45309; }

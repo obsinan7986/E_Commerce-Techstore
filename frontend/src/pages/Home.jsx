@@ -6,6 +6,7 @@ import api from "../services/api";
 
 import HeroBanner  from "../components/HeroBanner";
 import ProductCard from "../components/ProductCard";
+import FirstOrderBanner from "../components/FirstOrderBanner";
 
 import "../styles/home.css";
 
@@ -50,6 +51,8 @@ const Home = () => {
       )}
 
       <HeroBanner />
+
+      <FirstOrderBanner />
 
       <section className="latest-products">
         <div className="section-title-block">

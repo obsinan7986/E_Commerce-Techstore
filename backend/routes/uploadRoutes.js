@@ -64,7 +64,11 @@ router.post("/", protect, multiUpload, cloudifyUploads("oict_uploads"), async (r
       try {
         resolvedUrl = await uploadToCloudinary(resolvedUrl, "oict_uploads", "upload.jpg");
       } catch (err) {
-        console.warn("[uploadRoutes] Base64 upload fallback warning:", err.message);
+        return res.status(err.statusCode || err.status || 500).json({
+          success: false,
+          code: err.code || "STORAGE_ERROR",
+          message: err.message || "Image upload failed. Please try again.",
+        });
       }
     }
     return res.status(200).json({

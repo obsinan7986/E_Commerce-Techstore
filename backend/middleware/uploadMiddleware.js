@@ -93,9 +93,28 @@ export const saveBufferLocally = async (buffer, originalname = "upload.jpg") => 
   return `/uploads/${filename}`;
 };
 
+let hasLoggedLocalUploadWarning = false;
+
+/**
+ * Computes image health status for a given image URL/path.
+ * @param {string} image - Image path or URL
+ * @returns {"ok"|"empty"|"local-missing"|"local-ok"}
+ */
+export const computeImageStatus = (image) => {
+  const img = (image || "").trim();
+  if (!img) return "empty";
+  if (img.startsWith("https://") || img.startsWith("http://")) return "ok";
+  if (img.startsWith("/uploads/")) {
+    const filename = img.replace(/^\/uploads\/?/, "");
+    const filePath = path.join(uploadDir, filename);
+    return fs.existsSync(filePath) ? "local-ok" : "local-missing";
+  }
+  return "empty";
+};
+
 /**
  * Uploads a buffer directly to Cloudinary using upload_stream,
- * or falls back to local disk storage (/uploads) if Cloudinary keys are missing or upload fails.
+ * or saves to local disk only if ALLOW_LOCAL_UPLOADS is true.
  * @param {Buffer|string} bufferOrData - Buffer, base64 data string, or file path
  * @param {string} folder - Cloudinary folder name
  * @param {string} originalname - Original file name (used for local fallback)
@@ -139,7 +158,8 @@ export const uploadToCloudinary = async (
     throw new Error("Invalid buffer or file provided for upload.");
   }
 
-  // If Cloudinary is configured, attempt upload to cloud
+  // If Cloudinary is configured, upload to Cloudinary.
+  // On failure: return 502 STORAGE_ERROR and log real reason (no secrets). NEVER fall back to disk.
   if (isCloudinaryConfigured()) {
     try {
       configureCloudinary();
@@ -158,21 +178,33 @@ export const uploadToCloudinary = async (
       });
       return secureUrl;
     } catch (cloudErr) {
-      console.warn(
-        `[Cloudinary] Cloud upload failed (${cloudErr.message}). Falling back to local disk storage.`
-      );
-      return await saveBufferLocally(buffer, originalname);
+      console.error(`[Upload] Cloudinary upload failed: ${cloudErr.message || cloudErr}`);
+      const err = new Error("Image upload failed. Please try again.");
+      err.statusCode = 502;
+      err.code = "STORAGE_ERROR";
+      throw err;
     }
   }
 
-  // Robust fallback to local disk storage
-  return await saveBufferLocally(buffer, originalname);
+  // Cloudinary NOT configured: only if ALLOW_LOCAL_UPLOADS === "true" use local disk (dev only)
+  if (process.env.ALLOW_LOCAL_UPLOADS === "true") {
+    if (!hasLoggedLocalUploadWarning) {
+      console.warn("LOCAL UPLOADS ENABLED - files will not exist on other servers");
+      hasLoggedLocalUploadWarning = true;
+    }
+    return await saveBufferLocally(buffer, originalname);
+  }
+
+  const notConfiguredErr = new Error("File uploads are temporarily unavailable. Please contact support.");
+  notConfiguredErr.statusCode = 503;
+  notConfiguredErr.code = "STORAGE_NOT_CONFIGURED";
+  throw notConfiguredErr;
 };
 
 /**
  * Middleware that runs after multer.
  * Uploads req.file and every file in req.files to Cloudinary if configured,
- * or saves to local disk storage (/uploads) if Cloudinary keys are missing or fail.
+ * or saves to local disk storage (/uploads) if ALLOW_LOCAL_UPLOADS is true.
  * Sets file.path, file.filename, file.secure_url, and file.url to the resulting path/URL.
  */
 export const cloudifyUploads =
@@ -229,10 +261,14 @@ export const cloudifyUploads =
 
       next();
     } catch (error) {
-      console.error("[Upload Middleware Error]:", error);
-      return res.status(500).json({
+      console.error("[Upload Middleware Error]:", error.message || error);
+      const status = error.statusCode || error.status || 500;
+      const code = error.code || "STORAGE_ERROR";
+      const message = error.message || "Failed to process image upload";
+      return res.status(status).json({
         success: false,
-        message: error.message || "Failed to process image upload",
+        code,
+        message,
       });
     }
   };

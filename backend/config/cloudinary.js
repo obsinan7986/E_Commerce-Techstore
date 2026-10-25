@@ -53,9 +53,7 @@ export const configureCloudinary = () => {
 // Attempt initial configuration on boot
 const isReady = configureCloudinary();
 if (!isReady) {
-  console.info(
-    "[Cloudinary] Cloudinary keys not configured. Falling back to local disk storage (/uploads) for all file uploads."
-  );
+  console.info("[Cloudinary] Cloudinary keys not configured.");
 }
 
 export const isConfigured = isReady;

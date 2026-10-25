@@ -18,6 +18,7 @@ import {
 } from "../services/adminservice";
 import { toast } from "react-toastify";
 import { formatCurrency, formatCompactCurrency } from "../utils/formatters";
+import api from "../services/api";
 import "../styles/admin.css";
 import "../styles/adminDashboard.css";
 
@@ -26,19 +27,22 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lowStock, setLowStock] = useState([]);
+  const [storageHealth, setStorageHealth] = useState(null);
 
   const loadDashboard = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const [result, lowData] = await Promise.all([
+      const [result, lowData, storageRes] = await Promise.all([
         getAdminDashboard(),
         getLowStockProducts().catch(() => ({ products: [] })),
+        api.get("/health/storage").catch(() => ({ data: { configured: false, mode: "none" } })),
       ]);
 
       setData(result);
       setLowStock(lowData.products || []);
+      setStorageHealth(storageRes?.data || null);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || "Unable to load admin dashboard.");
@@ -113,6 +117,36 @@ const AdminDashboard = () => {
           <FiRefreshCw /> ↻ Refresh
         </button>
       </div>
+
+      {/* Storage Mode Yellow Warning Banner */}
+      {storageHealth && storageHealth.mode !== "cloudinary" && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 12,
+            padding: "14px 18px",
+            marginBottom: 20,
+            background: "#FEF9C3",
+            border: "1.5px solid #FDE047",
+            borderRadius: 10,
+            color: "#854D0E",
+            fontSize: "0.92rem",
+          }}
+        >
+          <FiAlertTriangle size={22} style={{ color: "#CA8A04", flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <strong style={{ display: "block", color: "#713F12", marginBottom: 2 }}>
+              Warning: Storage mode is {storageHealth.mode === "local-dev" ? '"local-dev"' : '"none"'} (Cloudinary not configured)
+            </strong>
+            <span style={{ lineHeight: 1.5 }}>
+              {storageHealth.mode === "local-dev"
+                ? "File uploads are currently saving to local disk (/uploads). These files are not durable and will disappear across server restarts or on cloud deployments like Render. Configure Cloudinary credentials to enable persistent image hosting."
+                : "Image uploads are currently disabled because Cloudinary keys are missing and ALLOW_LOCAL_UPLOADS is false. Configure Cloudinary to enable uploads."}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Upgraded 6 KPI Cards with Subtle Icons & Auto-fit Grid */}
       <div className="stats-grid">

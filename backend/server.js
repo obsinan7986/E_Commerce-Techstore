@@ -1,4 +1,3 @@
-import "dotenv/config";
 import express          from "express";
 import compression      from "compression";
 import cors             from "cors";
@@ -6,6 +5,7 @@ import dotenv           from "dotenv";
 import path             from "path";
 import fs               from "fs";
 import { fileURLToPath } from "url";
+import mongoose         from "mongoose";
 
 // ── ESM-safe path resolution ──────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -17,31 +17,53 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// ── Load .env FIRST ───────────────────────────────────────────────
-dotenv.config({ path: path.join(__dirname, ".env") });
+// ── Load .env FIRST and inspect ───────────────────────────────────
+const envPath = path.join(__dirname, ".env");
+const envFound = fs.existsSync(envPath);
+let envVarCount = 0;
+
+if (envFound) {
+  try {
+    const rawEnv = fs.readFileSync(envPath, "utf-8");
+    const parsed = dotenv.parse(rawEnv);
+    envVarCount = Object.keys(parsed).length;
+    for (const [key, value] of Object.entries(parsed)) {
+      if (process.env[key] === undefined) {
+        process.env[key] = value;
+      }
+    }
+  } catch (err) {
+    console.error("[Env] Error reading backend/.env:", err.message);
+  }
+}
+
+if (envVarCount === 0) {
+  console.warn("Warning: backend/.env loaded 0 variables - check the file exists and is saved as UTF-8");
+}
 
 // ── All other imports come AFTER dotenv ───────────────────────────
-import connectDB          from "./config/db.js";
-import productRoutes      from "./routes/productRoutes.js";
-import authRoutes         from "./routes/authRoutes.js";
-import uploadRoutes       from "./routes/uploadRoutes.js";
-import cartRoutes         from "./routes/cartRoutes.js";
-import wishlistRoutes     from "./routes/wishlistRoutes.js";
-import orderRoutes        from "./routes/orderRoutes.js";
-import paymentRoutes      from "./routes/paymentRoutes.js";
-import checkoutRoutes     from "./routes/checkoutRoutes.js";
-import adminRoutes        from "./routes/adminRoutes.js";
-import reviewRoutes       from "./routes/reviewRoutes.js";
-import couponRoutes       from "./routes/couponRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js";
-import messageRoutes      from "./routes/messageRoutes.js";
-import seedRoutes         from "./routes/seedRoutes.js";
-import bannerRoutes       from "./routes/bannerRoutes.js";
-import ownerRoutes        from "./routes/ownerRoutes.js";
-import sellerRoutes       from "./routes/sellerRoutes.js";
-import financeRoutes      from "./routes/financeRoutes.js";
-import meetingRoutes      from "./routes/meetingRoutes.js";
-import announcementRoutes from "./routes/announcementRoutes.js";
+import connectDB               from "./config/db.js";
+import { isCloudinaryConfigured } from "./config/cloudinary.js";
+import productRoutes           from "./routes/productRoutes.js";
+import authRoutes              from "./routes/authRoutes.js";
+import uploadRoutes            from "./routes/uploadRoutes.js";
+import cartRoutes              from "./routes/cartRoutes.js";
+import wishlistRoutes          from "./routes/wishlistRoutes.js";
+import orderRoutes             from "./routes/orderRoutes.js";
+import paymentRoutes           from "./routes/paymentRoutes.js";
+import checkoutRoutes          from "./routes/checkoutRoutes.js";
+import adminRoutes             from "./routes/adminRoutes.js";
+import reviewRoutes            from "./routes/reviewRoutes.js";
+import couponRoutes            from "./routes/couponRoutes.js";
+import notificationRoutes      from "./routes/notificationRoutes.js";
+import messageRoutes           from "./routes/messageRoutes.js";
+import seedRoutes              from "./routes/seedRoutes.js";
+import bannerRoutes            from "./routes/bannerRoutes.js";
+import ownerRoutes             from "./routes/ownerRoutes.js";
+import sellerRoutes            from "./routes/sellerRoutes.js";
+import financeRoutes           from "./routes/financeRoutes.js";
+import meetingRoutes           from "./routes/meetingRoutes.js";
+import announcementRoutes      from "./routes/announcementRoutes.js";
 
 // ── Connect to MongoDB ────────────────────────────────────────────
 connectDB();
@@ -74,7 +96,6 @@ app.use(cors({
 
 app.use(express.json());
 app.use(compression());
-
 
 // ── Static uploads — with CORS headers & fallback placeholder for missing files ──
 const uploadsHeaderMiddleware = (req, res, next) => {
@@ -127,6 +148,14 @@ app.use("/api/finance",        financeRoutes);
 app.use("/api/meetings",       meetingRoutes);
 app.use("/api/announcements",  announcementRoutes);
 
+// ── Storage health check ──────────────────────────────────────────
+app.get("/api/health/storage", (req, res) => {
+  const configured = isCloudinaryConfigured();
+  const allowLocal = process.env.ALLOW_LOCAL_UPLOADS === "true";
+  const mode = configured ? "cloudinary" : allowLocal ? "local-dev" : "none";
+  res.status(200).json({ configured, mode });
+});
+
 // ── Health check ──────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.status(200).json({ ok: true });
@@ -153,12 +182,31 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ── Helper to resolve database name without secrets or full URI ───
+const getDbName = () => {
+  if (mongoose.connection?.name) return mongoose.connection.name;
+  const uri = process.env.MONGO_URI || "";
+  try {
+    const withoutQuery = uri.split("?")[0];
+    const slashIdx = withoutQuery.lastIndexOf("/");
+    return slashIdx !== -1 ? withoutQuery.substring(slashIdx + 1) : "";
+  } catch {
+    return "";
+  }
+};
+
 // ── Start server ──────────────────────────────────────────────────
-// Finance routes: /api/finance/dashboard, /api/finance/payments, /api/finance/stats
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
+  const storageMode = isCloudinaryConfigured()
+    ? "cloudinary"
+    : process.env.ALLOW_LOCAL_UPLOADS === "true"
+    ? "local-dev"
+    : "none";
+
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`   NODE_ENV:  ${process.env.NODE_ENV}`);
-  console.log(`   MONGO_URI: ${process.env.MONGO_URI ? "✓ loaded" : "✗ MISSING"}`);
-  console.log(`   JWT_SECRET:${process.env.JWT_SECRET ? " ✓ loaded" : " ✗ MISSING"}`);
+  console.log(`   NODE_ENV:             ${process.env.NODE_ENV || "development"}`);
+  console.log(`   backend/.env found:   ${envFound ? "yes" : "no"} (${envVarCount} variables loaded)`);
+  console.log(`   Storage mode:         ${storageMode}`);
+  console.log(`   Database name:        ${getDbName() || "unknown"}`);
 });

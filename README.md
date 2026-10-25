@@ -963,7 +963,22 @@ Replace this section with the actual team members, roles, GitHub profiles, and i
 
 ---
 
-## 27. Repository
+## 27. Local vs Production
+
+### Separate Databases
+- **Never share the production database with local development environments**: Local seed scripts, test transactions, or development testing can overwrite or corrupt live customer orders and product catalogs.
+- Configure `PRODUCTION_DB_NAME` in `backend/.env`. If the backend starts in `NODE_ENV=development` while pointed to a database matching `PRODUCTION_DB_NAME`, the server will refuse to start unless `ALLOW_DEV_ON_PROD_DB=true` is explicitly provided.
+- Always run local development against a local MongoDB instance (e.g., `mongodb://127.0.0.1:27017/TechE-commerce`) or a designated dev/staging cluster.
+
+### Why Local Disk Uploads Are Not Durable
+- Cloud platforms such as Render use an **ephemeral filesystem**. Any file written to the local `/uploads` directory is lost whenever the server restarts, deploys, or scales.
+- When developers run the backend locally and save uploads to `/uploads`, those files only exist on that individual developer's hard drive. Production servers and other developers' machines cannot access them, resulting in broken product images ("Image Not Found").
+- **Cloudinary is required for persistent media storage**: In production, images, KYC documents, and receipts are streamed directly to Cloudinary and stored as permanent CDN URLs (`https://res.cloudinary.com/...`).
+- Local disk uploads are strictly gated by `ALLOW_LOCAL_UPLOADS=true` for offline development only and will never silently mask Cloudinary configuration errors.
+
+---
+
+## 28. Repository
 
 GitHub repository:
 

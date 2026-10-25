@@ -10,19 +10,43 @@ try {
 
 const connectDB = async () => {
   try {
-    // Log what we're connecting to (mask password)
     const uri = process.env.MONGO_URI || "";
-    const masked = uri.replace(/:([^@]+)@/, ":****@");
-    console.log(`[db] Connecting to: ${masked || "⚠ MONGO_URI is UNDEFINED"}`);
-
     if (!uri) {
       throw new Error("MONGO_URI environment variable is not set.");
     }
 
-    const conn = await mongoose.connect(uri);
+    console.log("[db] Connecting to MongoDB...");
 
-    console.log(`[db] ✅ MongoDB connected: ${conn.connection.host}`);
-    console.log(`[db]    Database name: ${conn.connection.name}`);
+    // Dev safety check before connecting
+    const uriDbName = uri.split("?")[0].split("/").pop() || "";
+    if (
+      process.env.NODE_ENV === "development" &&
+      process.env.PRODUCTION_DB_NAME &&
+      uriDbName === process.env.PRODUCTION_DB_NAME &&
+      process.env.ALLOW_DEV_ON_PROD_DB !== "true"
+    ) {
+      console.error(
+        `[db] ❌ Refusing to start in development mode on production database "${uriDbName}". Set ALLOW_DEV_ON_PROD_DB=true to override.`
+      );
+      process.exit(1);
+    }
+
+    const conn = await mongoose.connect(uri);
+    const dbName = conn.connection.name;
+    console.log(`[db] ✅ MongoDB connected. Database name: ${dbName}`);
+
+    // Dev safety check after connecting
+    if (
+      process.env.NODE_ENV === "development" &&
+      process.env.PRODUCTION_DB_NAME &&
+      dbName === process.env.PRODUCTION_DB_NAME &&
+      process.env.ALLOW_DEV_ON_PROD_DB !== "true"
+    ) {
+      console.error(
+        `[db] ❌ Refusing to start in development mode on production database "${dbName}". Set ALLOW_DEV_ON_PROD_DB=true to override.`
+      );
+      process.exit(1);
+    }
 
     // Keep role + isAdmin in sync for legacy documents
     await User.updateMany(

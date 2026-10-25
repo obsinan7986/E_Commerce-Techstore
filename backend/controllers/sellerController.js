@@ -20,6 +20,7 @@ import Cart    from "../models/Cart.js";
 import Wishlist from "../models/Wishlist.js";
 import Notification from "../models/Notification.js";
 import createAdminNotification from "../utils/createAdminNotification.js";
+import { computeImageStatus } from "../middleware/uploadMiddleware.js";
 
 // ============================================================
 // GET OWN PRODUCTS  –  GET /api/seller/products
@@ -42,7 +43,13 @@ export const sellerGetProducts = async (req, res) => {
       .limit(limit)
       .populate("reviewedBy", "fullName");
 
-    res.status(200).json({ success: true, total, page, pages: Math.ceil(total / limit), products });
+    const productsWithStatus = products.map((p) => {
+      const obj = p.toObject();
+      obj.imageStatus = computeImageStatus(p.image);
+      return obj;
+    });
+
+    res.status(200).json({ success: true, total, page, pages: Math.ceil(total / limit), products: productsWithStatus });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -22,6 +22,7 @@ import {
   rejectProduct,
   getAllReviews,
   getReviewStats,
+  getProductImageHealth,
 } from "../controllers/adminController.js";
 
 import {
@@ -69,6 +70,7 @@ router.get("/customers", ...adminOnly, getAdminCustomers);
 router.get("/payments", ...adminOnly, getAdminPayments);
 
 // Products
+router.get("/products/image-health", ...adminOnly, getProductImageHealth);
 router.get("/products", ...adminOnly, getAdminProducts);
 router.post("/products", ...adminOnly, createProduct);
 router.put(

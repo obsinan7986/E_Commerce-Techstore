@@ -869,6 +869,24 @@ const SellerDashboard = () => {
                             <div>
                               <strong style={{ display: "block", color: "#0F172A" }}>{p.name}</strong>
                               <span style={{ fontSize: "12px", color: "#64748B" }}>{p.brand}</span>
+                              {(p.imageStatus === "empty" || p.imageStatus === "local-missing" || !p.image) && (
+                                <span
+                                  style={{
+                                    display: "inline-block",
+                                    marginTop: 4,
+                                    background: "#FEE2E2",
+                                    color: "#DC2626",
+                                    border: "1px solid #FCA5A5",
+                                    fontSize: "0.68rem",
+                                    fontWeight: 700,
+                                    padding: "2px 6px",
+                                    borderRadius: 4,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  Image missing - re-upload
+                                </span>
+                              )}
                             </div>
                           </div>
                         </td>

@@ -17,6 +17,7 @@ const ProductGallery = ({ product }) => {
         <img
           src={selected || PRODUCT_FALLBACK_SVG}
           alt={product?.name || "Product"}
+          loading="lazy"
           onError={(e) => handleImageError(e, "product")}
         />
       </div>
@@ -32,7 +33,7 @@ const ProductGallery = ({ product }) => {
               onClick={() => setSelected(img)}
               aria-label={`View image ${i + 1}`}
             >
-              <img src={img} alt="" onError={(e) => handleImageError(e, "product")} />
+              <img src={img} alt="" loading="lazy" onError={(e) => handleImageError(e, "product")} />
             </button>
           ))}
         </div>

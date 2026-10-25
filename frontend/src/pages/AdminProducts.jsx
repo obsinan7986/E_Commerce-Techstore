@@ -45,17 +45,19 @@ const AdminProducts = () => {
   const [keyword,      setKeyword]      = useState("");
   const [category,     setCategory]     = useState("");
   const [stockFilter,  setStockFilter]  = useState("");
+  const [brokenFilter, setBrokenFilter] = useState("");
   const [sortBy,       setSortBy]       = useState("createdAt-desc");
 
   /* Low-stock alert banner */
   const [lowStockCount, setLowStockCount] = useState(0);
 
   /* Create / Edit modal */
-  const [showForm,     setShowForm]     = useState(false);
-  const [editTarget,   setEditTarget]   = useState(null);
-  const [form,         setForm]         = useState(BLANK);
-  const [formLoading,  setFormLoading]  = useState(false);
-  const [deleteLoading,setDeleteLoading]= useState(null);
+  const [showForm,       setShowForm]       = useState(false);
+  const [editTarget,     setEditTarget]     = useState(null);
+  const [form,           setForm]           = useState(BLANK);
+  const [formLoading,    setFormLoading]    = useState(false);
+  const [deleteLoading,  setDeleteLoading]  = useState(null);
+  const [imageErrorHint, setImageErrorHint] = useState(false);
 
   /* Inline stock quick-edit */
   const [editingStock, setEditingStock] = useState(null);  // product._id
@@ -83,7 +85,15 @@ const AdminProducts = () => {
       setLoading(true);
       setError("");
       const [data, lowData] = await Promise.all([
-        getAdminProducts({ page, limit: pageSize, keyword: keyword.trim(), category, stockFilter, sort: sortParam() }),
+        getAdminProducts({
+          page,
+          limit: pageSize,
+          keyword: keyword.trim(),
+          category,
+          stockFilter,
+          sort: sortParam(),
+          brokenOnly: brokenFilter === "broken" ? "true" : undefined,
+        }),
         getLowStockProducts(),
       ]);
       setProducts(data.products || []);
@@ -95,7 +105,7 @@ const AdminProducts = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, keyword, category, stockFilter, sortBy]); // eslint-disable-line
+  }, [page, pageSize, keyword, category, stockFilter, brokenFilter, sortBy]); // eslint-disable-line
 
   useEffect(() => { load(); }, [load]);
 
@@ -105,11 +115,18 @@ const AdminProducts = () => {
   };
 
   /* ── Modal helpers ── */
-  const openCreate = () => { setEditTarget(null); setForm(BLANK); setImagePreview(""); setShowForm(true); };
+  const openCreate = () => {
+    setEditTarget(null);
+    setForm(BLANK);
+    setImagePreview("");
+    setImageErrorHint(false);
+    setShowForm(true);
+  };
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImagePreview(URL.createObjectURL(file));
+    setImageErrorHint(false);
     try {
       setUploadingImg(true);
       const fd = new FormData();
@@ -118,6 +135,7 @@ const AdminProducts = () => {
       const path = data.image || data.imageUrl || "";
       if (path) {
         setForm((prev) => ({ ...prev, image: path }));
+        setImageErrorHint(false);
         flash("success", "Image uploaded successfully.");
       }
     } catch {
@@ -131,9 +149,16 @@ const AdminProducts = () => {
     setForm({ name: p.name, description: p.description, brand: p.brand,
                category: p.category, price: p.price, compareAtPrice: p.compareAtPrice ? String(p.compareAtPrice) : "", stock: p.stock, image: p.image || "" });
     setImagePreview(p.image?.startsWith("http") ? p.image : p.image ? `${BASE_URL}${p.image}` : "");
+    setImageErrorHint(p.imageStatus === "empty" || p.imageStatus === "local-missing" || !p.image);
     setShowForm(true);
   };
-  const closeForm  = () => { setShowForm(false); setEditTarget(null); setForm(BLANK); setImagePreview(""); };
+  const closeForm  = () => {
+    setShowForm(false);
+    setEditTarget(null);
+    setForm(BLANK);
+    setImagePreview("");
+    setImageErrorHint(false);
+  };
 
   const handleFormChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -282,6 +307,11 @@ const AdminProducts = () => {
           <option value="out">Out of Stock (0)</option>
         </select>
 
+        <select className="admin-select" value={brokenFilter} onChange={(e) => { setBrokenFilter(e.target.value); setPage(1); }}>
+          <option value="">All Images</option>
+          <option value="broken">Broken images only</option>
+        </select>
+
         <select className="admin-select" value={sortBy} onChange={(e) => { setSortBy(e.target.value); setPage(1); }}>
           <option value="createdAt-desc">Newest</option>
           <option value="nameAsc">Name A–Z</option>
@@ -290,9 +320,9 @@ const AdminProducts = () => {
           <option value="stockAsc">Stock Low–High</option>
         </select>
 
-        {(keyword || category || stockFilter) && (
+        {(keyword || category || stockFilter || brokenFilter) && (
           <button className="admin-btn admin-btn-secondary" style={{ height: 40 }}
-            onClick={() => { setKeyword(""); setCategory(""); setStockFilter(""); setPage(1); }}>
+            onClick={() => { setKeyword(""); setCategory(""); setStockFilter(""); setBrokenFilter(""); setPage(1); }}>
             Clear Filters
           </button>
         )}
@@ -332,12 +362,31 @@ const AdminProducts = () => {
                   return (
                     <tr key={p._id} style={p.stock === 0 ? { background: "#FFF8F8" } : p.stock <= 9 ? { background: "#FFFDF0" } : {}}>
                       <td>
-                        <img
-                          src={p.image?.startsWith("http") ? p.image : `${BASE_URL}${p.image}`}
-                          alt={p.name}
-                          style={{ width: 52, height: 52, objectFit: "contain", borderRadius: 6, border: "1px solid #E5E7EB" }}
-                          onError={(e) => { e.target.src = "/placeholder.png"; }}
-                        />
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                          <img
+                            src={p.image?.startsWith("http") ? p.image : `${BASE_URL}${p.image}`}
+                            alt={p.name}
+                            style={{ width: 52, height: 52, objectFit: "contain", borderRadius: 6, border: "1px solid #E5E7EB" }}
+                            onError={(e) => { e.target.src = "/placeholder.png"; }}
+                          />
+                          {(p.imageStatus === "empty" || p.imageStatus === "local-missing" || !p.image) && (
+                            <span
+                              className="admin-badge"
+                              style={{
+                                background: "#FEE2E2",
+                                color: "#DC2626",
+                                border: "1px solid #FCA5A5",
+                                fontSize: "0.68rem",
+                                fontWeight: 700,
+                                padding: "2px 6px",
+                                borderRadius: 4,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              Image missing - re-upload
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td>
                         <strong>{p.name}</strong>
@@ -550,12 +599,37 @@ const AdminProducts = () => {
                       }}
                     >
                       {imagePreview ? (
-                        <img
-                          src={imagePreview}
-                          alt="Product Preview"
-                          style={{ width: "100%", height: 180, objectFit: "contain" }}
-                          onError={(e) => { e.target.src = "/placeholder.png"; }}
-                        />
+                        <div style={{ position: "relative", width: "100%", height: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <img
+                            src={imagePreview}
+                            alt="Product Preview"
+                            style={{ width: "100%", height: 180, objectFit: "contain" }}
+                            onError={(e) => {
+                              e.target.src = "/placeholder.png";
+                              setImageErrorHint(true);
+                            }}
+                            onLoad={() => setImageErrorHint(false)}
+                          />
+                          {imageErrorHint && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                bottom: 6,
+                                left: 6,
+                                right: 6,
+                                background: "rgba(220, 38, 38, 0.95)",
+                                color: "#fff",
+                                fontSize: "0.74rem",
+                                padding: "4px 8px",
+                                borderRadius: 4,
+                                textAlign: "center",
+                                fontWeight: 600,
+                              }}
+                            >
+                              ⚠ Current image failed to load. Please re-upload.
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <div style={{ textAlign: "center", color: "#64748B", fontSize: "0.80rem" }}>
                           <div style={{ fontSize: "2rem", marginBottom: 4 }}>📷</div>

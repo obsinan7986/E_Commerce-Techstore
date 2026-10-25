@@ -2,6 +2,7 @@ import Product from "../models/Product.js";
 import Order   from "../models/Order.js";
 import Cart    from "../models/Cart.js";
 import Wishlist from "../models/Wishlist.js";
+import { computeImageStatus } from "../middleware/uploadMiddleware.js";
 
 
 // ==========================================
@@ -519,7 +520,8 @@ export const getAdminProducts = async (req, res) => {
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 100);
     const keyword = (req.query.keyword || "").trim();
-    const { category, stockFilter, sort } = req.query;
+    const { category, stockFilter, sort, brokenOnly, imageFilter } = req.query;
+    const isBrokenFilter = brokenOnly === "true" || imageFilter === "broken";
 
     const filter = {};
 
@@ -548,6 +550,30 @@ export const getAdminProducts = async (req, res) => {
     if (sort === "stockDesc") sortOption = { stock: -1 };
     if (sort === "nameAsc") sortOption = { name: 1 };
 
+    if (isBrokenFilter) {
+      const allCandidates = await Product.find(filter).sort(sortOption);
+      const brokenList = allCandidates.filter((p) => {
+        const s = computeImageStatus(p.image);
+        return s === "empty" || s === "local-missing";
+      });
+      const totalBroken = brokenList.length;
+      const paginated = brokenList.slice((page - 1) * limit, page * limit);
+      const productsWithStatus = paginated.map((p) => {
+        const obj = p.toObject();
+        obj.imageStatus = computeImageStatus(p.image);
+        return obj;
+      });
+
+      return res.status(200).json({
+        success: true,
+        count: productsWithStatus.length,
+        total: totalBroken,
+        page,
+        pages: Math.ceil(totalBroken / limit) || 1,
+        products: productsWithStatus,
+      });
+    }
+
     const total = await Product.countDocuments(filter);
 
     const products = await Product.find(filter)
@@ -555,13 +581,19 @@ export const getAdminProducts = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit);
 
+    const productsWithStatus = products.map((p) => {
+      const obj = p.toObject();
+      obj.imageStatus = computeImageStatus(p.image);
+      return obj;
+    });
+
     res.status(200).json({
       success: true,
-      count: products.length,
+      count: productsWithStatus.length,
       total,
       page,
       pages: Math.ceil(total / limit),
-      products,
+      products: productsWithStatus,
     });
   } catch (error) {
     res.status(500).json({

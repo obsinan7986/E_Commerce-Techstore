@@ -3,6 +3,7 @@ import Product from "../models/Product.js";
 import Order   from "../models/Order.js";
 import Review  from "../models/Review.js";
 import createNotification from "../utils/createNotification.js";
+import { computeImageStatus } from "../middleware/uploadMiddleware.js";
 
 // ======================================
 // Analytics — single endpoint for the analytics dashboard
@@ -705,6 +706,14 @@ export const approveProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ success: false, message: "Product not found." });
 
+    const imageStatus = computeImageStatus(product.image);
+    if (imageStatus === "empty" || imageStatus === "local-missing") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot approve product with missing or broken image. Please re-upload image first.",
+      });
+    }
+
     const { commissionOverride } = req.body;
     if (commissionOverride !== undefined) {
       product.commissionOverride =
@@ -892,6 +901,53 @@ export const getReviewStats = async (req, res) => {
         mostReviewed,
         recentReviews,
       },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ======================================
+// GET PRODUCT IMAGE HEALTH
+// GET /api/admin/products/image-health
+// ======================================
+export const getProductImageHealth = async (req, res) => {
+  try {
+    const products = await Product.find({})
+      .select("_id name seller image")
+      .populate("seller", "fullName email");
+
+    let ok = 0;
+    let empty = 0;
+    let localMissing = 0;
+    let localOk = 0;
+
+    const list = products.map((p) => {
+      const status = computeImageStatus(p.image);
+      if (status === "ok") ok++;
+      else if (status === "empty") empty++;
+      else if (status === "local-missing") localMissing++;
+      else if (status === "local-ok") localOk++;
+
+      return {
+        id: p._id,
+        name: p.name,
+        seller: p.seller,
+        image: p.image,
+        status,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      counts: {
+        total: list.length,
+        ok,
+        empty,
+        localMissing,
+        localOk,
+      },
+      products: list,
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
